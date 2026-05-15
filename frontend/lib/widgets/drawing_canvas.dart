@@ -188,10 +188,8 @@ class CanvasPainter extends CustomPainter {
         text: TextSpan(
           text: solutionKanji,
           style: TextStyle(
-            //fontSize: size.width * 0.6,
             fontSize: canvasSize * 0.6,
-
-            color: Colors.grey.withOpacity(0.2), // ✅ transparente
+            color: Colors.grey.withAlpha(51), // ✅ transparente
             fontWeight: FontWeight.bold,
           ),
         ),
