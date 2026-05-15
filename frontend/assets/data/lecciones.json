@@ -8,5 +8,15 @@
       "lectura": "むずか",
       "kanji": "難"
     }
+  },
+  {
+    "id": 2,
+    "frase": "はは痛いです。",
+    "target": {
+      "start": 0,
+      "length": 1,
+      "lectura": "は",
+      "kanji": "歯"
+    }
   }
 ]

@@ -214,12 +214,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 feedback = mensaje;
                 //strokesReferencia = strokesSolucion;
                 
-                if (score >= 0.4) {
+                if (score < 0.4) {
                   kanjiMostrado = "";
-                  mostrarSolucion = false;
+                  //mostrarSolucion = false;
                 } else {
                   kanjiMostrado = kanjiObjetivo;
-                  mostrarSolucion = true;
+                  //mostrarSolucion = true;
                 }
 
               });
@@ -228,8 +228,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
           ),
           ElevatedButton(
             onPressed: () {
+              canvasKey.currentState?.clear();
               setState(() {
                 mostrarSolucion = true;
+                resultado = '';
+                  feedback = '';
               });
             },
             child: const Text('Mostrar solución'),
