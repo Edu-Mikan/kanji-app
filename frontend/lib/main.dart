@@ -29,19 +29,15 @@ class CanvasScreen extends StatefulWidget {
 class _CanvasScreenState extends State<CanvasScreen> {
   final GlobalKey<DrawingCanvasState> canvasKey = GlobalKey();
 
-
   String resultado = '';
   String feedback = '';
   String frase = '';
-  //String lecturaObjetivo = '';
   String kanjiObjetivo = '';
-  String kanjiMostrado = '';
   bool mostrarSolucion = false;
-
-  
   int start = 0;
   int length = 0;
-
+  List<dynamic> lecciones = [];
+  int indiceActual = 0;
 
   @override
   void initState() {
@@ -54,26 +50,55 @@ class _CanvasScreenState extends State<CanvasScreen> {
       await rootBundle.loadString('assets/data/lecciones.json');
 
   final data = jsonDecode(jsonString);
-  debugPrint(jsonEncode(data));
+  lecciones = data;
 
-  final leccion = data[0]; // de momento solo una
-  debugPrint(leccion.toString());
+  cargarLeccionActual();
+}
+
+void siguienteLeccion() {
+  if (lecciones.isEmpty) return;
+
+  // ✅ limpiar canvas
+  canvasKey.currentState?.clear();
+
+  // ✅ avanzar índice
+  if (indiceActual < lecciones.length - 1) {
+    indiceActual++;
+  } else {
+    indiceActual = 0;
+  }
+
+  // ✅ cargar nueva lección
+  final leccion = lecciones[indiceActual];
+  final target = leccion['target'];
 
   setState(() {
-    final target = leccion['target'];
+    frase = leccion['frase'] ?? '';
+    start = target?['start'] ?? 0;
+    length = target?['length'] ?? 0;
+    kanjiObjetivo = target?['kanji'] ?? '';
 
-    if (target != null) {
-      start = target['start'];
-      length = target['length'];
-      kanjiObjetivo = target['kanji'] ?? '';
-    }
-    else{ 
-      start = 0;
-      length = 0;
-      kanjiObjetivo = '';
-    }
-    frase = leccion['frase'];
+    resultado = '';
+    feedback = '';
+    mostrarSolucion = false;
+  });
+}
 
+void cargarLeccionActual() {
+  if (lecciones.isEmpty) return;
+
+  final leccion = lecciones[indiceActual];
+  final target = leccion['target'];
+
+  setState(() {
+    frase = leccion['frase'] ?? '';
+    start = target?['start'] ?? 0;
+    length = target?['length'] ?? 0;
+    kanjiObjetivo = target?['kanji'] ?? '';
+
+    resultado = '';
+    feedback = '';
+    mostrarSolucion = false;
   });
 }
 
@@ -89,7 +114,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 ? const SizedBox()
                 : Builder(
                     builder: (_) {
-                      debugPrint("frase: $frase");
+                      //debugPrint("frase: $frase");
                       if (frase.isEmpty ||
                           start < 0 ||
                           length <= 0 ||
@@ -98,11 +123,17 @@ class _CanvasScreenState extends State<CanvasScreen> {
                         return const SizedBox();
                       }
 
-                      debugPrint("frase length: ${frase.length}");
-                      debugPrint("start: $start, length: $length");
+                      //debugPrint("frase length: ${frase.length}");
+                      //debugPrint("start: $start, length: $length");
 
 
                       final chars = frase.characters.toList();
+
+                      
+                      if (start + length > chars.length) {
+                        return const SizedBox();
+                      }
+
 
                       final before = chars.take(start).join('');
                       final target = chars.skip(start).take(length).join('');
@@ -127,33 +158,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
                             ),
                             TextSpan(text: after),
                           ]
-                          // children: [
-                          //   TextSpan(text: partes[0]),
-                          //   TextSpan(
-                          //     text: lecturaObjetivo,
-                          //     style: const TextStyle(
-                          //       decoration: TextDecoration.underline,
-                          //       fontWeight: FontWeight.bold,
-                          //       color: Colors.blue,
-                          //     ),
-                          //   ),
-                          //   TextSpan(text: partes[1]),
-                          // ],
                         ),
                       );
                     },
                   ),
           ),
-          
-          // SizedBox(
-          //   height: 400,
-          //   width: double.infinity,
-          //   child: DrawingCanvas(
-          //     key: canvasKey,
-          //     solutionKanji: mostrarSolucion ? kanjiMostrado : null,
-          //   ),
-          // ),
-
           Expanded(
             child: 
               DrawingCanvas(
@@ -161,7 +170,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 solutionKanji: mostrarSolucion ? kanjiObjetivo : null
               ),
           ),
-
           ElevatedButton(
             onPressed: () {
               canvasKey.currentState?.clear();
@@ -203,26 +211,49 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
               if (score < 0.4) {
                 mensaje = "✅ Bien";
+
+                setState(() {
+                  resultado = "Score: ${score.toStringAsFixed(2)}";
+                  feedback = mensaje;
+                });
+
+                // ✅ CAMBIO AUTOMÁTICO SEGURO
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  siguienteLeccion();
+                });
+
               } else if (score < 0.7) {
                 mensaje = "⚠️ Mejorable";
+
+                setState(() {
+                  resultado = "Score: ${score.toStringAsFixed(2)}";
+                  feedback = mensaje;
+                  //mostrarSolucion = true;
+                });
+
               } else {
                 mensaje = "❌ Incorrecto";
+
+                setState(() {
+                  resultado = "Score: ${score.toStringAsFixed(2)}";
+                  feedback = mensaje;
+                  //mostrarSolucion = true;
+                });
               }
 
-              setState(() {
-                resultado = "Score: ${score.toStringAsFixed(2)}";
-                feedback = mensaje;
-                //strokesReferencia = strokesSolucion;
+              // setState(() {
+              //   resultado = "Score: ${score.toStringAsFixed(2)}";
+              //   feedback = mensaje;
+              //   //strokesReferencia = strokesSolucion;
                 
-                if (score < 0.4) {
-                  kanjiMostrado = "";
-                  //mostrarSolucion = false;
-                } else {
-                  kanjiMostrado = kanjiObjetivo;
-                  //mostrarSolucion = true;
-                }
+              //   if (score < 0.4) {
+              //     kanjiMostrado = "";
+              //   } else {
+              //     kanjiMostrado = kanjiObjetivo;
+              //   }
 
-              });
+              // });
             },
             child: const Text('Validar'),
           ),
