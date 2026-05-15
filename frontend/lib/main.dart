@@ -95,12 +95,21 @@ class _CanvasScreenState extends State<CanvasScreen> {
                     },
                   ),
           ),
+          
+          // SizedBox(
+          //   height: 400,
+          //   width: double.infinity,
+          //   child: DrawingCanvas(
+          //     key: canvasKey,
+          //     solutionKanji: mostrarSolucion ? kanjiMostrado : null,
+          //   ),
+          // ),
+
           Expanded(
             child: 
               DrawingCanvas(
                 key: canvasKey,
-                //referenceStrokes: mostrarSolucion ? strokesReferencia : null,
-                //currentStroke: currentStroke,
+                solutionKanji: mostrarSolucion ? kanjiObjetivo : null
               ),
           ),
 
@@ -183,15 +192,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 Text(
                   resultado,
                   style: const TextStyle(fontSize: 20),
-                ),
-                // Solo mostramos el kanji objetivo si hay un resultado para evitar spoilers
-                Text(
-                  mostrarSolucion ? "Kanji correcto: $kanjiObjetivo" : "",
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
                 ),
 
                 const SizedBox(height: 8),
