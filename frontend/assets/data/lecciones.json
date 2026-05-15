@@ -2,7 +2,11 @@
   {
     "id": 1,
     "frase": "日本語はむずかしいです。",
-    "lecturaObjetivo": "むずか",
-    "kanjiObjetivo": "難"
+    "target": {
+      "start": 4,
+      "length": 3,
+      "lectura": "むずか",
+      "kanji": "難"
+    }
   }
 ]
