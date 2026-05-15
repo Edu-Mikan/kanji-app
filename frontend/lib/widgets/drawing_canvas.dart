@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 
-/* class DrawingCanvas extends StatefulWidget {
-  const DrawingCanvas({super.key});
-
-  @override
-  State<DrawingCanvas> createState() => DrawingCanvasState();
-} */
-
 List<Map<String, List<double>>> normalizeReference(List<dynamic> strokes) {
   double minX = double.infinity;
   double minY = double.infinity;
@@ -71,9 +64,10 @@ List<Map<String, List<double>>> normalizeReference(List<dynamic> strokes) {
 }
 
 class DrawingCanvas extends StatefulWidget {
-
+  final String? solutionKanji;
   const DrawingCanvas({
     super.key,
+    this.solutionKanji,
   });
 
   @override
@@ -161,6 +155,7 @@ List<Map<String, dynamic>> convertirStrokes() {
         painter: CanvasPainter(
           strokes,
           currentStroke,
+          solutionKanji: widget.solutionKanji
         ),
       ),
       ),
@@ -172,17 +167,53 @@ List<Map<String, dynamic>> convertirStrokes() {
 class CanvasPainter extends CustomPainter {
   final List<List<Offset>> strokes;
   final List<Offset> currentStroke;
+  final String? solutionKanji;
 
   CanvasPainter(
     this.strokes,
-    this.currentStroke);
+    this.currentStroke,
+    {this.solutionKanji});
 
   @override
   void paint(Canvas canvas, Size size) {
+    final canvasSize = size.shortestSide;
     final paint = Paint()
       ..color = Colors.black
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
+      
+    //test new
+    if (solutionKanji != null && solutionKanji!.isNotEmpty) {
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: solutionKanji,
+          style: TextStyle(
+            //fontSize: size.width * 0.6,
+            fontSize: canvasSize * 0.6,
+
+            color: Colors.grey.withOpacity(0.2), // ✅ transparente
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+
+      textPainter.layout();
+
+      final dx = (size.width - textPainter.width) / 2;
+      final dy = (size.height - textPainter.height) / 2;
+
+      final offset = Offset(
+        dx.clamp(0, size.width),
+        dy.clamp(0, size.height),
+      );
+
+
+      textPainter.paint(canvas, offset);
+    }
+    //end test new
+
+
 
     // Dibujar trazos terminados
     for (var stroke in strokes) {
