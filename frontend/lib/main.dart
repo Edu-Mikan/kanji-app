@@ -39,6 +39,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
   List<dynamic> lecciones = [];
   int indiceActual = 0;
 
+  bool mostrarFeedbackGrande = false;
+
   @override
   void initState() {
     super.initState();
@@ -163,12 +165,38 @@ void cargarLeccionActual() {
                     },
                   ),
           ),
+          // Expanded(
+          //   child: 
+          //     DrawingCanvas(
+          //       key: canvasKey,
+          //       solutionKanji: mostrarSolucion ? kanjiObjetivo : null
+          //     ),
+          // ),
           Expanded(
-            child: 
-              DrawingCanvas(
-                key: canvasKey,
-                solutionKanji: mostrarSolucion ? kanjiObjetivo : null
-              ),
+            child: Stack(
+              children: [
+                DrawingCanvas(
+                  key: canvasKey,
+                  solutionKanji: mostrarSolucion ? kanjiObjetivo : null,
+                ),
+
+                // ✅ MENSAJE GRANDE CENTRADO
+                if (mostrarFeedbackGrande)
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    child: const Center(
+                      child: Text(
+                        "🎉 ¡Muy bien! 🎉",
+                        style: TextStyle(
+                          fontSize: 48,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -210,18 +238,42 @@ void cargarLeccionActual() {
               String mensaje;
 
               if (score < 0.4) {
-                mensaje = "✅ Bien";
+                // mensaje = "✅ Bien";
 
+                // setState(() {
+                //   resultado = "Score: ${score.toStringAsFixed(2)}";
+                //   feedback = mensaje;
+                // });
+
+                // // ✅ CAMBIO AUTOMÁTICO SEGURO
+                // WidgetsBinding.instance.addPostFrameCallback((_) {
+                //   if (!mounted) return;
+                //   siguienteLeccion();
+                // });
+
+                
                 setState(() {
-                  resultado = "Score: ${score.toStringAsFixed(2)}";
-                  feedback = mensaje;
-                });
+                    resultado = "Score: ${score.toStringAsFixed(2)}";
+                    feedback = "✅ Bien";
+                    mostrarSolucion = false;
+                    mostrarFeedbackGrande = true;
+                  });
 
-                // ✅ CAMBIO AUTOMÁTICO SEGURO
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!mounted) return;
-                  siguienteLeccion();
-                });
+                  // ✅ esperamos un poco antes de cambiar
+                  Future.delayed(const Duration(milliseconds: 1000), () {
+                    if (!mounted) return;
+
+                    setState(() {
+                      mostrarFeedbackGrande = false;
+                    });
+
+                    // ✅ cambio seguro tras pintar el feedback
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      siguienteLeccion();
+                    });
+                  });
+
 
               } else if (score < 0.7) {
                 mensaje = "⚠️ Mejorable";
