@@ -73,6 +73,10 @@ flutter:
   assets:
     - assets/data/lecciones.json
 
+  fonts:
+      - family: NotoSansJP
+        fonts:
+          - asset: assets/fonts/NotoSansJP-VariableFont_wght.ttf
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a
