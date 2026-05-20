@@ -1,20 +1,16 @@
 [
   {
     "id": 1,
-    "frase": "日本語はむずかしいです。",
+    "frase": "日本語は〇しいです。",
     "target": {
-      "start": 4,
-      "length": 3,
       "lectura": "むずか",
       "kanji": "難"
     }
   },
   {
     "id": 2,
-    "frase": "はは痛いです。",
+    "frase": "〇は痛いです。",
     "target": {
-      "start": 0,
-      "length": 1,
       "lectura": "は",
       "kanji": "歯"
     }
