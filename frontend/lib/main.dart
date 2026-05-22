@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
@@ -44,6 +46,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
   String lecturaObjetivo = '';
   bool mostrarFeedbackGrande = false;
   bool mostrarFurigana = true;
+  Timer? _drawTimer;
+  bool _isValidating = false;
 
   @override
   void initState() {
@@ -66,7 +70,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
     if (lecciones.isEmpty) return;
 
     // ✅ limpiar canvas
-    canvasKey.currentState?.clear();
+    Future.delayed(const Duration(milliseconds: 50), () {
+      canvasKey.currentState?.clear();
+    });
 
     // ✅ avanzar índice
     if (indiceActual < lecciones.length - 1) {
@@ -74,6 +80,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
     } else {
       indiceActual = 0;
     }
+    //Cancelar el timer
+    _cancelTimer();
 
     // ✅ cargar nueva lección
     final leccion = lecciones[indiceActual];
@@ -93,24 +101,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
     });
   }
 
-  // void cargarLeccionActual() {
-  //   if (lecciones.isEmpty) return;
-
-  //   final leccion = lecciones[indiceActual];
-  //   final target = leccion['target'];
-
-  //   setState(() {
-  //     frase = leccion['frase'] ?? '';
-  //     start = target?['start'] ?? 0;
-  //     length = target?['length'] ?? 0;
-  //     kanjiObjetivo = target?['kanji'] ?? '';
-
-  //     resultado = '';
-  //     feedback = '';
-  //     mostrarSolucion = false;
-  //   });
-  // }
-
   void cargarLeccionActual() {
     if (lecciones.isEmpty) return;
 
@@ -126,6 +116,95 @@ class _CanvasScreenState extends State<CanvasScreen> {
       feedback = '';
       mostrarSolucion = false;
     });
+  }
+
+  void _onUserDraw() {
+    if (_isValidating) return;
+    // cancelar timer anterior
+    //_drawTimer?.cancel();
+    _cancelTimer();
+
+    // iniciar nuevo timer
+    _drawTimer = Timer(const Duration(milliseconds: 1500), () {
+      _autoValidar();
+    });
+  }
+
+  void _cancelTimer() {
+    _drawTimer?.cancel();
+    _drawTimer = null;
+  }
+
+  Future<void> _autoValidar() async {
+    if (_isValidating) return;
+
+    _isValidating = true;
+
+    try {
+      final strokes = canvasKey.currentState?.convertirStrokes();
+
+      if (strokes == null || strokes.isEmpty) return;
+
+      final url = Uri.parse('http://localhost:3000/recognize');
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "kanji": kanjiObjetivo,
+          "ink": {"strokes": strokes},
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Error HTTP: ${response.statusCode}');
+      }
+
+      final data = jsonDecode(response.body);
+      final score = data['score']?.toDouble();
+
+      if (score == null) return;
+
+      if (score <= 1.5) {
+        setState(() {
+          resultado = "Score: ${score.toStringAsFixed(2)}";
+          feedback = "Bien";
+          mostrarFeedbackGrande = true;
+        });
+
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (!mounted) return;
+
+          setState(() {
+            mostrarFeedbackGrande = false;
+          });
+
+          siguienteLeccion();
+        });
+      }
+      // else if (score < 0.7) {
+      //   setState(() {
+      //     resultado = "Score: ${score.toStringAsFixed(2)}";
+      //     feedback = "Mejorable";
+      //   });
+      // }
+      else {
+        _cancelTimer();
+
+        setState(() {
+          resultado = "Score: ${score.toStringAsFixed(2)}";
+          feedback = "Incorrecto";
+        });
+
+        Future.delayed(const Duration(milliseconds: 50), () {
+          canvasKey.currentState?.clear();
+        });
+      }
+    } catch (e) {
+      debugPrint("AUTO VALIDAR ERROR: $e");
+    } finally {
+      _isValidating = false;
+    }
   }
 
   Widget _buildFrase() {
@@ -198,7 +277,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
             child: Stack(
               children: [
                 // ✅ CANVAS BASE (primero)
-                DrawingCanvas(key: canvasKey, solutionKanji: null),
+                //DrawingCanvas(key: canvasKey, solutionKanji: null),
+                DrawingCanvas(
+                  key: canvasKey,
+                  solutionKanji: null,
+                  onDraw: _onUserDraw,
+                ),
 
                 // ✅ SVG ENCIMA CON OPACIDAD BAJA
                 if (mostrarSolucion)
@@ -271,7 +355,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
                 String mensaje;
 
-                if (score < 0.4) {
+                if (score <= 1.5) {
                   setState(() {
                     resultado = "Score: ${score.toStringAsFixed(2)}";
                     feedback = "Bien";
@@ -291,15 +375,24 @@ class _CanvasScreenState extends State<CanvasScreen> {
                       siguienteLeccion();
                     });
                   });
-                } else if (score < 0.7) {
-                  mensaje = "Mejorable";
-
-                  setState(() {
-                    resultado = "Score: ${score.toStringAsFixed(2)}";
-                    feedback = mensaje;
-                  });
-                } else {
+                }
+                // else if (score < 0.7) {
+                //   mensaje = "Mejorable";
+                //   setState(() {
+                //     resultado = "Score: ${score.toStringAsFixed(2)}";
+                //     feedback = mensaje;
+                //   });
+                // }
+                else {
                   mensaje = "Incorrecto";
+
+                  // ✅ detener validación futura
+                  _cancelTimer();
+
+                  // ✅ borrar canvas
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    canvasKey.currentState?.clear();
+                  });
 
                   setState(() {
                     resultado = "Score: ${score.toStringAsFixed(2)}";

@@ -62,7 +62,9 @@ List<Map<String, List<double>>> normalizeReference(List<dynamic> strokes) {
 
 class DrawingCanvas extends StatefulWidget {
   final String? solutionKanji;
-  const DrawingCanvas({super.key, this.solutionKanji});
+  final VoidCallback? onDraw;
+  //const DrawingCanvas({super.key, this.solutionKanji});
+  const DrawingCanvas({super.key, this.solutionKanji, this.onDraw});
 
   @override
   DrawingCanvasState createState() => DrawingCanvasState();
@@ -113,7 +115,7 @@ class DrawingCanvasState extends State<DrawingCanvas> {
       },
       onPanUpdate: (details) {
         final RenderBox box = context.findRenderObject() as RenderBox;
-
+        widget.onDraw?.call();
         setState(() {
           currentStroke.add(box.globalToLocal(details.globalPosition));
         });
