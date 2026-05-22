@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
 
 List<Map<String, List<double>>> normalizeReference(List<dynamic> strokes) {
   double minX = double.infinity;
@@ -127,8 +126,8 @@ class DrawingCanvasState extends State<DrawingCanvas> {
         //print('Número de strokes: ${strokes.length}');
         //print(strokes);
 
-        debugPrint('--- STROKES CONVERTIDOS ---');
-        debugPrint(jsonEncode(convertirStrokes()));
+        //debugPrint('--- STROKES CONVERTIDOS ---');
+        //debugPrint(jsonEncode(convertirStrokes()));
       },
       child: Container(
         color: Colors.grey[200],
