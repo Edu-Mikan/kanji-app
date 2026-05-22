@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
+import 'package:kanji_app/styles/app_text_styles.dart';
 import 'widgets/drawing_canvas.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -38,13 +39,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
   String frase = '';
   String kanjiObjetivo = '';
   bool mostrarSolucion = false;
-  //int start = 0;
-  //int length = 0;
   List<dynamic> lecciones = [];
   int indiceActual = 0;
   String lecturaObjetivo = '';
-
   bool mostrarFeedbackGrande = false;
+  bool mostrarFurigana = true;
 
   @override
   void initState() {
@@ -130,26 +129,30 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   Widget _buildFrase() {
-    final leccion = lecciones[indiceActual];
+    if (lecciones.isEmpty) {
+      return const SizedBox();
+    }
 
+    final leccion = lecciones[indiceActual];
     final tokens = leccion['tokens'];
 
     // ✅ fallback si todavía no tienes tokens en el JSON
 
     if (tokens == null || tokens.isEmpty) {
-      return Text(frase, style: const TextStyle(fontSize: 24));
+      return Text(frase, style: AppTextStyles.jpLarge);
     }
 
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: const TextStyle(fontSize: 24, color: Colors.black),
+        style: AppTextStyles.jpLarge,
         children: (tokens as List).map<InlineSpan>((token) {
           final text = token['text'];
           final reading = token['reading'];
+          final esHueco = text == "〇";
 
-          if (reading == null) {
-            return TextSpan(text: text);
+          if (reading == null || (!mostrarFurigana && !esHueco)) {
+            return TextSpan(text: text, style: AppTextStyles.jpLarge);
           }
 
           return WidgetSpan(
@@ -174,16 +177,23 @@ class _CanvasScreenState extends State<CanvasScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
+            child: lecciones.isEmpty
+                ? const SizedBox()
+                : Column(
+                    children: [
+                      _buildFrase(),
 
-            child: lecciones.isEmpty ? const SizedBox() : _buildFrase(),
+                      const SizedBox(height: 8),
+
+                      Text(
+                        lecciones[indiceActual]['traduccion'] ?? '',
+                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
           ),
-          // Expanded(
-          //   child:
-          //     DrawingCanvas(
-          //       key: canvasKey,
-          //       solutionKanji: mostrarSolucion ? kanjiObjetivo : null
-          //     ),
-          // ),
+
           Expanded(
             child: Stack(
               children: [
@@ -318,6 +328,15 @@ class _CanvasScreenState extends State<CanvasScreen> {
             },
             child: const Text('Mostrar solución'),
           ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                mostrarFurigana = !mostrarFurigana;
+              });
+            },
+            child: Text('Toggle Furigana'),
+          ),
+
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(

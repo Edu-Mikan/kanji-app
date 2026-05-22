@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kanji_app/styles/app_text_styles.dart';
 
 class FuriganaText extends StatelessWidget {
   final String text;
@@ -17,17 +18,11 @@ class FuriganaText extends StatelessWidget {
           children: [
             Transform.translate(
               offset: const Offset(0, -3),
-              child: Text(text, style: const TextStyle(fontSize: 24)),
+              child: Text(text, style: AppTextStyles.jpLarge),
             ),
             Positioned(
               top: -16,
-              child: Text(
-                reading,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              child: Text(reading, style: AppTextStyles.furigana),
             ),
           ],
         ),
