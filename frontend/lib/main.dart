@@ -240,92 +240,83 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
           ElevatedButton(
             onPressed: () async {
-              final strokes = canvasKey.currentState?.convertirStrokes();
+              try {
+                final strokes = canvasKey.currentState?.convertirStrokes();
 
-              if (strokes == null) return;
+                if (strokes == null) return;
 
-              final url = Uri.parse('http://localhost:3000/recognize');
+                final url = Uri.parse('http://localhost:3000/recognize');
 
-              final response = await http.post(
-                url,
-                headers: {'Content-Type': 'application/json'},
-                body: jsonEncode({
-                  "kanji": kanjiObjetivo,
-                  "ink": {"strokes": strokes},
-                }),
-              );
+                final response = await http.post(
+                  url,
+                  headers: {'Content-Type': 'application/json'},
+                  body: jsonEncode({
+                    "kanji": kanjiObjetivo,
+                    "ink": {"strokes": strokes},
+                  }),
+                );
 
-              final data = jsonDecode(response.body);
-              final score = data['score'];
-              //final strokesSolucion = data['strokes'];
+                // ✅ comprobar respuesta
+                if (response.statusCode != 200) {
+                  throw Exception('Error HTTP: ${response.statusCode}');
+                }
 
-              String mensaje;
+                // ✅ intentar parsear JSON
+                final data = jsonDecode(response.body);
 
-              if (score < 0.4) {
-                // mensaje = "✅ Bien";
+                final scoreRaw = data['score'];
 
-                // setState(() {
-                //   resultado = "Score: ${score.toStringAsFixed(2)}";
-                //   feedback = mensaje;
-                // });
+                if (scoreRaw == null) {
+                  throw Exception('No viene score en respuesta');
+                }
 
-                // // ✅ CAMBIO AUTOMÁTICO SEGURO
-                // WidgetsBinding.instance.addPostFrameCallback((_) {
-                //   if (!mounted) return;
-                //   siguienteLeccion();
-                // });
+                final score = scoreRaw.toDouble();
 
-                setState(() {
-                  resultado = "Score: ${score.toStringAsFixed(2)}";
-                  feedback = "Bien";
-                  mostrarSolucion = false;
-                  mostrarFeedbackGrande = true;
-                });
+                String mensaje;
 
-                // ✅ esperamos un poco antes de cambiar
-                Future.delayed(const Duration(milliseconds: 1000), () {
-                  if (!mounted) return;
+                if (score < 0.4) {
+                  setState(() {
+                    resultado = "Score: ${score.toStringAsFixed(2)}";
+                    feedback = "Bien";
+                    mostrarSolucion = false;
+                    mostrarFeedbackGrande = true;
+                  });
+
+                  Future.delayed(const Duration(milliseconds: 1000), () {
+                    if (!mounted) return;
+
+                    setState(() {
+                      mostrarFeedbackGrande = false;
+                    });
+
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      siguienteLeccion();
+                    });
+                  });
+                } else if (score < 0.7) {
+                  mensaje = "Mejorable";
 
                   setState(() {
-                    mostrarFeedbackGrande = false;
+                    resultado = "Score: ${score.toStringAsFixed(2)}";
+                    feedback = mensaje;
                   });
+                } else {
+                  mensaje = "Incorrecto";
 
-                  // ✅ cambio seguro tras pintar el feedback
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!mounted) return;
-                    siguienteLeccion();
+                  setState(() {
+                    resultado = "Score: ${score.toStringAsFixed(2)}";
+                    feedback = mensaje;
                   });
-                });
-              } else if (score < 0.7) {
-                mensaje = "Mejorable";
+                }
+              } catch (e) {
+                // ✅ IMPORTANTE: ver error real
+                debugPrint("ERROR VALIDAR: $e");
 
                 setState(() {
-                  resultado = "Score: ${score.toStringAsFixed(2)}";
-                  feedback = mensaje;
-                  //mostrarSolucion = true;
-                });
-              } else {
-                mensaje = "Incorrecto";
-
-                setState(() {
-                  resultado = "Score: ${score.toStringAsFixed(2)}";
-                  feedback = mensaje;
-                  //mostrarSolucion = true;
+                  feedback = "Error al validar";
                 });
               }
-
-              // setState(() {
-              //   resultado = "Score: ${score.toStringAsFixed(2)}";
-              //   feedback = mensaje;
-              //   //strokesReferencia = strokesSolucion;
-
-              //   if (score < 0.4) {
-              //     kanjiMostrado = "";
-              //   } else {
-              //     kanjiMostrado = kanjiObjetivo;
-              //   }
-
-              // });
             },
             child: const Text('Validar'),
           ),

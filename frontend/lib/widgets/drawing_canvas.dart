@@ -153,8 +153,67 @@ class CanvasPainter extends CustomPainter {
 
   CanvasPainter(this.strokes, this.currentStroke, {this.solutionKanji});
 
+  void _drawDashedLine(
+    Canvas canvas,
+    Offset p1,
+    Offset p2,
+    Paint paint,
+    double dashWidth,
+    double dashSpace,
+  ) {
+    final totalLength = (p2 - p1).distance;
+    final direction = (p2 - p1) / totalLength;
+
+    double distance = 0;
+
+    while (distance < totalLength) {
+      final start = p1 + direction * distance;
+      final end = p1 + direction * (distance + dashWidth);
+
+      canvas.drawLine(start, end, paint);
+
+      distance += dashWidth + dashSpace;
+    }
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
+    // ✅ 1. FONDO BLANCO
+    final backgroundPaint = Paint()..color = Colors.white;
+
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      backgroundPaint,
+    );
+
+    // ✅ 2. LÍNEAS GUÍA (punteadas)
+    final guidePaint = Paint()
+      ..color = Colors.grey.withValues(alpha: 0.5)
+      ..strokeWidth = 1;
+
+    const dashWidth = 3.0;
+    const dashSpace = 3.0;
+
+    // ✅ línea vertical
+    _drawDashedLine(
+      canvas,
+      Offset(size.width / 2, 0),
+      Offset(size.width / 2, size.height),
+      guidePaint,
+      dashWidth,
+      dashSpace,
+    );
+
+    // ✅ línea horizontal
+    _drawDashedLine(
+      canvas,
+      Offset(0, size.height / 2),
+      Offset(size.width, size.height / 2),
+      guidePaint,
+      dashWidth,
+      dashSpace,
+    );
+
     final canvasSize = size.shortestSide;
     final paint = Paint()
       ..color = Colors.black
