@@ -1,18 +1,21 @@
 [
   {
     "id": 1,
+
     "frase": "日本語は〇しいです。",
+    "traduccion": "El japonés es difícil.",
+
+    "tokens": [
+      { "text": "日本語", "reading": "にほんご" },
+      { "text": "は" },
+      { "text": "〇", "reading": "むずか" },
+      { "text": "しい" },
+      { "text": "です。" }
+    ],
+
     "target": {
-      "lectura": "むずか",
-      "kanji": "難"
-    }
-  },
-  {
-    "id": 2,
-    "frase": "〇は痛いです。",
-    "target": {
-      "lectura": "は",
-      "kanji": "歯"
+      "kanji": "難",
+      "reading": "むずか"
     }
   }
 ]

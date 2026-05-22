@@ -5,6 +5,7 @@ import 'widgets/drawing_canvas.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'widgets/kanji_svg.dart';
+import 'widgets/furigana_text.dart';
 
 void main() {
   runApp(const MyApp());
@@ -129,9 +130,13 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   Widget _buildFrase() {
-    final parts = frase.split('〇');
+    final leccion = lecciones[indiceActual];
 
-    if (parts.length != 2) {
+    final tokens = leccion['tokens'];
+
+    // ✅ fallback si todavía no tienes tokens en el JSON
+
+    if (tokens == null || tokens.isEmpty) {
       return Text(frase, style: const TextStyle(fontSize: 24));
     }
 
@@ -139,48 +144,19 @@ class _CanvasScreenState extends State<CanvasScreen> {
       textAlign: TextAlign.center,
       text: TextSpan(
         style: const TextStyle(fontSize: 24, color: Colors.black),
-        children: [
-          TextSpan(text: parts[0]),
+        children: (tokens as List).map<InlineSpan>((token) {
+          final text = token['text'];
+          final reading = token['reading'];
 
-          WidgetSpan(
+          if (reading == null) {
+            return TextSpan(text: text);
+          }
+
+          return WidgetSpan(
             alignment: PlaceholderAlignment.middle,
-            baseline: TextBaseline.ideographic,
-            child: SizedBox(
-              width: 28,
-              height: 36, // 👈 altura total del bloque
-              child: Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  // ✅ círculo (parte base inline)
-                  Transform.translate(
-                    offset: const Offset(0, -3), // 👈 🔥 ajuste vertical CLAVE
-                    child: const Text(
-                      "〇",
-                      style: TextStyle(fontSize: 26, color: Colors.black),
-                    ),
-                  ),
-
-                  // ✅ furigana flotante arriba
-                  Positioned(
-                    top: -16, // ajustable
-                    child: IgnorePointer(
-                      child: Text(
-                        lecturaObjetivo,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          TextSpan(text: parts[1]),
-        ],
+            child: FuriganaText(text: text, reading: reading),
+          );
+        }).toList(),
       ),
     );
   }
@@ -199,7 +175,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
 
-            child: frase.isEmpty ? const SizedBox() : _buildFrase(),
+            child: lecciones.isEmpty ? const SizedBox() : _buildFrase(),
           ),
           // Expanded(
           //   child:
