@@ -17,7 +17,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   Future<void> _initApp() async {
     // ✅ pequeño delay para asegurar render
-    await Future.delayed(const Duration(milliseconds: 3500));
+    await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted) return;
 
