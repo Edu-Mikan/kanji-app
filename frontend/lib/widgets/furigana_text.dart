@@ -10,21 +10,24 @@ class FuriganaText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IntrinsicWidth(
-      child: SizedBox(
-        height: 48,
-        child: Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.center,
-          children: [
-            Transform.translate(
-              offset: const Offset(0, -3),
-              child: Text(text, style: AppTextStyles.jpLarge),
-            ),
-            Positioned(
-              top: -16,
-              child: Text(reading, style: AppTextStyles.furigana),
-            ),
-          ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 1),
+        child: SizedBox(
+          height: 48,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Transform.translate(
+                offset: const Offset(0, -3),
+                child: Text(text, style: AppTextStyles.jpLarge),
+              ),
+              Positioned(
+                top: -16,
+                child: Text(reading, style: AppTextStyles.furigana),
+              ),
+            ],
+          ),
         ),
       ),
     );
