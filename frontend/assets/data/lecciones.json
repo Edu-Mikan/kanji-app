@@ -7,12 +7,38 @@
       { "text": "日本語", "reading": "にほんご" },
       { "text": "は" },
       { "text": "〇", "reading": "むずか" },
-      { "text": "しい" },
-      { "text": "です。" }
+      { "text": "しいです。" }
     ],
     "target": {
       "kanji": "難",
       "reading": "むずか"
+    }
+  },
+  {
+    "id": 2,
+    "frase": "漢字を勉〇しています。",
+    "traduccion": "Estoy estudiando kanjis.",
+    "tokens": [
+      { "text": "漢字", "reading": "かんじ" },
+      { "text": "を" },
+      { "text": "勉〇", "reading": "べんきょう" },
+      { "text": "しています。" }
+    ],
+    "target": {
+      "kanji": "強",
+      "reading": "きょう"
+    }
+  },
+    {
+    "id": 3,
+    "frase": "A",
+    "traduccion": "escribe A en hiragana",
+    "tokens": [
+      { "text": "〇"}
+    ],
+    "target": {
+      "kanji": "あ",
+      "reading": "あ"
     }
   }
 ]
