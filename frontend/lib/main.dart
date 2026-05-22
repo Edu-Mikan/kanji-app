@@ -4,6 +4,7 @@ import 'package:kanji_app/screens/loading_screen.dart';
 import 'widgets/drawing_canvas.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'widgets/kanji_svg.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,9 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(
-        fontFamily: 'NotoSansJP',
-      ),
+      theme: ThemeData(fontFamily: 'NotoSansJP'),
       home: const LoadingScreen(),
     );
   }
@@ -53,131 +52,132 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   Future<void> cargarLeccion() async {
-  final String jsonString =
-      await rootBundle.loadString('assets/data/lecciones.json');
+    final String jsonString = await rootBundle.loadString(
+      'assets/data/lecciones.json',
+    );
 
-  final data = jsonDecode(jsonString);
-  lecciones = data;
+    final data = jsonDecode(jsonString);
+    lecciones = data;
 
-  cargarLeccionActual();
-}
-
-void siguienteLeccion() {
-  if (lecciones.isEmpty) return;
-
-  // ✅ limpiar canvas
-  canvasKey.currentState?.clear();
-
-  // ✅ avanzar índice
-  if (indiceActual < lecciones.length - 1) {
-    indiceActual++;
-  } else {
-    indiceActual = 0;
+    cargarLeccionActual();
   }
 
-  // ✅ cargar nueva lección
-  final leccion = lecciones[indiceActual];
-  final target = leccion['target'];
+  void siguienteLeccion() {
+    if (lecciones.isEmpty) return;
 
-  setState(() {
-    frase = leccion['frase'] ?? '';
-    //start = target?['start'] ?? 0;
-    //length = target?['length'] ?? 0;
-    kanjiObjetivo = target?['kanji'] ?? '';
+    // ✅ limpiar canvas
+    canvasKey.currentState?.clear();
 
-    resultado = '';
-    feedback = '';
-    mostrarSolucion = false;
-  });
-}
+    // ✅ avanzar índice
+    if (indiceActual < lecciones.length - 1) {
+      indiceActual++;
+    } else {
+      indiceActual = 0;
+    }
 
-// void cargarLeccionActual() {
-//   if (lecciones.isEmpty) return;
+    // ✅ cargar nueva lección
+    final leccion = lecciones[indiceActual];
+    final target = leccion['target'];
 
-//   final leccion = lecciones[indiceActual];
-//   final target = leccion['target'];
+    setState(() {
+      frase = leccion['frase'] ?? '';
+      //start = target?['start'] ?? 0;
+      //length = target?['length'] ?? 0;
+      kanjiObjetivo = target?['kanji'] ?? '';
+      mostrarSolucion = false;
+      lecturaObjetivo = target?['lectura'] ?? '';
 
-//   setState(() {
-//     frase = leccion['frase'] ?? '';
-//     start = target?['start'] ?? 0;
-//     length = target?['length'] ?? 0;
-//     kanjiObjetivo = target?['kanji'] ?? '';
+      resultado = '';
+      feedback = '';
+      mostrarSolucion = false;
+    });
+  }
 
-//     resultado = '';
-//     feedback = '';
-//     mostrarSolucion = false;
-//   });
-// }
+  // void cargarLeccionActual() {
+  //   if (lecciones.isEmpty) return;
 
-void cargarLeccionActual() {
-  if (lecciones.isEmpty) return;
+  //   final leccion = lecciones[indiceActual];
+  //   final target = leccion['target'];
 
-  final leccion = lecciones[indiceActual];
-  final target = leccion['target'];
+  //   setState(() {
+  //     frase = leccion['frase'] ?? '';
+  //     start = target?['start'] ?? 0;
+  //     length = target?['length'] ?? 0;
+  //     kanjiObjetivo = target?['kanji'] ?? '';
 
-  setState(() {
-    frase = leccion['frase'] ?? '';
-    kanjiObjetivo = target?['kanji'] ?? '';
-    lecturaObjetivo = target?['lectura'] ?? '';
+  //     resultado = '';
+  //     feedback = '';
+  //     mostrarSolucion = false;
+  //   });
+  // }
 
-    resultado = '';
-    feedback = '';
-    mostrarSolucion = false;
-  });
-}
+  void cargarLeccionActual() {
+    if (lecciones.isEmpty) return;
 
-Widget _buildFrase() {
-  final parts = frase.split('〇');
+    final leccion = lecciones[indiceActual];
+    final target = leccion['target'];
 
-  if (parts.length != 2) {
-    return Text(
-      frase,
-      style: const TextStyle(fontSize: 24),
+    setState(() {
+      frase = leccion['frase'] ?? '';
+      kanjiObjetivo = target?['kanji'] ?? '';
+      lecturaObjetivo = target?['lectura'] ?? '';
+
+      resultado = '';
+      feedback = '';
+      mostrarSolucion = false;
+    });
+  }
+
+  Widget _buildFrase() {
+    final parts = frase.split('〇');
+
+    if (parts.length != 2) {
+      return Text(frase, style: const TextStyle(fontSize: 24));
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.end,
+      children: [
+        Text(parts[0], style: const TextStyle(fontSize: 24)),
+
+        // ✅ BLOQUE CORRECTO
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // ✅ SIN ancho fijo (clave)
+              Text(
+                lecturaObjetivo,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 2),
+
+              // ✅ círculo define visual, no el ancho
+              const Text(
+                "〇",
+                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+
+        Text(parts[1], style: const TextStyle(fontSize: 24)),
+      ],
     );
   }
 
-  return Wrap(
-    alignment: WrapAlignment.center,
-    crossAxisAlignment: WrapCrossAlignment.end,
-    children: [
-      Text(parts[0], style: const TextStyle(fontSize: 24)),
-
-      // ✅ BLOQUE CORRECTO
-      Container(
-        margin: const EdgeInsets.symmetric(horizontal: 2),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // ✅ SIN ancho fijo (clave)
-            Text(
-              lecturaObjetivo,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 2),
-
-            // ✅ círculo define visual, no el ancho
-            const Text(
-              "〇",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      Text(parts[1], style: const TextStyle(fontSize: 24)),
-    ],
-  );
-}
-
+  String kanjiToSvgFileName(String kanji) {
+    final code = kanji.runes.first;
+    return code.toRadixString(16).padLeft(5, '0');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -187,14 +187,11 @@ Widget _buildFrase() {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            
-child: frase.isEmpty
-    ? const SizedBox()
-    : _buildFrase(),
 
+            child: frase.isEmpty ? const SizedBox() : _buildFrase(),
           ),
           // Expanded(
-          //   child: 
+          //   child:
           //     DrawingCanvas(
           //       key: canvasKey,
           //       solutionKanji: mostrarSolucion ? kanjiObjetivo : null
@@ -203,25 +200,27 @@ child: frase.isEmpty
           Expanded(
             child: Stack(
               children: [
-                DrawingCanvas(
-                  key: canvasKey,
-                  solutionKanji: mostrarSolucion ? kanjiObjetivo : null,
-                ),
+                // ✅ CANVAS BASE (primero)
+                DrawingCanvas(key: canvasKey, solutionKanji: null),
 
-                // ✅ MENSAJE GRANDE CENTRADO
+                // ✅ SVG ENCIMA CON OPACIDAD BAJA
+                if (mostrarSolucion)
+                  IgnorePointer(
+                    // 👈 MUY IMPORTANTE
+                    child: Center(
+                      child: KanjiSvg(
+                        kanji: kanjiObjetivo,
+                        size: 250,
+                        opacity: 0.15,
+                      ),
+                    ),
+                  ),
+
+                // ✅ overlay feedback
                 if (mostrarFeedbackGrande)
                   Container(
                     color: Colors.black.withValues(alpha: 0.3),
-                    child: const Center(
-                      child: Text(
-                        "🎉 ¡Muy bien! 🎉",
-                        style: TextStyle(
-                          fontSize: 48,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    child: const Center(child: Text("🎉 ¡Muy bien! 🎉")),
                   ),
               ],
             ),
@@ -231,18 +230,17 @@ child: frase.isEmpty
               canvasKey.currentState?.clear();
 
               setState(() {
-                  mostrarSolucion = false;
-                  resultado = '';
-                  feedback = '';
-                });
+                mostrarSolucion = false;
+                resultado = '';
+                feedback = '';
+              });
             },
             child: const Text('Borrar'),
           ),
 
           ElevatedButton(
             onPressed: () async {
-              final strokes =
-                  canvasKey.currentState?.convertirStrokes();
+              final strokes = canvasKey.currentState?.convertirStrokes();
 
               if (strokes == null) return;
 
@@ -253,9 +251,7 @@ child: frase.isEmpty
                 headers: {'Content-Type': 'application/json'},
                 body: jsonEncode({
                   "kanji": kanjiObjetivo,
-                  "ink": {
-                    "strokes": strokes,
-                  }
+                  "ink": {"strokes": strokes},
                 }),
               );
 
@@ -279,30 +275,27 @@ child: frase.isEmpty
                 //   siguienteLeccion();
                 // });
 
-                
                 setState(() {
-                    resultado = "Score: ${score.toStringAsFixed(2)}";
-                    feedback = "Bien";
-                    mostrarSolucion = false;
-                    mostrarFeedbackGrande = true;
+                  resultado = "Score: ${score.toStringAsFixed(2)}";
+                  feedback = "Bien";
+                  mostrarSolucion = false;
+                  mostrarFeedbackGrande = true;
+                });
+
+                // ✅ esperamos un poco antes de cambiar
+                Future.delayed(const Duration(milliseconds: 1000), () {
+                  if (!mounted) return;
+
+                  setState(() {
+                    mostrarFeedbackGrande = false;
                   });
 
-                  // ✅ esperamos un poco antes de cambiar
-                  Future.delayed(const Duration(milliseconds: 1000), () {
+                  // ✅ cambio seguro tras pintar el feedback
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted) return;
-
-                    setState(() {
-                      mostrarFeedbackGrande = false;
-                    });
-
-                    // ✅ cambio seguro tras pintar el feedback
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      siguienteLeccion();
-                    });
+                    siguienteLeccion();
                   });
-
-
+                });
               } else if (score < 0.7) {
                 mensaje = "Mejorable";
 
@@ -311,7 +304,6 @@ child: frase.isEmpty
                   feedback = mensaje;
                   //mostrarSolucion = true;
                 });
-
               } else {
                 mensaje = "Incorrecto";
 
@@ -326,7 +318,7 @@ child: frase.isEmpty
               //   resultado = "Score: ${score.toStringAsFixed(2)}";
               //   feedback = mensaje;
               //   //strokesReferencia = strokesSolucion;
-                
+
               //   if (score < 0.4) {
               //     kanjiMostrado = "";
               //   } else {
@@ -343,7 +335,7 @@ child: frase.isEmpty
               setState(() {
                 mostrarSolucion = true;
                 resultado = '';
-                  feedback = '';
+                feedback = '';
               });
             },
             child: const Text('Mostrar solución'),
@@ -352,10 +344,7 @@ child: frase.isEmpty
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                Text(
-                  resultado,
-                  style: const TextStyle(fontSize: 20),
-                ),
+                Text(resultado, style: const TextStyle(fontSize: 20)),
 
                 const SizedBox(height: 8),
                 Text(
@@ -369,7 +358,7 @@ child: frase.isEmpty
             ),
           ),
         ],
-      )
+      ),
     );
   }
 }
