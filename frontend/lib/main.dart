@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
@@ -48,6 +47,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
   bool mostrarFurigana = true;
   Timer? _drawTimer;
   bool _isValidating = false;
+
+  String kanjiResultado = '';
+  bool mostrarKanjiEnFrase = false;
 
   @override
   void initState() {
@@ -98,6 +100,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
       resultado = '';
       feedback = '';
       mostrarSolucion = false;
+
+      kanjiResultado = '';
+      mostrarKanjiEnFrase = false;
     });
   }
 
@@ -170,6 +175,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
           resultado = "Score: ${score.toStringAsFixed(2)}";
           feedback = "Bien";
           mostrarFeedbackGrande = true;
+
+          kanjiResultado = kanjiObjetivo;
+          mostrarKanjiEnFrase = true;
         });
 
         Future.delayed(const Duration(milliseconds: 1000), () {
@@ -218,7 +226,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
     // ✅ fallback si todavía no tienes tokens en el JSON
 
     if (tokens == null || tokens.isEmpty) {
-      return Text(frase, style: AppTextStyles.jpLarge);
+      return Text(
+        frase,
+        style: AppTextStyles.jpLarge,
+        textAlign: TextAlign.center,
+      );
     }
 
     return RichText(
@@ -226,9 +238,18 @@ class _CanvasScreenState extends State<CanvasScreen> {
       text: TextSpan(
         style: AppTextStyles.jpLarge,
         children: (tokens as List).map<InlineSpan>((token) {
-          final text = token['text'];
+          // final text = token['text'];
+          // final reading = token['reading'];
+          // final esHueco = text == "〇";
+
+          String text = token['text'];
           final reading = token['reading'];
           final esHueco = text == "〇";
+
+          // ✅ sustituir si se ha acertado
+          if (esHueco && mostrarKanjiEnFrase) {
+            text = kanjiResultado;
+          }
 
           if (reading == null || (!mostrarFurigana && !esHueco)) {
             return TextSpan(text: text, style: AppTextStyles.jpLarge);
@@ -277,13 +298,26 @@ class _CanvasScreenState extends State<CanvasScreen> {
             child: Stack(
               children: [
                 // ✅ CANVAS BASE (primero)
-                //DrawingCanvas(key: canvasKey, solutionKanji: null),
                 DrawingCanvas(
                   key: canvasKey,
                   solutionKanji: null,
                   onDraw: _onUserDraw,
                 ),
-
+                // ✅ kanji resultado (esquina superior derecha)
+                if (kanjiResultado.isNotEmpty)
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Text(
+                      kanjiResultado,
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontFamily: 'NotoSansJP',
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ),
                 // ✅ SVG ENCIMA CON OPACIDAD BAJA
                 if (mostrarSolucion)
                   IgnorePointer(
