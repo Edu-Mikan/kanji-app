@@ -1,14 +1,8 @@
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs');
+const express = require("express");
+const cors = require("cors");
+const fs = require("fs");
 
-
-
-const kanjiDataset = JSON.parse(
-  fs.readFileSync('./kanji_full.json', 'utf-8')
-);
-
-
+const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
 
 const app = express();
 app.use(cors());
@@ -17,27 +11,28 @@ app.use(express.json());
 const PORT = 3000;
 
 function normalizeStrokes(strokes) {
-  let minX = Infinity, minY = Infinity;
-  let maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity;
+  let maxX = -Infinity,
+    maxY = -Infinity;
 
-  strokes.forEach(stroke => {
-    stroke.x.forEach(x => {
+  strokes.forEach((stroke) => {
+    stroke.x.forEach((x) => {
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
     });
-    stroke.y.forEach(y => {
+    stroke.y.forEach((y) => {
       if (y < minY) minY = y;
       if (y > maxY) maxY = y;
     });
   });
 
   const size = Math.max(maxX - minX, maxY - minY);
-  
-  return strokes.map(stroke => ({
-    x: stroke.x.map(x => (x - minX) / size),
-    y: stroke.y.map(y => (y - minY) / size),
-  }));
 
+  return strokes.map((stroke) => ({
+    x: stroke.x.map((x) => (x - minX) / size),
+    y: stroke.y.map((y) => (y - minY) / size),
+  }));
 }
 
 // function compareStrokes(user, reference) {
@@ -74,7 +69,7 @@ function normalizeStrokes(strokes) {
 function ordenarStroke(stroke) {
   const points = stroke.x.map((x, i) => ({
     x,
-    y: stroke.y[i]
+    y: stroke.y[i],
   }));
 
   if (points.length < 2) return stroke;
@@ -103,18 +98,18 @@ function ordenarStroke(stroke) {
   }
 
   return {
-    x: ordered.map(p => p.x),
-    y: ordered.map(p => p.y)
+    x: ordered.map((p) => p.x),
+    y: ordered.map((p) => p.y),
   };
 }
 
 function compareStrokes(user, reference) {
   let total = 0;
 
-  user.forEach(userStroke => {
+  user.forEach((userStroke) => {
     let bestScore = Infinity;
 
-    reference.forEach(refStroke => {
+    reference.forEach((refStroke) => {
       const len = Math.min(userStroke.x.length, refStroke.x.length);
 
       let score = 0;
@@ -140,10 +135,8 @@ function compareStrokes(user, reference) {
   // penalización por número de strokes
   const strokePenalty = Math.abs(user.length - reference.length);
 
-  
   // 🔥 divide por nº de strokes para no inflar
   finalScore = finalScore / Math.sqrt(reference.length);
-
 
   finalScore += strokePenalty * 0.6;
 
@@ -177,51 +170,46 @@ function resampleStroke(stroke, n = 20) {
   return { x: newX, y: newY };
 }
 
-
 function alignStrokes(user, reference) {
   if (!user || user.length === 0) return user;
   if (!reference || reference.length === 0) return user;
 
   if (!user[0] || !user[0].x || user[0].x.length === 0) return user;
-  if (!reference[0] || !reference[0].x || reference[0].x.length === 0) return user;
+  if (!reference[0] || !reference[0].x || reference[0].x.length === 0)
+    return user;
 
   const offsetX = user[0].x[0] - reference[0].x[0];
   const offsetY = user[0].y[0] - reference[0].y[0];
 
-  return user.map(stroke => ({
-    x: stroke.x.map(x => x - offsetX),
-    y: stroke.y.map(y => y - offsetY),
+  return user.map((stroke) => ({
+    x: stroke.x.map((x) => x - offsetX),
+    y: stroke.y.map((y) => y - offsetY),
   }));
 }
-
-
 
 function isValidKanji(strokes) {
   return (
     strokes &&
     strokes.length > 0 &&
-    strokes.every(s => s.x.length > 0 && s.y.length > 0)
+    strokes.every((s) => s.x.length > 0 && s.y.length > 0)
   );
 }
-
 
 const referenceKanji = [
   // horizontal
   {
     x: [0.2, 0.8],
-    y: [0.5, 0.5]
+    y: [0.5, 0.5],
   },
   // vertical
   {
     x: [0.5, 0.5],
-    y: [0.2, 0.8]
-  }
+    y: [0.2, 0.8],
+  },
 ];
 
-
-app.post('/recognize', async (req, res) => {
+app.post("/recognize", async (req, res) => {
   try {
-
     const strokes = req.body.ink.strokes;
 
     const targetKanji = req.body.kanji || "難";
@@ -229,35 +217,34 @@ app.post('/recognize', async (req, res) => {
 
     const normalized = normalizeStrokes(strokes);
 
-    const resampled = normalized.map(s => resampleStroke(s, 20));
+    const resampled = normalized.map((s) => resampleStroke(s, 20));
 
     // ✅ 🔥 FILTRO AQUÍ
-    const filtered = resampled.filter(s => s.x.length > 5);
+    const filtered = resampled.filter((s) => s.x.length > 5);
 
-    const referenceResampled = referenceKanji.map(s =>
+    const referenceResampled = referenceKanji.map((s) =>
       //resampleStroke(s, 20)
-      ordenarStroke(resampleStroke(s, 20))
+      ordenarStroke(resampleStroke(s, 20)),
     );
 
-    const cleaned = referenceResampled.filter(s => s.x.length > 5);
+    const cleaned = referenceResampled.filter((s) => s.x.length > 5);
 
-    
-if (!filtered || filtered.length === 0) {
-  console.log("⚠️ Usuario sin strokes válidos");
-  return res.send({
-    kanji: targetKanji,
-    score: 999
-  });
-}
+    if (!filtered || filtered.length === 0) {
+      console.log("⚠️ Usuario sin strokes válidos");
+      return res.send({
+        kanji: targetKanji,
+        score: 999,
+      });
+    }
 
-if (!cleaned || cleaned.length === 0) {
-  console.log("⚠️ Dataset sin strokes válidos");
-  return res.send({
-    kanji: targetKanji,
-    score: 999,
-    strokes: []
-  });
-}
+    if (!cleaned || cleaned.length === 0) {
+      console.log("⚠️ Dataset sin strokes válidos");
+      return res.send({
+        kanji: targetKanji,
+        score: 999,
+        strokes: [],
+      });
+    }
 
     // ✅ 🔥 ALINEAR CON FILTERED
     const aligned = alignStrokes(filtered, referenceResampled);
@@ -271,15 +258,15 @@ if (!cleaned || cleaned.length === 0) {
       kanji: targetKanji,
       score: score,
       //strokes: referenceKanji
-      strokes: referenceResampled
+      strokes: referenceResampled,
     });
-
   } catch (error) {
     console.error(error);
-    res.status(500).send('Error');
+    res.status(500).send("Error");
   }
 });
 
+app.use("/kanji_svg", express.static("kanji_svg"));
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -9,7 +9,6 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -22,9 +21,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const CanvasScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const CanvasScreen()));
   }
 
   @override
@@ -34,23 +33,16 @@ class _LoadingScreenState extends State<LoadingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            
             Image.asset(
               '../assets/images/loading_image_kanji_kun.PNG',
               width: 120,
             ),
             Text(
               "漢字くん",
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Text(
-              "Cargando aplicación...",
-              style: TextStyle(fontSize: 18),
-            ),
+            Text("Cargando aplicación...", style: TextStyle(fontSize: 18)),
             SizedBox(height: 24),
             CircularProgressIndicator(),
           ],

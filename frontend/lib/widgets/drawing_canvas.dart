@@ -49,9 +49,7 @@ List<Map<String, List<double>>> normalizeReference(List<dynamic> strokes) {
     }
   }
 
-  final size = (maxX - minX) > (maxY - minY)
-      ? (maxX - minX)
-      : (maxY - minY);
+  final size = (maxX - minX) > (maxY - minY) ? (maxX - minX) : (maxY - minY);
 
   if (size == 0) return cleaned;
 
@@ -65,20 +63,15 @@ List<Map<String, List<double>>> normalizeReference(List<dynamic> strokes) {
 
 class DrawingCanvas extends StatefulWidget {
   final String? solutionKanji;
-  const DrawingCanvas({
-    super.key,
-    this.solutionKanji,
-  });
+  const DrawingCanvas({super.key, this.solutionKanji});
 
   @override
   DrawingCanvasState createState() => DrawingCanvasState();
 }
 
 class DrawingCanvasState extends State<DrawingCanvas> {
-  
   List<List<Offset>> strokes = [];
   List<Offset> currentStroke = [];
-
 
   void clear() {
     setState(() {
@@ -87,34 +80,29 @@ class DrawingCanvasState extends State<DrawingCanvas> {
     });
   }
 
-  
-List<Map<String, dynamic>> convertirStrokes() {
-  List<Map<String, dynamic>> resultado = [];
+  List<Map<String, dynamic>> convertirStrokes() {
+    List<Map<String, dynamic>> resultado = [];
 
-  final todos = [...strokes];
+    final todos = [...strokes];
 
-  if (currentStroke.isNotEmpty) {
-    todos.add(currentStroke);
-  }
-
-  for (var stroke in todos) {
-    List<double> xs = [];
-    List<double> ys = [];
-
-    for (var p in stroke) {
-      xs.add(p.dx);
-      ys.add(p.dy);
+    if (currentStroke.isNotEmpty) {
+      todos.add(currentStroke);
     }
 
-    resultado.add({
-      "x": xs,
-      "y": ys,
-    });
+    for (var stroke in todos) {
+      List<double> xs = [];
+      List<double> ys = [];
+
+      for (var p in stroke) {
+        xs.add(p.dx);
+        ys.add(p.dy);
+      }
+
+      resultado.add({"x": xs, "y": ys});
+    }
+
+    return resultado;
   }
-
-  return resultado;
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -122,17 +110,13 @@ List<Map<String, dynamic>> convertirStrokes() {
       onPanStart: (details) {
         final RenderBox box = context.findRenderObject() as RenderBox;
 
-        currentStroke = [
-          box.globalToLocal(details.globalPosition),
-        ];
+        currentStroke = [box.globalToLocal(details.globalPosition)];
       },
       onPanUpdate: (details) {
         final RenderBox box = context.findRenderObject() as RenderBox;
 
         setState(() {
-          currentStroke.add(
-            box.globalToLocal(details.globalPosition),
-          );
+          currentStroke.add(box.globalToLocal(details.globalPosition));
         });
       },
       onPanEnd: (_) {
@@ -142,37 +126,32 @@ List<Map<String, dynamic>> convertirStrokes() {
         });
         //print('Número de strokes: ${strokes.length}');
         //print(strokes);
-        
+
         debugPrint('--- STROKES CONVERTIDOS ---');
         debugPrint(jsonEncode(convertirStrokes()));
-
       },
       child: Container(
         color: Colors.grey[200],
         width: double.infinity,
         height: 400,
         child: CustomPaint(
-        painter: CanvasPainter(
-          strokes,
-          currentStroke,
-          solutionKanji: widget.solutionKanji
+          painter: CanvasPainter(
+            strokes,
+            currentStroke,
+            solutionKanji: widget.solutionKanji,
+          ),
         ),
-      ),
       ),
     );
   }
 }
-
 
 class CanvasPainter extends CustomPainter {
   final List<List<Offset>> strokes;
   final List<Offset> currentStroke;
   final String? solutionKanji;
 
-  CanvasPainter(
-    this.strokes,
-    this.currentStroke,
-    {this.solutionKanji});
+  CanvasPainter(this.strokes, this.currentStroke, {this.solutionKanji});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -181,7 +160,7 @@ class CanvasPainter extends CustomPainter {
       ..color = Colors.black
       ..strokeWidth = 5
       ..strokeCap = StrokeCap.round;
-      
+
     //test new
     if (solutionKanji != null && solutionKanji!.isNotEmpty) {
       final textPainter = TextPainter(
@@ -201,17 +180,11 @@ class CanvasPainter extends CustomPainter {
       final dx = (size.width - textPainter.width) / 2;
       final dy = (size.height - textPainter.height) / 2;
 
-      final offset = Offset(
-        dx.clamp(0, size.width),
-        dy.clamp(0, size.height),
-      );
-
+      final offset = Offset(dx.clamp(0, size.width), dy.clamp(0, size.height));
 
       textPainter.paint(canvas, offset);
     }
     //end test new
-
-
 
     // Dibujar trazos terminados
     for (var stroke in strokes) {
