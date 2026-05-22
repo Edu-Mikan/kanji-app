@@ -135,42 +135,53 @@ class _CanvasScreenState extends State<CanvasScreen> {
       return Text(frase, style: const TextStyle(fontSize: 24));
     }
 
-    return Wrap(
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.end,
-      children: [
-        Text(parts[0], style: const TextStyle(fontSize: 24)),
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: const TextStyle(fontSize: 24, color: Colors.black),
+        children: [
+          TextSpan(text: parts[0]),
 
-        // ✅ BLOQUE CORRECTO
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // ✅ SIN ancho fijo (clave)
-              Text(
-                lecturaObjetivo,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
+          WidgetSpan(
+            alignment: PlaceholderAlignment.middle,
+            baseline: TextBaseline.ideographic,
+            child: SizedBox(
+              width: 28,
+              height: 36, // 👈 altura total del bloque
+              child: Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  // ✅ círculo (parte base inline)
+                  Transform.translate(
+                    offset: const Offset(0, -3), // 👈 🔥 ajuste vertical CLAVE
+                    child: const Text(
+                      "〇",
+                      style: TextStyle(fontSize: 26, color: Colors.black),
+                    ),
+                  ),
+
+                  // ✅ furigana flotante arriba
+                  Positioned(
+                    top: -16, // ajustable
+                    child: IgnorePointer(
+                      child: Text(
+                        lecturaObjetivo,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-
-              const SizedBox(height: 2),
-
-              // ✅ círculo define visual, no el ancho
-              const Text(
-                "〇",
-                style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-              ),
-            ],
+            ),
           ),
-        ),
 
-        Text(parts[1], style: const TextStyle(fontSize: 24)),
-      ],
+          TextSpan(text: parts[1]),
+        ],
+      ),
     );
   }
 
