@@ -3,6 +3,8 @@
     "id": 1,
     "frase": "日本語は〇しいです。",
     "traduccion": "El japonés es difícil.",
+    "nivel": "N5",
+    "parte": 1,
     "tokens": [
       { "text": "日本語", "reading": "にほんご" },
       { "text": "は" },
@@ -18,6 +20,8 @@
     "id": 2,
     "frase": "漢字を勉〇しています。",
     "traduccion": "Estoy estudiando kanjis.",
+    "nivel": "N5",
+    "parte": 1,
     "tokens": [
       { "text": "漢字", "reading": "かんじ" },
       { "text": "を" },
@@ -33,6 +37,8 @@
     "id": 3,
     "frase": "A",
     "traduccion": "escribe A en hiragana",
+    "nivel": "Kana",
+    "parte": 1,
     "tokens": [
       { "text": "〇"}
     ],
