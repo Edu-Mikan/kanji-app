@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kanji_app/main.dart';
+import 'level_screen.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -21,9 +21,14 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
     if (!mounted) return;
 
-    Navigator.of(
+    // Navigator.of(
+    //   context,
+    // ).pushReplacement(MaterialPageRoute(builder: (_) => const CanvasScreen()));
+
+    Navigator.pushReplacement(
       context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const CanvasScreen()));
+      MaterialPageRoute(builder: (_) => const LevelScreen()),
+    );
   }
 
   @override

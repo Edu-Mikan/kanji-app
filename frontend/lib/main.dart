@@ -26,7 +26,16 @@ class MyApp extends StatelessWidget {
 }
 
 class CanvasScreen extends StatefulWidget {
-  const CanvasScreen({super.key});
+  //const CanvasScreen({super.key});
+
+  final String nivel;
+  final int numeroLeccion;
+
+  const CanvasScreen({
+    super.key,
+    required this.nivel,
+    required this.numeroLeccion,
+  });
 
   @override
   State<CanvasScreen> createState() => _CanvasScreenState();
@@ -63,7 +72,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
 
     final data = jsonDecode(jsonString);
-    lecciones = data;
+    //lecciones = data;
+
+    // ✅ FILTRAR
+    lecciones = data.where((l) {
+      return l['nivel'] == widget.nivel && l['parte'] == widget.numeroLeccion;
+    }).toList();
 
     cargarLeccionActual();
   }
@@ -91,8 +105,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
     setState(() {
       frase = leccion['frase'] ?? '';
-      //start = target?['start'] ?? 0;
-      //length = target?['length'] ?? 0;
       kanjiObjetivo = target?['kanji'] ?? '';
       mostrarSolucion = false;
       lecturaObjetivo = target?['lectura'] ?? '';
