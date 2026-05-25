@@ -298,22 +298,85 @@ class _CanvasScreenState extends State<CanvasScreen> {
       text: TextSpan(
         style: AppTextStyles.jpLarge,
         children: (tokens as List).map<InlineSpan>((token) {
-          // final text = token['text'];
-          // final reading = token['reading'];
-          // final esHueco = text == "〇";
-
           String text = token['text'];
           final reading = token['reading'];
 
-          // ✅ detectar si hay huecos en cualquier parte
           final contieneHueco = text.contains("〇");
 
-          // ✅ sustituir múltiples huecos correctamente
-          if (contieneHueco && mostrarKanjiEnFrase) {
-            text = reemplazarHuecos(text, kanjiResultado);
+          // ✅ si hay huecos, construir carácter por carácter
+          if (contieneHueco) {
+            int indiceLocal = 0;
+
+            // ✅ construir texto final (ej: 勉〇 → 勉〇 o 勉強)
+            String displayText = text;
+
+            if (mostrarKanjiEnFrase) {
+              displayText = reemplazarHuecos(text, kanjiResultado);
+            }
+
+            // ✅ SI hay furigana → usar FuriganaText SIEMPRE
+            // final hayHuecoPendiente =
+            //     kanjiResultado.length < kanjiObjetivo.length;
+            //final indiceLocal = getIndiceHuecoToken(text);
+
+            // ✅ SOLO usar Furigana cuando ya no hay huecos
+            if (reading != null && mostrarFurigana) {
+              return WidgetSpan(
+                alignment: PlaceholderAlignment.middle,
+
+                child: FuriganaText(
+                  text: displayText,
+                  reading: reading,
+                  indiceActivo: indiceLocal >= 0 ? indiceLocal : null,
+                ),
+              );
+            }
+
+            // ✅ si NO hay furigana → entonces sí aplicamos estilos por carácter
+            List<InlineSpan> spans = [];
+
+            int huecoIndex = 0;
+
+            for (int i = 0; i < text.length; i++) {
+              final char = text[i];
+
+              if (char == "〇") {
+                if (huecoIndex < kanjiResultado.length) {
+                  spans.add(
+                    TextSpan(
+                      text: kanjiResultado[huecoIndex],
+                      style: AppTextStyles.jpLarge,
+                    ),
+                  );
+                } else if (huecoIndex == indiceKanjiActual) {
+                  spans.add(
+                    TextSpan(
+                      text: "〇",
+                      style: AppTextStyles.jpLarge.copyWith(
+                        color: Colors.red,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  );
+                } else {
+                  spans.add(
+                    TextSpan(
+                      text: "〇",
+                      style: AppTextStyles.jpLarge.copyWith(color: Colors.grey),
+                    ),
+                  );
+                }
+
+                huecoIndex++;
+              } else {
+                spans.add(TextSpan(text: char, style: AppTextStyles.jpLarge));
+              }
+            }
+
+            return TextSpan(children: spans);
           }
 
-          if (reading == null || (!mostrarFurigana && !contieneHueco)) {
+          if (reading == null || !mostrarFurigana) {
             return TextSpan(text: text, style: AppTextStyles.jpLarge);
           }
 
