@@ -33,8 +33,25 @@
       "reading": "きょう"
     }
   },
-    {
+   {
     "id": 3,
+    "frase": "漢字を〇〇しています。",
+    "traduccion": "Estoy estudiando kanjis.",
+    "nivel": "N5",
+    "parte": 1,
+    "tokens": [
+      { "text": "漢字", "reading": "かんじ" },
+      { "text": "を" },
+      { "text": "〇〇", "reading": "べんきょう" },
+      { "text": "しています。" }
+    ],
+    "target": {
+      "kanji": "勉強",
+      "reading": "べんきょう"
+    }
+  },
+    {
+    "id": 4,
     "frase": "A",
     "traduccion": "escribe A en hiragana",
     "nivel": "Kana",
