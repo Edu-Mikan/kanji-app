@@ -56,9 +56,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
   bool mostrarFurigana = true;
   Timer? _drawTimer;
   bool _isValidating = false;
-
   String kanjiResultado = '';
   bool mostrarKanjiEnFrase = false;
+
+  int indiceKanjiActual = 0;
+  String kanjiMostrado = '';
 
   @override
   void initState() {
@@ -84,6 +86,10 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
   void siguienteLeccion() {
     if (lecciones.isEmpty) return;
+
+    indiceKanjiActual = 0;
+    kanjiResultado = '';
+    kanjiMostrado = '';
 
     // ✅ limpiar canvas
     Future.delayed(const Duration(milliseconds: 50), () {
@@ -152,6 +158,40 @@ class _CanvasScreenState extends State<CanvasScreen> {
     _drawTimer = null;
   }
 
+  String reemplazarHuecos(String texto, String resultado) {
+    int index = 0;
+
+    return texto.replaceAllMapped(RegExp("〇"), (match) {
+      if (index < resultado.length) {
+        return resultado[index++];
+      }
+      return "〇";
+    });
+  }
+
+  String obtenerKanjiActual() {
+    if (kanjiObjetivo.isEmpty) return "";
+
+    if (indiceKanjiActual >= kanjiObjetivo.length) {
+      return kanjiObjetivo;
+    }
+
+    return kanjiObjetivo[indiceKanjiActual];
+  }
+
+  void _ocultarFeedbackYLimpiar() {
+    if (!mounted) return;
+
+    setState(() {
+      mostrarFeedbackGrande = false;
+
+      // ✅ limpiar SOLO el kanji de esquina
+      kanjiMostrado = '';
+    });
+
+    canvasKey.currentState?.clear();
+  }
+
   Future<void> _autoValidar() async {
     if (_isValidating) return;
 
@@ -163,12 +203,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
       if (strokes == null || strokes.isEmpty) return;
 
       final url = Uri.parse('http://localhost:3000/recognize');
-
+      final kanjiActual = obtenerKanjiActual();
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "kanji": kanjiObjetivo,
+          "kanji": kanjiActual,
           "ink": {"strokes": strokes},
         }),
       );
@@ -188,27 +228,35 @@ class _CanvasScreenState extends State<CanvasScreen> {
           feedback = "Bien";
           mostrarFeedbackGrande = true;
 
-          kanjiResultado = kanjiObjetivo;
+          // ✅ añadir kanji correcto en posición adecuada
+          if (indiceKanjiActual < kanjiObjetivo.length) {
+            kanjiResultado += kanjiObjetivo[indiceKanjiActual];
+            indiceKanjiActual++;
+          }
+
+          // ✅ mostrar en frase
           mostrarKanjiEnFrase = true;
         });
 
-        Future.delayed(const Duration(milliseconds: 1000), () {
-          if (!mounted) return;
+        if (indiceKanjiActual >= kanjiObjetivo.length) {
+          // ✅ palabra completa
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            if (!mounted) return;
 
-          setState(() {
-            mostrarFeedbackGrande = false;
+            setState(() {
+              mostrarFeedbackGrande = false;
+            });
+
+            siguienteLeccion();
           });
-
-          siguienteLeccion();
-        });
-      }
-      // else if (score < 0.7) {
-      //   setState(() {
-      //     resultado = "Score: ${score.toStringAsFixed(2)}";
-      //     feedback = "Mejorable";
-      //   });
-      // }
-      else {
+        } else {
+          // ✅ queda otro kanji (caso intermedio)
+          Future.delayed(
+            const Duration(milliseconds: 600),
+            _ocultarFeedbackYLimpiar,
+          );
+        }
+      } else {
         _cancelTimer();
 
         setState(() {
@@ -256,14 +304,16 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
           String text = token['text'];
           final reading = token['reading'];
-          final esHueco = text == "〇";
 
-          // ✅ sustituir si se ha acertado
-          if (esHueco && mostrarKanjiEnFrase) {
-            text = kanjiResultado;
+          // ✅ detectar si hay huecos en cualquier parte
+          final contieneHueco = text.contains("〇");
+
+          // ✅ sustituir múltiples huecos correctamente
+          if (contieneHueco && mostrarKanjiEnFrase) {
+            text = reemplazarHuecos(text, kanjiResultado);
           }
 
-          if (reading == null || (!mostrarFurigana && !esHueco)) {
+          if (reading == null || (!mostrarFurigana && !contieneHueco)) {
             return TextSpan(text: text, style: AppTextStyles.jpLarge);
           }
 
@@ -316,12 +366,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   onDraw: _onUserDraw,
                 ),
                 // ✅ kanji resultado (esquina superior derecha)
-                if (kanjiResultado.isNotEmpty)
+                if (kanjiMostrado.isNotEmpty)
                   Positioned(
                     top: 16,
                     right: 16,
                     child: Text(
-                      kanjiResultado,
+                      kanjiMostrado,
                       style: const TextStyle(
                         fontSize: 40,
                         fontFamily: 'NotoSansJP',
@@ -402,25 +452,46 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 String mensaje;
 
                 if (score <= 1.5) {
+                  final esUltimoKanji =
+                      indiceKanjiActual >= kanjiObjetivo.length - 1;
+
                   setState(() {
                     resultado = "Score: ${score.toStringAsFixed(2)}";
                     feedback = "Bien";
-                    mostrarSolucion = false;
                     mostrarFeedbackGrande = true;
+
+                    // ✅ añadir kanji correcto
+                    kanjiResultado += kanjiObjetivo[indiceKanjiActual];
+                    indiceKanjiActual++;
+                    kanjiMostrado = kanjiObjetivo[indiceKanjiActual - 1];
+
+                    mostrarKanjiEnFrase = true;
                   });
 
-                  Future.delayed(const Duration(milliseconds: 1000), () {
-                    if (!mounted) return;
-
-                    setState(() {
-                      mostrarFeedbackGrande = false;
-                    });
-
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (esUltimoKanji) {
+                    // ✅ caso final → siguiente lección
+                    Future.delayed(const Duration(milliseconds: 1000), () {
                       if (!mounted) return;
+
+                      setState(() {
+                        mostrarFeedbackGrande = false;
+                      });
+
                       siguienteLeccion();
                     });
-                  });
+                  } else {
+                    // ✅ caso intermedio → continuar con siguiente kanji
+                    Future.delayed(const Duration(milliseconds: 600), () {
+                      if (!mounted) return;
+
+                      setState(() {
+                        mostrarFeedbackGrande = false;
+                      });
+
+                      // limpiar canvas para siguiente kanji
+                      canvasKey.currentState?.clear();
+                    });
+                  }
                 }
                 // else if (score < 0.7) {
                 //   mensaje = "Mejorable";
