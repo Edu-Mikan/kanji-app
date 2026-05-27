@@ -279,6 +279,15 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
   }
 
+  String get progresoKanji {
+    if (lecciones.isEmpty) return "";
+
+    final actual = indiceActual + 1;
+    final total = lecciones.length;
+
+    return "Kanji $actual de $total";
+  }
+
   InlineSpan _buildToken(dynamic token) {
     final rawText = (token['text'] ?? '') as String;
     final reading = token['reading'] as String?;
@@ -296,7 +305,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
         alignment: PlaceholderAlignment.middle,
         child: FuriganaText(
           text: display,
-          reading: reading!,
+          reading: reading,
           indiceActivo: contieneHueco
               ? (indiceKanjiActual - kanjiVisible.length)
               : null,
@@ -371,8 +380,26 @@ class _CanvasScreenState extends State<CanvasScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('漢字くん')),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(padding: const EdgeInsets.all(16), child: _buildFrase()),
+          // ✅ PROGRESO (PEGADO ARRIBA)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), // 🔥 clave
+            child: Text(
+              progresoKanji,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+
+          // ✅ FRASE (PEGADA PERO CON UN POCO DE ESPACIO)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+            child: Center(child: _buildFrase()),
+          ),
 
           Expanded(
             child: Stack(
@@ -408,6 +435,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
               ],
             ),
           ),
+
           ElevatedButton(
             onPressed: () {
               canvasKey.currentState?.clear();
@@ -420,6 +448,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
             },
             child: const Text('Borrar'),
           ),
+
           ElevatedButton(
             onPressed: () {
               canvasKey.currentState?.clear();
@@ -431,13 +460,14 @@ class _CanvasScreenState extends State<CanvasScreen> {
             },
             child: const Text('Mostrar solución'),
           ),
+
           ElevatedButton(
             onPressed: () {
               setState(() {
                 mostrarFurigana = !mostrarFurigana;
               });
             },
-            child: Text('Toggle Furigana'),
+            child: const Text('Toggle Furigana'),
           ),
 
           Container(
@@ -445,7 +475,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
             child: Column(
               children: [
                 Text(resultado, style: const TextStyle(fontSize: 20)),
-
                 const SizedBox(height: 8),
                 Text(
                   feedback,
