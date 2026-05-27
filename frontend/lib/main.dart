@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
 import 'package:kanji_app/styles/app_text_styles.dart';
 import 'widgets/drawing_canvas.dart';
-import 'package:http/http.dart' as http;
+//import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'widgets/kanji_svg.dart';
 import 'widgets/furigana_text.dart';
+import 'services/validation_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,14 +50,14 @@ class _CanvasScreenState extends State<CanvasScreen> {
   bool mostrarSolucion = false;
   List<dynamic> lecciones = [];
   int indiceActual = 0;
-
   bool mostrarFeedbackGrande = false;
   bool mostrarFurigana = true;
   Timer? _drawTimer;
   bool _isValidating = false;
-
   int indiceKanjiActual = 0;
   String kanjiMostrado = '';
+
+  late final ValidationService _validationService;
 
   String get kanjiVisible {
     return kanjiObjetivo.substring(
@@ -68,6 +69,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   @override
   void initState() {
     super.initState();
+    _validationService = ValidationService(baseUrl: 'http://localhost:3000');
     cargarLeccion();
   }
 
@@ -228,31 +230,18 @@ class _CanvasScreenState extends State<CanvasScreen> {
       final strokes = canvasKey.currentState?.convertirStrokes();
       if (strokes == null || strokes.isEmpty) return;
 
-      final response = await http.post(
-        Uri.parse('http://localhost:3000/recognize'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "kanji": obtenerKanjiActual(),
-          "ink": {"strokes": strokes},
-        }),
+      final result = await _validationService.validarKanji(
+        kanji: obtenerKanjiActual(),
+        strokes: strokes,
       );
 
-      if (response.statusCode != 200) {
-        throw Exception('Error HTTP: ${response.statusCode}');
-      }
+      if (result == null) return;
 
-      final data = jsonDecode(response.body);
-      final score = data['score']?.toDouble();
-
-      if (score == null) return;
-
-      if (score <= 1.5) {
-        _validacionCorrecta(score);
+      if (result.isCorrect) {
+        _validacionCorrecta(result.score);
       } else {
-        _validacionIncorrecta(score);
+        _validacionIncorrecta(result.score);
       }
-    } catch (e) {
-      debugPrint("AUTO VALIDAR ERROR: $e");
     } finally {
       _isValidating = false;
     }
@@ -286,18 +275,23 @@ class _CanvasScreenState extends State<CanvasScreen> {
     final masked = _buildMaskedText(rawText);
     final display = reemplazarHuecos(masked, kanjiVisible);
 
-    if (reading != null && mostrarFurigana) {
+    final contieneHueco = masked.contains("〇");
+
+    final mostrarFuriganaToken =
+        reading != null && (mostrarFurigana || contieneHueco);
+
+    if (mostrarFuriganaToken) {
       return WidgetSpan(
         alignment: PlaceholderAlignment.middle,
         child: FuriganaText(
           text: display,
-          reading: reading,
-          indiceActivo: indiceKanjiActual,
+          reading: reading!,
+          indiceActivo: contieneHueco ? indiceKanjiActual : null,
         ),
       );
     }
 
-    if (!masked.contains("〇")) {
+    if (!contieneHueco) {
       return TextSpan(text: display);
     }
 
@@ -387,6 +381,55 @@ class _CanvasScreenState extends State<CanvasScreen> {
                     color: Colors.black.withValues(alpha: 0.3),
                     child: const Center(child: Text("🎉 ¡Muy bien! 🎉")),
                   ),
+              ],
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              canvasKey.currentState?.clear();
+
+              setState(() {
+                mostrarSolucion = false;
+                resultado = '';
+                feedback = '';
+              });
+            },
+            child: const Text('Borrar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              canvasKey.currentState?.clear();
+              setState(() {
+                mostrarSolucion = true;
+                resultado = '';
+                feedback = '';
+              });
+            },
+            child: const Text('Mostrar solución'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                mostrarFurigana = !mostrarFurigana;
+              });
+            },
+            child: Text('Toggle Furigana'),
+          ),
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text(resultado, style: const TextStyle(fontSize: 20)),
+
+                const SizedBox(height: 8),
+                Text(
+                  feedback,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
