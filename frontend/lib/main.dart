@@ -49,6 +49,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   bool mostrarSolucion = false;
   List<dynamic> lecciones = [];
   int indiceActual = 0;
+
   bool mostrarFeedbackGrande = false;
   bool mostrarFurigana = true;
   Timer? _drawTimer;
@@ -58,9 +59,10 @@ class _CanvasScreenState extends State<CanvasScreen> {
   String kanjiMostrado = '';
 
   String get kanjiVisible {
-    final visibleCount = indiceKanjiActual.clamp(0, kanjiObjetivo.length);
-    if (visibleCount == 0) return '';
-    return kanjiObjetivo.substring(0, visibleCount);
+    return kanjiObjetivo.substring(
+      0,
+      indiceKanjiActual.clamp(0, kanjiObjetivo.length),
+    );
   }
 
   @override
@@ -70,49 +72,17 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   Future<void> cargarLeccion() async {
-    final String jsonString = await rootBundle.loadString(
+    final jsonString = await rootBundle.loadString(
       'assets/data/lecciones.json',
     );
 
     final data = jsonDecode(jsonString);
 
-    // ✅ FILTRAR
     lecciones = data.where((l) {
       return l['nivel'] == widget.nivel && l['parte'] == widget.numeroLeccion;
     }).toList();
 
     cargarLeccionActual();
-  }
-
-  void siguienteLeccion() {
-    if (lecciones.isEmpty) return;
-
-    indiceKanjiActual = 0;
-    kanjiMostrado = '';
-
-    // ✅ limpiar canvas
-    Future.delayed(const Duration(milliseconds: 50), () {
-      canvasKey.currentState?.clear();
-    });
-
-    // ✅ avanzar índice
-    if (indiceActual < lecciones.length - 1) {
-      indiceActual++;
-    } else {
-      indiceActual = 0;
-    }
-    //Cancelar el timer
-    _cancelTimer();
-
-    // ✅ cargar nueva lección
-    final leccion = lecciones[indiceActual];
-    final target = leccion['target'];
-
-    setState(() {
-      frase = leccion['frase'] ?? '';
-      kanjiObjetivo = target?['kanji'] ?? '';
-      _resetEstadoVisualLeccion();
-    });
   }
 
   void cargarLeccionActual() {
@@ -126,17 +96,38 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
     setState(() {
       frase = ocultarKanjiObjetivo(fraseOriginal, targetKanji);
-
-      kanjiObjetivo = target?['kanji'] ?? '';
-      _resetEstadoVisualLeccion();
+      kanjiObjetivo = targetKanji;
+      _resetEstado();
     });
+  }
+
+  void siguienteLeccion() {
+    if (lecciones.isEmpty) return;
+
+    indiceKanjiActual = 0;
+    kanjiMostrado = '';
+
+    Future.delayed(const Duration(milliseconds: 50), () {
+      canvasKey.currentState?.clear();
+    });
+
+    indiceActual = (indiceActual < lecciones.length - 1) ? indiceActual + 1 : 0;
+
+    _cancelTimer();
+    cargarLeccionActual();
+  }
+
+  void _resetEstado() {
+    resultado = '';
+    feedback = '';
+    mostrarSolucion = false;
   }
 
   void _onUserDraw() {
     if (_isValidating) return;
+
     _cancelTimer();
 
-    // iniciar nuevo timer
     _drawTimer = Timer(const Duration(milliseconds: 1500), () {
       _autoValidar();
     });
@@ -160,153 +151,88 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
   String ocultarKanjiObjetivo(String frase, String kanji) {
     if (kanji.isEmpty) return frase;
-
-    final placeholder = "〇" * kanji.length;
-
-    return frase.replaceFirst(kanji, placeholder);
+    return frase.replaceFirst(kanji, "〇" * kanji.length);
   }
 
   String obtenerKanjiActual() {
-    if (kanjiObjetivo.isEmpty) return "";
-
     if (indiceKanjiActual >= kanjiObjetivo.length) {
       return kanjiObjetivo;
     }
-
     return kanjiObjetivo[indiceKanjiActual];
   }
 
-  void _ocultarFeedbackYLimpiar() {
-    if (!mounted) return;
+  // ✅ VALIDACIÓN UNIFICADA
+  void _validacionCorrecta(double score, {bool mostrarKanji = false}) {
+    final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
 
     setState(() {
-      mostrarFeedbackGrande = false;
+      resultado = "Score: ${score.toStringAsFixed(2)}";
+      feedback = "Bien";
+      mostrarFeedbackGrande = true;
 
-      // ✅ limpiar SOLO el kanji de esquina
+      if (indiceKanjiActual < kanjiObjetivo.length) {
+        if (mostrarKanji) {
+          kanjiMostrado = kanjiObjetivo[indiceKanjiActual];
+        }
+        indiceKanjiActual++;
+      }
+    });
+
+    if (esUltimoKanji) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (!mounted) return;
+        setState(() => mostrarFeedbackGrande = false);
+        siguienteLeccion();
+      });
+    } else {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (!mounted) return;
+        _limpiarParaSiguienteKanji();
+      });
+    }
+  }
+
+  void _validacionIncorrecta(double score, {bool postFrame = false}) {
+    _cancelTimer();
+
+    if (postFrame) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        canvasKey.currentState?.clear();
+      });
+    } else {
+      Future.delayed(const Duration(milliseconds: 50), () {
+        canvasKey.currentState?.clear();
+      });
+    }
+
+    setState(() {
+      resultado = "Score: ${score.toStringAsFixed(2)}";
+      feedback = "Incorrecto";
+    });
+  }
+
+  void _limpiarParaSiguienteKanji() {
+    setState(() {
+      mostrarFeedbackGrande = false;
       kanjiMostrado = '';
     });
 
     canvasKey.currentState?.clear();
   }
 
-  void _resetEstadoVisualLeccion() {
-    resultado = '';
-    feedback = '';
-    mostrarSolucion = false;
-  }
-
-  void _manejarValidacionIncorrectaAuto(double score) {
-    _cancelTimer();
-
-    setState(() {
-      resultado = "Score: ${score.toStringAsFixed(2)}";
-      feedback = "Incorrecto";
-    });
-
-    Future.delayed(const Duration(milliseconds: 50), () {
-      canvasKey.currentState?.clear();
-    });
-  }
-
-  void _manejarValidacionIncorrectaManual(double score) {
-    _cancelTimer();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      canvasKey.currentState?.clear();
-    });
-
-    setState(() {
-      resultado = "Score: ${score.toStringAsFixed(2)}";
-      feedback = "Incorrecto";
-    });
-  }
-
-  void _manejarValidacionCorrectaAuto(double score) {
-    final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
-
-    setState(() {
-      resultado = "Score: ${score.toStringAsFixed(2)}";
-      feedback = "Bien";
-      mostrarFeedbackGrande = true;
-
-      if (indiceKanjiActual < kanjiObjetivo.length) {
-        indiceKanjiActual++;
-      }
-    });
-
-    if (esUltimoKanji) {
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (!mounted) return;
-
-        setState(() {
-          mostrarFeedbackGrande = false;
-        });
-
-        siguienteLeccion();
-      });
-      return;
-    }
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      _ocultarFeedbackYLimpiar();
-    });
-  }
-
-  void _manejarValidacionCorrectaManual(double score) {
-    final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
-
-    setState(() {
-      resultado = "Score: ${score.toStringAsFixed(2)}";
-      feedback = "Bien";
-      mostrarFeedbackGrande = true;
-
-      if (indiceKanjiActual < kanjiObjetivo.length) {
-        kanjiMostrado = kanjiObjetivo[indiceKanjiActual];
-        indiceKanjiActual++;
-      }
-    });
-
-    if (esUltimoKanji) {
-      Future.delayed(const Duration(milliseconds: 1000), () {
-        if (!mounted) return;
-
-        setState(() {
-          mostrarFeedbackGrande = false;
-        });
-
-        siguienteLeccion();
-      });
-      return;
-    }
-
-    Future.delayed(const Duration(milliseconds: 600), () {
-      if (!mounted) return;
-
-      setState(() {
-        mostrarFeedbackGrande = false;
-      });
-
-      canvasKey.currentState?.clear();
-    });
-  }
-
   Future<void> _autoValidar() async {
     if (_isValidating) return;
-
     _isValidating = true;
 
     try {
       final strokes = canvasKey.currentState?.convertirStrokes();
-
       if (strokes == null || strokes.isEmpty) return;
 
-      final url = Uri.parse('http://localhost:3000/recognize');
-      final kanjiActual = obtenerKanjiActual();
       final response = await http.post(
-        url,
+        Uri.parse('http://localhost:3000/recognize'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          "kanji": kanjiActual,
+          "kanji": obtenerKanjiActual(),
           "ink": {"strokes": strokes},
         }),
       );
@@ -321,9 +247,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
       if (score == null) return;
 
       if (score <= 1.5) {
-        _manejarValidacionCorrectaAuto(score);
+        _validacionCorrecta(score);
       } else {
-        _manejarValidacionIncorrectaAuto(score);
+        _validacionIncorrecta(score);
       }
     } catch (e) {
       debugPrint("AUTO VALIDAR ERROR: $e");
@@ -333,57 +259,49 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   Widget _buildFrase() {
-    if (lecciones.isEmpty) {
-      return const SizedBox();
-    }
+    if (lecciones.isEmpty) return const SizedBox();
 
     final leccion = lecciones[indiceActual];
     final tokens = leccion['tokens'];
-    final visible = kanjiVisible;
-
-    // ✅ fallback si todavía no tienes tokens en el JSON
 
     if (tokens == null || tokens.isEmpty) {
-      return Text(
-        frase,
-        style: AppTextStyles.jpLarge,
-        textAlign: TextAlign.center,
-      );
+      return Text(frase, style: AppTextStyles.jpLarge);
     }
 
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
         style: AppTextStyles.jpLarge,
-        children: (tokens as List).map<InlineSpan>((token) {
-          return _buildTokenSpan(token, visible);
-        }).toList(),
+        children: (tokens as List)
+            .map<InlineSpan>((token) => _buildToken(token))
+            .toList(),
       ),
     );
   }
 
-  InlineSpan _buildTokenSpan(dynamic token, String visible) {
+  InlineSpan _buildToken(dynamic token) {
     final rawText = (token['text'] ?? '') as String;
     final reading = token['reading'] as String?;
-    final maskedText = _buildMaskedText(rawText);
-    final displayText = reemplazarHuecos(maskedText, visible);
+
+    final masked = _buildMaskedText(rawText);
+    final display = reemplazarHuecos(masked, kanjiVisible);
 
     if (reading != null && mostrarFurigana) {
       return WidgetSpan(
         alignment: PlaceholderAlignment.middle,
         child: FuriganaText(
-          text: displayText,
+          text: display,
           reading: reading,
-          indiceActivo: 0,
+          indiceActivo: indiceKanjiActual,
         ),
       );
     }
 
-    if (!maskedText.contains("〇")) {
-      return TextSpan(text: displayText, style: AppTextStyles.jpLarge);
+    if (!masked.contains("〇")) {
+      return TextSpan(text: display);
     }
 
-    return _buildHuecoSpan(maskedText, visible);
+    return _buildHuecoSpan(masked);
   }
 
   String _buildMaskedText(String rawText) {
@@ -391,7 +309,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
     return rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length);
   }
 
-  InlineSpan _buildHuecoSpan(String maskedText, String visible) {
+  InlineSpan _buildHuecoSpan(String maskedText) {
     final spans = <InlineSpan>[];
     int huecoIndex = 0;
 
@@ -399,14 +317,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
       final char = maskedText[i];
 
       if (char != "〇") {
-        spans.add(TextSpan(text: char, style: AppTextStyles.jpLarge));
+        spans.add(TextSpan(text: char));
         continue;
       }
 
-      if (huecoIndex < visible.length) {
-        spans.add(
-          TextSpan(text: visible[huecoIndex], style: AppTextStyles.jpLarge),
-        );
+      if (huecoIndex < kanjiVisible.length) {
+        spans.add(TextSpan(text: kanjiVisible[huecoIndex]));
       } else if (huecoIndex == indiceKanjiActual) {
         spans.add(
           TextSpan(
@@ -438,53 +354,25 @@ class _CanvasScreenState extends State<CanvasScreen> {
       appBar: AppBar(title: const Text('漢字くん')),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: lecciones.isEmpty
-                ? const SizedBox()
-                : Column(
-                    children: [
-                      _buildFrase(),
-
-                      const SizedBox(height: 8),
-
-                      Text(
-                        lecciones[indiceActual]['traduccion'] ?? '',
-                        style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-          ),
+          Padding(padding: const EdgeInsets.all(16), child: _buildFrase()),
 
           Expanded(
             child: Stack(
               children: [
-                // ✅ CANVAS BASE (primero)
-                DrawingCanvas(
-                  key: canvasKey,
-                  solutionKanji: null,
-                  onDraw: _onUserDraw,
-                ),
-                // ✅ kanji resultado (esquina superior derecha)
+                DrawingCanvas(key: canvasKey, onDraw: _onUserDraw),
+
                 if (kanjiMostrado.isNotEmpty)
                   Positioned(
                     top: 16,
                     right: 16,
                     child: Text(
                       kanjiMostrado,
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontFamily: 'NotoSansJP',
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black54,
-                      ),
+                      style: const TextStyle(fontSize: 40),
                     ),
                   ),
-                // ✅ SVG ENCIMA CON OPACIDAD BAJA
+
                 if (mostrarSolucion)
                   IgnorePointer(
-                    // 👈 MUY IMPORTANTE
                     child: Center(
                       child: KanjiSvg(
                         kanji: kanjiObjetivo,
@@ -494,112 +382,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
                     ),
                   ),
 
-                // ✅ overlay feedback
                 if (mostrarFeedbackGrande)
                   Container(
                     color: Colors.black.withValues(alpha: 0.3),
                     child: const Center(child: Text("🎉 ¡Muy bien! 🎉")),
                   ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              canvasKey.currentState?.clear();
-
-              setState(() {
-                mostrarSolucion = false;
-                resultado = '';
-                feedback = '';
-              });
-            },
-            child: const Text('Borrar'),
-          ),
-
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                final strokes = canvasKey.currentState?.convertirStrokes();
-
-                if (strokes == null) return;
-
-                final url = Uri.parse('http://localhost:3000/recognize');
-
-                final response = await http.post(
-                  url,
-                  headers: {'Content-Type': 'application/json'},
-                  body: jsonEncode({
-                    "kanji": kanjiObjetivo,
-                    "ink": {"strokes": strokes},
-                  }),
-                );
-
-                // ✅ comprobar respuesta
-                if (response.statusCode != 200) {
-                  throw Exception('Error HTTP: ${response.statusCode}');
-                }
-
-                // ✅ intentar parsear JSON
-                final data = jsonDecode(response.body);
-
-                final scoreRaw = data['score'];
-
-                if (scoreRaw == null) {
-                  throw Exception('No viene score en respuesta');
-                }
-
-                final score = scoreRaw.toDouble();
-
-                if (score <= 1.5) {
-                  _manejarValidacionCorrectaManual(score);
-                } else {
-                  _manejarValidacionIncorrectaManual(score);
-                }
-              } catch (e) {
-                // ✅ IMPORTANTE: ver error real
-                debugPrint("ERROR VALIDAR: $e");
-
-                setState(() {
-                  feedback = "Error al validar";
-                });
-              }
-            },
-            child: const Text('Validar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              canvasKey.currentState?.clear();
-              setState(() {
-                mostrarSolucion = true;
-                resultado = '';
-                feedback = '';
-              });
-            },
-            child: const Text('Mostrar solución'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                mostrarFurigana = !mostrarFurigana;
-              });
-            },
-            child: Text('Toggle Furigana'),
-          ),
-
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Text(resultado, style: const TextStyle(fontSize: 20)),
-
-                const SizedBox(height: 8),
-                Text(
-                  feedback,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ],
             ),
           ),
