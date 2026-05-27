@@ -218,22 +218,22 @@ class _CanvasScreenState extends State<CanvasScreen> {
     }
   }
 
-  void _validacionIncorrecta(double score, {bool postFrame = false}) {
+  void _validacionIncorrecta(double score) {
     _cancelTimer();
-
-    if (postFrame) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        canvasKey.currentState?.clear();
-      });
-    } else {
-      Future.delayed(const Duration(milliseconds: 50), () {
-        canvasKey.currentState?.clear();
-      });
-    }
 
     setState(() {
       resultado = "Score: ${score.toStringAsFixed(2)}";
       feedback = "Incorrecto";
+      mostrarFeedbackGrande = true; // ✅ mostrar overlay
+    });
+
+    // ✅ ocultar después de un tiempo
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (!mounted) return;
+
+      setState(() {
+        mostrarFeedbackGrande = false;
+      });
     });
   }
 
@@ -481,25 +481,69 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   ),
 
                 if (mostrarFeedbackGrande)
-                  Container(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    child: const Center(child: Text("🎉 ¡Muy bien! 🎉")),
+                  Center(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: mostrarFeedbackGrande ? 1.0 : 0.0,
+                      curve: Curves.easeOut,
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: feedback == "Bien"
+                                ? Colors.green
+                                : Colors.red,
+                            width: 2,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          feedback == "Bien" ? Icons.check : Icons.close,
+                          color: feedback == "Bien" ? Colors.green : Colors.red,
+                          size: 60,
+                        ),
+                      ),
+                    ),
                   ),
+
+                // ✅ BOTÓN BORRAR (esquina inferior derecha)
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    // mini: true, ❌ quítalo
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black87,
+                    elevation: 3,
+                    onPressed: () {
+                      canvasKey.currentState?.clear();
+
+                      setState(() {
+                        mostrarSolucion = false;
+                        resultado = '';
+                        feedback = '';
+                      });
+                    },
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.cleaning_services, size: 20),
+                        SizedBox(height: 2),
+                        Text("Borrar", style: TextStyle(fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-
-          ElevatedButton(
-            onPressed: () {
-              canvasKey.currentState?.clear();
-
-              setState(() {
-                mostrarSolucion = false;
-                resultado = '';
-                feedback = '';
-              });
-            },
-            child: const Text('Borrar'),
           ),
 
           ElevatedButton(
@@ -513,16 +557,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
             },
             child: const Text('Mostrar solución'),
           ),
-
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                mostrarFurigana = !mostrarFurigana;
-              });
-            },
-            child: const Text('Toggle Furigana'),
-          ),
-
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
