@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
+import 'package:kanji_app/screens/resultado_screen.dart';
 import 'package:kanji_app/styles/app_text_styles.dart';
 import 'widgets/drawing_canvas.dart';
 //import 'package:http/http.dart' as http;
@@ -181,11 +182,21 @@ class _CanvasScreenState extends State<CanvasScreen> {
     });
 
     if (esUltimoKanji) {
+      final esUltimaLeccion = indiceActual >= lecciones.length - 1;
+
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (!mounted) return;
+
         setState(() => mostrarFeedbackGrande = false);
-        siguienteLeccion();
+
+        if (esUltimaLeccion) {
+          _irResultado();
+        } else {
+          siguienteLeccion();
+        }
       });
+
+      return;
     } else {
       Future.delayed(const Duration(milliseconds: 600), () {
         if (!mounted) return;
@@ -286,7 +297,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
         child: FuriganaText(
           text: display,
           reading: reading!,
-          indiceActivo: contieneHueco ? indiceKanjiActual : null,
+          indiceActivo: contieneHueco
+              ? (indiceKanjiActual - kanjiVisible.length)
+              : null,
         ),
       );
     }
@@ -340,6 +353,17 @@ class _CanvasScreenState extends State<CanvasScreen> {
     }
 
     return TextSpan(children: spans);
+  }
+
+  void _irResultado() {
+    final kanjis = lecciones.map<String>((l) {
+      return l['target']['kanji'] as String;
+    }).toList();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => ResultadoScreen(kanjis: kanjis)),
+    );
   }
 
   @override
