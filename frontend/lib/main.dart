@@ -5,11 +5,12 @@ import 'package:kanji_app/screens/loading_screen.dart';
 import 'package:kanji_app/screens/resultado_screen.dart';
 import 'package:kanji_app/styles/app_text_styles.dart';
 import 'widgets/drawing_canvas.dart';
-//import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'widgets/kanji_svg.dart';
 import 'widgets/furigana_text.dart';
 import 'services/validation_service.dart';
+import 'screens/settings_screen.dart';
+import 'services/settings_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -43,7 +44,7 @@ class CanvasScreen extends StatefulWidget {
 
 class _CanvasScreenState extends State<CanvasScreen> {
   final GlobalKey<DrawingCanvasState> canvasKey = GlobalKey();
-
+  final SettingsService _settings = SettingsService();
   String resultado = '';
   String feedback = '';
   String frase = '';
@@ -53,6 +54,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   int indiceActual = 0;
   bool mostrarFeedbackGrande = false;
   bool mostrarFurigana = true;
+  bool mostrarTraduccion = true;
   Timer? _drawTimer;
   bool _isValidating = false;
   int indiceKanjiActual = 0;
@@ -71,7 +73,18 @@ class _CanvasScreenState extends State<CanvasScreen> {
   void initState() {
     super.initState();
     _validationService = ValidationService(baseUrl: 'http://localhost:3000');
+
+    _initSettings();
     cargarLeccion();
+  }
+
+  Future<void> _initSettings() async {
+    await _settings.cargar();
+
+    setState(() {
+      mostrarFurigana = _settings.mostrarFurigana;
+      mostrarTraduccion = _settings.mostrarTraduccion;
+    });
   }
 
   Future<void> cargarLeccion() async {
@@ -345,7 +358,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
             text: "〇",
             style: AppTextStyles.jpLarge.copyWith(
               color: Colors.red,
-              decoration: TextDecoration.underline,
+              //decoration: TextDecoration.underline,
             ),
           ),
         );
@@ -375,10 +388,35 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
   }
 
+  Future<void> _abrirSettings() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SettingsScreen(), // ✅ SIN parámetros
+      ),
+    );
+
+    if (result == true) {
+      // ✅ recargar desde el service
+      setState(() {
+        mostrarFurigana = _settings.mostrarFurigana;
+        mostrarTraduccion = _settings.mostrarTraduccion;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('漢字くん')),
+      appBar: AppBar(
+        title: Text("${widget.nivel} - Lección ${widget.numeroLeccion}"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _abrirSettings,
+          ),
+        ],
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -398,7 +436,22 @@ class _CanvasScreenState extends State<CanvasScreen> {
           // ✅ FRASE (PEGADA PERO CON UN POCO DE ESPACIO)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-            child: Center(child: _buildFrase()),
+            child: Column(
+              children: [
+                Center(child: _buildFrase()),
+                const SizedBox(height: 6),
+
+                // ✅ TRADUCCIÓN (condicional)
+                if (mostrarTraduccion &&
+                    lecciones.isNotEmpty &&
+                    indiceActual < lecciones.length)
+                  Text(
+                    lecciones[indiceActual]['traduccion'] ?? '',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
+                    textAlign: TextAlign.center,
+                  ),
+              ],
+            ),
           ),
 
           Expanded(
