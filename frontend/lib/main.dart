@@ -49,7 +49,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
   bool mostrarSolucion = false;
   List<dynamic> lecciones = [];
   int indiceActual = 0;
-  String lecturaObjetivo = '';
   bool mostrarFeedbackGrande = false;
   bool mostrarFurigana = true;
   Timer? _drawTimer;
@@ -112,7 +111,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
     setState(() {
       frase = leccion['frase'] ?? '';
       kanjiObjetivo = target?['kanji'] ?? '';
-      lecturaObjetivo = target?['lectura'] ?? '';
       _resetEstadoVisualLeccion();
     });
   }
@@ -130,7 +128,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
       frase = ocultarKanjiObjetivo(fraseOriginal, targetKanji);
 
       kanjiObjetivo = target?['kanji'] ?? '';
-      lecturaObjetivo = target?['lectura'] ?? '';
       _resetEstadoVisualLeccion();
     });
   }
@@ -198,21 +195,25 @@ class _CanvasScreenState extends State<CanvasScreen> {
     mostrarSolucion = false;
   }
 
-  void _manejarValidacionIncorrecta({
-    required double score,
-    required bool limpiarCanvasConPostFrame,
-  }) {
+  void _manejarValidacionIncorrectaAuto(double score) {
     _cancelTimer();
 
-    if (limpiarCanvasConPostFrame) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        canvasKey.currentState?.clear();
-      });
-    } else {
-      Future.delayed(const Duration(milliseconds: 50), () {
-        canvasKey.currentState?.clear();
-      });
-    }
+    setState(() {
+      resultado = "Score: ${score.toStringAsFixed(2)}";
+      feedback = "Incorrecto";
+    });
+
+    Future.delayed(const Duration(milliseconds: 50), () {
+      canvasKey.currentState?.clear();
+    });
+  }
+
+  void _manejarValidacionIncorrectaManual(double score) {
+    _cancelTimer();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      canvasKey.currentState?.clear();
+    });
 
     setState(() {
       resultado = "Score: ${score.toStringAsFixed(2)}";
@@ -220,10 +221,51 @@ class _CanvasScreenState extends State<CanvasScreen> {
     });
   }
 
-  void _programarTransicionDespuesDeAcierto({
-    required bool esUltimoKanji,
-    required bool limpiarKanjiEsquinaEnIntermedio,
-  }) {
+  void _manejarValidacionCorrectaAuto(double score) {
+    final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
+
+    setState(() {
+      resultado = "Score: ${score.toStringAsFixed(2)}";
+      feedback = "Bien";
+      mostrarFeedbackGrande = true;
+
+      if (indiceKanjiActual < kanjiObjetivo.length) {
+        indiceKanjiActual++;
+      }
+    });
+
+    if (esUltimoKanji) {
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (!mounted) return;
+
+        setState(() {
+          mostrarFeedbackGrande = false;
+        });
+
+        siguienteLeccion();
+      });
+      return;
+    }
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      _ocultarFeedbackYLimpiar();
+    });
+  }
+
+  void _manejarValidacionCorrectaManual(double score) {
+    final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
+
+    setState(() {
+      resultado = "Score: ${score.toStringAsFixed(2)}";
+      feedback = "Bien";
+      mostrarFeedbackGrande = true;
+
+      if (indiceKanjiActual < kanjiObjetivo.length) {
+        kanjiMostrado = kanjiObjetivo[indiceKanjiActual];
+        indiceKanjiActual++;
+      }
+    });
+
     if (esUltimoKanji) {
       Future.delayed(const Duration(milliseconds: 1000), () {
         if (!mounted) return;
@@ -240,43 +282,12 @@ class _CanvasScreenState extends State<CanvasScreen> {
     Future.delayed(const Duration(milliseconds: 600), () {
       if (!mounted) return;
 
-      if (limpiarKanjiEsquinaEnIntermedio) {
-        _ocultarFeedbackYLimpiar();
-        return;
-      }
-
       setState(() {
         mostrarFeedbackGrande = false;
       });
 
       canvasKey.currentState?.clear();
     });
-  }
-
-  void _manejarValidacionCorrecta({
-    required double score,
-    required bool mostrarKanjiEnEsquina,
-    required bool limpiarKanjiEsquinaEnIntermedio,
-  }) {
-    final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
-
-    setState(() {
-      resultado = "Score: ${score.toStringAsFixed(2)}";
-      feedback = "Bien";
-      mostrarFeedbackGrande = true;
-
-      if (indiceKanjiActual < kanjiObjetivo.length) {
-        if (mostrarKanjiEnEsquina) {
-          kanjiMostrado = kanjiObjetivo[indiceKanjiActual];
-        }
-        indiceKanjiActual++;
-      }
-    });
-
-    _programarTransicionDespuesDeAcierto(
-      esUltimoKanji: esUltimoKanji,
-      limpiarKanjiEsquinaEnIntermedio: limpiarKanjiEsquinaEnIntermedio,
-    );
   }
 
   Future<void> _autoValidar() async {
@@ -310,16 +321,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
       if (score == null) return;
 
       if (score <= 1.5) {
-        _manejarValidacionCorrecta(
-          score: score,
-          mostrarKanjiEnEsquina: false,
-          limpiarKanjiEsquinaEnIntermedio: true,
-        );
+        _manejarValidacionCorrectaAuto(score);
       } else {
-        _manejarValidacionIncorrecta(
-          score: score,
-          limpiarCanvasConPostFrame: false,
-        );
+        _manejarValidacionIncorrectaAuto(score);
       }
     } catch (e) {
       debugPrint("AUTO VALIDAR ERROR: $e");
@@ -352,88 +356,80 @@ class _CanvasScreenState extends State<CanvasScreen> {
       text: TextSpan(
         style: AppTextStyles.jpLarge,
         children: (tokens as List).map<InlineSpan>((token) {
-          final rawText = (token['text'] ?? '') as String;
-          final reading = token['reading'] as String?;
-
-          final maskedText = kanjiObjetivo.isNotEmpty
-              ? rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length)
-              : rawText;
-
-          final contieneHueco = maskedText.contains("〇");
-
-          if (!contieneHueco) {
-            if (reading == null || !mostrarFurigana) {
-              return TextSpan(text: maskedText, style: AppTextStyles.jpLarge);
-            }
-
-            return WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: FuriganaText(text: maskedText, reading: reading),
-            );
-          }
-
-          final displayText = reemplazarHuecos(maskedText, visible);
-
-          if (reading != null && mostrarFurigana) {
-            return WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: FuriganaText(
-                text: displayText,
-                reading: reading,
-                indiceActivo: 0,
-              ),
-            );
-          }
-
-          final spans = <InlineSpan>[];
-          int huecoIndex = 0;
-
-          for (int i = 0; i < maskedText.length; i++) {
-            final char = maskedText[i];
-
-            if (char != "〇") {
-              spans.add(TextSpan(text: char, style: AppTextStyles.jpLarge));
-              continue;
-            }
-
-            if (huecoIndex < visible.length) {
-              spans.add(
-                TextSpan(
-                  text: visible[huecoIndex],
-                  style: AppTextStyles.jpLarge,
-                ),
-              );
-            } else if (huecoIndex == indiceKanjiActual) {
-              spans.add(
-                TextSpan(
-                  text: "〇",
-                  style: AppTextStyles.jpLarge.copyWith(
-                    color: Colors.red,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              );
-            } else {
-              spans.add(
-                TextSpan(
-                  text: "〇",
-                  style: AppTextStyles.jpLarge.copyWith(color: Colors.grey),
-                ),
-              );
-            }
-
-            huecoIndex++;
-          }
-
-          return TextSpan(children: spans);
+          return _buildTokenSpan(token, visible);
         }).toList(),
       ),
     );
   }
 
-  String kanjiToSvgFileName(String kanji) {
-    final code = kanji.runes.first;
-    return code.toRadixString(16).padLeft(5, '0');
+  InlineSpan _buildTokenSpan(dynamic token, String visible) {
+    final rawText = (token['text'] ?? '') as String;
+    final reading = token['reading'] as String?;
+    final maskedText = _buildMaskedText(rawText);
+    final displayText = reemplazarHuecos(maskedText, visible);
+
+    if (reading != null && mostrarFurigana) {
+      return WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: FuriganaText(
+          text: displayText,
+          reading: reading,
+          indiceActivo: 0,
+        ),
+      );
+    }
+
+    if (!maskedText.contains("〇")) {
+      return TextSpan(text: displayText, style: AppTextStyles.jpLarge);
+    }
+
+    return _buildHuecoSpan(maskedText, visible);
+  }
+
+  String _buildMaskedText(String rawText) {
+    if (kanjiObjetivo.isEmpty) return rawText;
+    return rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length);
+  }
+
+  InlineSpan _buildHuecoSpan(String maskedText, String visible) {
+    final spans = <InlineSpan>[];
+    int huecoIndex = 0;
+
+    for (int i = 0; i < maskedText.length; i++) {
+      final char = maskedText[i];
+
+      if (char != "〇") {
+        spans.add(TextSpan(text: char, style: AppTextStyles.jpLarge));
+        continue;
+      }
+
+      if (huecoIndex < visible.length) {
+        spans.add(
+          TextSpan(text: visible[huecoIndex], style: AppTextStyles.jpLarge),
+        );
+      } else if (huecoIndex == indiceKanjiActual) {
+        spans.add(
+          TextSpan(
+            text: "〇",
+            style: AppTextStyles.jpLarge.copyWith(
+              color: Colors.red,
+              decoration: TextDecoration.underline,
+            ),
+          ),
+        );
+      } else {
+        spans.add(
+          TextSpan(
+            text: "〇",
+            style: AppTextStyles.jpLarge.copyWith(color: Colors.grey),
+          ),
+        );
+      }
+
+      huecoIndex++;
+    }
+
+    return TextSpan(children: spans);
   }
 
   @override
@@ -555,16 +551,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 final score = scoreRaw.toDouble();
 
                 if (score <= 1.5) {
-                  _manejarValidacionCorrecta(
-                    score: score,
-                    mostrarKanjiEnEsquina: true,
-                    limpiarKanjiEsquinaEnIntermedio: false,
-                  );
+                  _manejarValidacionCorrectaManual(score);
                 } else {
-                  _manejarValidacionIncorrecta(
-                    score: score,
-                    limpiarCanvasConPostFrame: true,
-                  );
+                  _manejarValidacionIncorrectaManual(score);
                 }
               } catch (e) {
                 // ✅ IMPORTANTE: ver error real
