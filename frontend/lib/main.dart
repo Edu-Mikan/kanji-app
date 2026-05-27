@@ -130,11 +130,24 @@ class _CanvasScreenState extends State<CanvasScreen> {
     final leccion = lecciones[indiceActual];
     final target = leccion['target'];
 
+    // setState(() {
+    //   frase = leccion['frase'] ?? '';
+    //   kanjiObjetivo = target?['kanji'] ?? '';
+    //   lecturaObjetivo = target?['lectura'] ?? '';
+
+    //   resultado = '';
+    //   feedback = '';
+    //   mostrarSolucion = false;
+    // });
+
+    final fraseOriginal = leccion['frase'] ?? '';
+    final targetKanji = target?['kanji'] ?? '';
+
     setState(() {
-      frase = leccion['frase'] ?? '';
+      frase = ocultarKanjiObjetivo(fraseOriginal, targetKanji);
+
       kanjiObjetivo = target?['kanji'] ?? '';
       lecturaObjetivo = target?['lectura'] ?? '';
-
       resultado = '';
       feedback = '';
       mostrarSolucion = false;
@@ -167,6 +180,19 @@ class _CanvasScreenState extends State<CanvasScreen> {
       }
       return "〇";
     });
+  }
+
+  String getKanjiVisible() {
+    if (indiceKanjiActual <= 0) return "";
+    return kanjiObjetivo.substring(0, indiceKanjiActual);
+  }
+
+  String ocultarKanjiObjetivo(String frase, String kanji) {
+    if (kanji.isEmpty) return frase;
+
+    final placeholder = "〇" * kanji.length;
+
+    return frase.replaceFirst(kanji, placeholder);
   }
 
   String obtenerKanjiActual() {
@@ -299,6 +325,13 @@ class _CanvasScreenState extends State<CanvasScreen> {
         style: AppTextStyles.jpLarge,
         children: (tokens as List).map<InlineSpan>((token) {
           String text = token['text'];
+
+          final targetKanji = kanjiObjetivo;
+
+          if (targetKanji.isNotEmpty) {
+            text = text.replaceFirst(targetKanji, "〇" * targetKanji.length);
+          }
+
           final reading = token['reading'];
 
           final contieneHueco = text.contains("〇");
@@ -311,7 +344,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
             String displayText = text;
 
             if (mostrarKanjiEnFrase) {
-              displayText = reemplazarHuecos(text, kanjiResultado);
+              //displayText = reemplazarHuecos(text, kanjiResultado);
+              final kanjiVisible = getKanjiVisible();
+              displayText = reemplazarHuecos(text, kanjiVisible);
             }
 
             // ✅ SI hay furigana → usar FuriganaText SIEMPRE

@@ -1,14 +1,14 @@
 [
   {
     "id": 1,
-    "frase": "日本語は〇しいです。",
+    "frase": "日本語は難しいです。",
     "traduccion": "El japonés es difícil.",
     "nivel": "N5",
     "parte": 1,
     "tokens": [
       { "text": "日本語", "reading": "にほんご" },
       { "text": "は" },
-      { "text": "〇", "reading": "むずか" },
+      { "text": "難", "reading": "むずか" },
       { "text": "しいです。" }
     ],
     "target": {
@@ -18,14 +18,14 @@
   },
   {
     "id": 2,
-    "frase": "漢字を勉〇しています。",
+    "frase": "漢字を勉強しています。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
     "parte": 1,
     "tokens": [
       { "text": "漢字", "reading": "かんじ" },
       { "text": "を" },
-      { "text": "勉〇", "reading": "べんきょう" },
+      { "text": "勉強", "reading": "べんきょう" },
       { "text": "しています。" }
     ],
     "target": {
@@ -35,14 +35,14 @@
   },
    {
     "id": 3,
-    "frase": "漢字を〇〇しています。",
+    "frase": "漢字を勉強しています。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
     "parte": 1,
     "tokens": [
       { "text": "漢字", "reading": "かんじ" },
       { "text": "を" },
-      { "text": "〇〇", "reading": "べんきょう" },
+      { "text": "勉強", "reading": "べんきょう" },
       { "text": "しています。" }
     ],
     "target": {
