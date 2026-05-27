@@ -56,7 +56,7 @@ class FuriganaText extends StatelessWidget {
                       style: esActivo
                           ? AppTextStyles.jpLarge.copyWith(
                               color: Colors.red,
-                              decoration: TextDecoration.underline,
+                              //decoration: TextDecoration.underline,
                             )
                           : AppTextStyles.jpLarge,
                     );
