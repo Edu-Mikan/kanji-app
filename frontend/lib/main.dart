@@ -59,6 +59,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   bool _isValidating = false;
   int indiceKanjiActual = 0;
   String kanjiMostrado = '';
+  bool hayTrazos = false;
 
   late final ValidationService _validationService;
 
@@ -224,7 +225,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
     setState(() {
       resultado = "Score: ${score.toStringAsFixed(2)}";
       feedback = "Incorrecto";
-      mostrarFeedbackGrande = true; // ✅ mostrar overlay
+      mostrarFeedbackGrande = true;
+      hayTrazos = true;
     });
 
     // ✅ ocultar después de un tiempo
@@ -515,33 +517,35 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   ),
 
                 // ✅ BOTÓN BORRAR (esquina inferior derecha)
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: FloatingActionButton(
-                    // mini: true, ❌ quítalo
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black87,
-                    elevation: 3,
-                    onPressed: () {
-                      canvasKey.currentState?.clear();
+                if (hayTrazos)
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: FloatingActionButton(
+                      // mini: true, ❌ quítalo
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      elevation: 3,
+                      onPressed: () {
+                        canvasKey.currentState?.clear();
 
-                      setState(() {
-                        mostrarSolucion = false;
-                        resultado = '';
-                        feedback = '';
-                      });
-                    },
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.cleaning_services, size: 20),
-                        SizedBox(height: 2),
-                        Text("Borrar", style: TextStyle(fontSize: 10)),
-                      ],
+                        setState(() {
+                          mostrarSolucion = false;
+                          resultado = '';
+                          feedback = '';
+                          hayTrazos = false;
+                        });
+                      },
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Icon(Icons.cleaning_services, size: 20),
+                          SizedBox(height: 2),
+                          Text("Borrar", style: TextStyle(fontSize: 10)),
+                        ],
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
@@ -553,6 +557,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
                 mostrarSolucion = true;
                 resultado = '';
                 feedback = '';
+                hayTrazos = false;
               });
             },
             child: const Text('Mostrar solución'),
