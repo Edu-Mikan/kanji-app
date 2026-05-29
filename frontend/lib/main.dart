@@ -74,7 +74,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
   @override
   void initState() {
     super.initState();
-    _validationService = ValidationService(baseUrl: 'http://localhost:3000');
+    _validationService = ValidationService(
+      baseUrl: 'https://kanji-app-mjns.onrender.com',
+    );
 
     _initSettings();
     cargarLeccion();
