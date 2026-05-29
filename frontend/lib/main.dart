@@ -89,6 +89,53 @@ class _CanvasScreenState extends State<CanvasScreen> {
     });
   }
 
+  bool _isKanji(String char) {
+    final code = char.codeUnitAt(0);
+    return (code >= 0x4E00 && code <= 0x9FFF);
+  }
+
+  List<Map<String, String?>> parseFurigana(String text) {
+    final tokens = <Map<String, String?>>[];
+
+    int i = 0;
+
+    while (i < text.length) {
+      final open = text.indexOf('[', i);
+
+      if (open == -1) {
+        tokens.add({"text": text.substring(i), "reading": null});
+        break;
+      }
+
+      final close = text.indexOf(']', open);
+
+      final before = text.substring(i, open);
+      final reading = text.substring(open + 1, close);
+
+      // ✅ find the LAST contiguous kanji block at the end of "before"
+      int splitIndex = before.length;
+
+      while (splitIndex > 0 && _isKanji(before[splitIndex - 1])) {
+        splitIndex--;
+      }
+
+      final prefix = before.substring(0, splitIndex);
+      final kanjiBlock = before.substring(splitIndex);
+
+      // ✅ prefix (no reading)
+      if (prefix.isNotEmpty) {
+        tokens.add({"text": prefix, "reading": null});
+      }
+
+      // ✅ kanji block (with reading)
+      tokens.add({"text": kanjiBlock, "reading": reading});
+
+      i = close + 1;
+    }
+
+    return tokens;
+  }
+
   Future<void> cargarLeccion() async {
     final jsonString = await rootBundle.loadString(
       'assets/data/lecciones.json',
@@ -107,13 +154,26 @@ class _CanvasScreenState extends State<CanvasScreen> {
     if (lecciones.isEmpty) return;
 
     final leccion = lecciones[indiceActual];
-    final target = leccion['target'];
 
     final fraseOriginal = leccion['frase'] ?? '';
-    final targetKanji = target?['kanji'] ?? '';
+    final targetKanji = leccion['target'] ?? '';
+
+    final tokens = parseFurigana(fraseOriginal);
+
+    // ✅ Inject tokens EXACTLY like old JSON
+    leccion['tokens'] = tokens;
+
+    // ✅ DEBUG
+    print("TOKENS GENERADOS:");
+    for (var t in tokens) {
+      print("text='${t['text']}' reading='${t['reading']}'");
+    }
+
+    // ✅ IMPORTANT: remove [reading] before masking
+    final fraseLimpia = fraseOriginal.replaceAll(RegExp(r'\[([^\]]+)\]'), '');
 
     setState(() {
-      frase = ocultarKanjiObjetivo(fraseOriginal, targetKanji);
+      frase = ocultarKanjiObjetivo(fraseLimpia, targetKanji);
       kanjiObjetivo = targetKanji;
       _resetEstado();
     });
@@ -315,16 +375,19 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
     final mostrarFuriganaToken =
         reading != null && (mostrarFurigana || contieneHueco);
-
+    final textForFurigana = display;
     if (mostrarFuriganaToken) {
       return WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: FuriganaText(
-          text: display,
-          reading: reading,
-          indiceActivo: contieneHueco
-              ? (indiceKanjiActual - kanjiVisible.length)
-              : null,
+        child: IntrinsicWidth(
+          // ✅ ADD THIS WRAPPER
+          child: FuriganaText(
+            text: textForFurigana,
+            reading: reading,
+            indiceActivo: contieneHueco
+                ? (indiceKanjiActual - kanjiVisible.length)
+                : null,
+          ),
         ),
       );
     }
@@ -338,6 +401,18 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
   String _buildMaskedText(String rawText) {
     if (kanjiObjetivo.isEmpty) return rawText;
+
+    // ✅ only mask the PART that belongs to this token
+    if (!rawText.contains(kanjiObjetivo)) {
+      return rawText;
+    }
+
+    // ✅ If token exactly equals target → full mask
+    if (rawText == kanjiObjetivo) {
+      return "〇" * kanjiObjetivo.length;
+    }
+
+    // ✅ partial case (keep structure like before)
     return rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length);
   }
 
@@ -382,7 +457,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
   void _irResultado() {
     final kanjis = lecciones.map<String>((l) {
-      return l['target']['kanji'] as String;
+      return l['target'] as String;
     }).toList();
 
     Navigator.pushReplacement(
