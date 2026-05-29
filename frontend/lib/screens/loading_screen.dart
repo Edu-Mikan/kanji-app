@@ -39,7 +39,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              '../assets/images/loading_image_kanji_kun.PNG',
+              'assets/images/loading_image_kanji_kun.PNG',
               width: 120,
             ),
             Text(

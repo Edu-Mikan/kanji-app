@@ -9,19 +9,19 @@ class LevelScreen extends StatelessWidget {
   String getImageForNivel(String nivel) {
     switch (nivel) {
       case 'N5':
-        return '../assets/images/N5.png';
+        return 'assets/images/N5.png';
       case 'N4':
-        return '../assets/images/N4.png';
+        return 'assets/images/N4.png';
       case 'N3':
-        return '../assets/images/N3.png';
+        return 'assets/images/N3.png';
       case 'N2':
-        return '../assets/images/N2.png';
+        return 'assets/images/N2.png';
       case 'N1':
-        return '../assets/images/N1.png';
+        return 'assets/images/N1.png';
       case 'Kana':
-        return '../assets/images/Kana.png';
+        return 'assets/images/Kana.png';
       default:
-        return '../assets/images/N5.png';
+        return 'assets/images/N5.png';
     }
   }
 
