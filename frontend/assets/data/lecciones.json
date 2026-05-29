@@ -25,5 +25,14 @@
     "parte": 1,
     "categoria": [],
     "target": "勉強"
+  },
+     {
+    "id": 4,
+    "frase": "漢字[かんじ]を勉強中[べんきょうちゅう]です。",
+    "traduccion": "Estoy estudiando kanjis.",
+    "nivel": "N5",
+    "parte": 1,
+    "categoria": [],
+    "target": "勉強中"
   }
 ]
