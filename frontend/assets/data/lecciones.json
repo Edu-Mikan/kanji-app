@@ -1,67 +1,29 @@
 [
   {
     "id": 1,
-    "frase": "日本語は難しいです。",
+    "frase": "日本語[にほんご]は難[むずか]しいです。",
     "traduccion": "El japonés es difícil.",
     "nivel": "N5",
     "parte": 1,
-    "tokens": [
-      { "text": "日本語", "reading": "にほんご" },
-      { "text": "は" },
-      { "text": "難", "reading": "むずか" },
-      { "text": "しいです。" }
-    ],
-    "target": {
-      "kanji": "難",
-      "reading": "むずか"
-    }
+    "categoria": [],
+    "target":  "難"
   },
   {
     "id": 2,
-    "frase": "漢字を勉強しています。",
+    "frase": "漢字[かんじ]を勉強[べんきょう]しています。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
     "parte": 1,
-    "tokens": [
-      { "text": "漢字", "reading": "かんじ" },
-      { "text": "を" },
-      { "text": "勉強", "reading": "べんきょう" },
-      { "text": "しています。" }
-    ],
-    "target": {
-      "kanji": "強",
-      "reading": "きょう"
-    }
+    "categoria": [],
+    "target": "強"
   },
    {
     "id": 3,
-    "frase": "漢字を勉強しています。",
+    "frase": "漢字[かんじ]を勉強[べんきょう]しています。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
     "parte": 1,
-    "tokens": [
-      { "text": "漢字", "reading": "かんじ" },
-      { "text": "を" },
-      { "text": "勉強", "reading": "べんきょう" },
-      { "text": "しています。" }
-    ],
-    "target": {
-      "kanji": "勉強",
-      "reading": "べんきょう"
-    }
-  },
-    {
-    "id": 4,
-    "frase": "A",
-    "traduccion": "escribe A en hiragana",
-    "nivel": "Kana",
-    "parte": 1,
-    "tokens": [
-      { "text": "〇"}
-    ],
-    "target": {
-      "kanji": "あ",
-      "reading": "あ"
-    }
+    "categoria": [],
+    "target": "勉強"
   }
 ]
