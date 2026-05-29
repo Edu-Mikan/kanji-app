@@ -163,12 +163,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
     // ✅ Inject tokens EXACTLY like old JSON
     leccion['tokens'] = tokens;
 
-    // ✅ DEBUG
-    print("TOKENS GENERADOS:");
-    for (var t in tokens) {
-      print("text='${t['text']}' reading='${t['reading']}'");
-    }
-
     // ✅ IMPORTANT: remove [reading] before masking
     final fraseLimpia = fraseOriginal.replaceAll(RegExp(r'\[([^\]]+)\]'), '');
 
@@ -212,8 +206,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   void _cancelTimer() {
-    _drawTimer?.cancel();
-    _drawTimer = null;
+    if (_drawTimer?.isActive ?? false) {
+      _drawTimer?.cancel();
+    }
   }
 
   String reemplazarHuecos(String texto, String resultado) {
@@ -365,55 +360,41 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   InlineSpan _buildToken(dynamic token) {
-    final rawText = (token['text'] ?? '') as String;
+    final rawText = token['text'] as String? ?? '';
     final reading = token['reading'] as String?;
 
     final masked = _buildMaskedText(rawText);
     final display = reemplazarHuecos(masked, kanjiVisible);
-
     final contieneHueco = masked.contains("〇");
 
-    final mostrarFuriganaToken =
-        reading != null && (mostrarFurigana || contieneHueco);
-    final textForFurigana = display;
-    if (mostrarFuriganaToken) {
+    final showFurigana = reading != null && (mostrarFurigana || contieneHueco);
+
+    if (showFurigana) {
       return WidgetSpan(
         alignment: PlaceholderAlignment.middle,
-        child: IntrinsicWidth(
-          // ✅ ADD THIS WRAPPER
-          child: FuriganaText(
-            text: textForFurigana,
-            reading: reading,
-            indiceActivo: contieneHueco
-                ? (indiceKanjiActual - kanjiVisible.length)
-                : null,
-          ),
+        child: FuriganaText(
+          text: display,
+          reading: reading,
+          indiceActivo: contieneHueco
+              ? (indiceKanjiActual - kanjiVisible.length)
+              : null,
         ),
       );
     }
 
-    if (!contieneHueco) {
-      return TextSpan(text: display);
+    if (contieneHueco) {
+      return _buildHuecoSpan(masked);
     }
 
-    return _buildHuecoSpan(masked);
+    return TextSpan(text: display);
   }
 
   String _buildMaskedText(String rawText) {
     if (kanjiObjetivo.isEmpty) return rawText;
 
-    // ✅ only mask the PART that belongs to this token
-    if (!rawText.contains(kanjiObjetivo)) {
-      return rawText;
-    }
-
-    // ✅ If token exactly equals target → full mask
-    if (rawText == kanjiObjetivo) {
-      return "〇" * kanjiObjetivo.length;
-    }
-
-    // ✅ partial case (keep structure like before)
-    return rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length);
+    return rawText.contains(kanjiObjetivo)
+        ? rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length)
+        : rawText;
   }
 
   InlineSpan _buildHuecoSpan(String maskedText) {
