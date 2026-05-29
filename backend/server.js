@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 function normalizeStrokes(strokes) {
   let minX = Infinity,
@@ -34,37 +34,6 @@ function normalizeStrokes(strokes) {
     y: stroke.y.map((y) => (y - minY) / size),
   }));
 }
-
-// function compareStrokes(user, reference) {
-//   let total = 0;
-//   let count = 0;
-
-//   const strokeCount = Math.min(user.length, reference.length);
-
-//   for (let i = 0; i < strokeCount; i++) {
-//     const s1 = user[i];
-//     const s2 = reference[i];
-
-//     const len = Math.min(s1.x.length, s2.x.length);
-
-//     for (let j = 0; j < len; j++) {
-//       const dx = s1.x[j] - s2.x[j];
-//       const dy = s1.y[j] - s2.y[j];
-
-//       total += Math.sqrt(dx * dx + dy * dy);
-//       count++;
-//     }
-//   }
-
-//   let score = total / count;
-
-//   // 🔥 PENALIZACIÓN POR TRAZOS
-//   const strokePenalty = Math.abs(user.length - reference.length);
-
-//   score += strokePenalty * 0.5;
-
-//   return score;
-// }
 
 function ordenarStroke(stroke) {
   const points = stroke.x.map((x, i) => ({
@@ -269,5 +238,5 @@ app.post("/recognize", async (req, res) => {
 app.use("/kanji_svg", express.static("kanji_svg"));
 
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en puerto ${PORT}`);
 });
