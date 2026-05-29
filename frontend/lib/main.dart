@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
 import 'package:kanji_app/screens/resultado_screen.dart';
 import 'package:kanji_app/styles/app_text_styles.dart';
+import 'package:kanji_app/widgets/icon_text_button.dart';
 import 'widgets/drawing_canvas.dart';
 import 'dart:convert';
 import 'widgets/kanji_svg.dart';
@@ -440,10 +441,40 @@ class _CanvasScreenState extends State<CanvasScreen> {
             padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
             child: Column(
               children: [
-                Center(child: _buildFrase()),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ✅ FRASE ocupa todo el espacio disponible
+                    Expanded(child: Center(child: _buildFrase())),
+
+                    const SizedBox(width: 8),
+
+                    // ✅ BOTÓN MOSTRAR SOLUCIÓN
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconTextButton(
+                          icon: Icons.visibility,
+                          label: "Solución",
+                          scale: 0.8, // 🔥 más pequeño
+                          onTap: () {
+                            canvasKey.currentState?.clear();
+                            setState(() {
+                              mostrarSolucion = true;
+                              resultado = '';
+                              feedback = '';
+                              hayTrazos = false;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
                 const SizedBox(height: 6),
 
-                // ✅ TRADUCCIÓN (condicional)
+                // ✅ TRADUCCIÓN
                 if (mostrarTraduccion &&
                     lecciones.isNotEmpty &&
                     indiceActual < lecciones.length)
@@ -521,12 +552,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   Positioned(
                     bottom: 16,
                     right: 16,
-                    child: FloatingActionButton(
-                      // mini: true, ❌ quítalo
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black87,
-                      elevation: 3,
-                      onPressed: () {
+                    child: IconTextButton(
+                      icon: Icons.cleaning_services,
+                      label: "Borrar",
+                      scale: 1.0,
+                      onTap: () {
                         canvasKey.currentState?.clear();
 
                         setState(() {
@@ -536,14 +566,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
                           hayTrazos = false;
                         });
                       },
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.cleaning_services, size: 20),
-                          SizedBox(height: 2),
-                          Text("Borrar", style: TextStyle(fontSize: 10)),
-                        ],
-                      ),
                     ),
                   ),
               ],
