@@ -139,17 +139,23 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   Future<void> cargarLeccion() async {
-    final jsonString = await rootBundle.loadString(
-      'assets/data/lecciones.json',
-    );
+    try {
+      final ruta = 'assets/data/lecciones_${widget.nivel}.json';
+      final jsonString = await rootBundle.loadString(ruta);
 
-    final data = jsonDecode(jsonString);
+      final data = jsonDecode(jsonString);
 
-    lecciones = data.where((l) {
-      return l['nivel'] == widget.nivel && l['parte'] == widget.numeroLeccion;
-    }).toList();
+      //Mezclar las lecciones para que no siempre salgan en el mismo orden
+      data.shuffle();
 
-    cargarLeccionActual();
+      lecciones = data.where((l) {
+        return l['leccion'] == widget.numeroLeccion;
+      }).toList();
+
+      cargarLeccionActual();
+    } catch (e) {
+      debugPrint("Error cargando JSON: $e");
+    }
   }
 
   void cargarLeccionActual() {
@@ -439,13 +445,23 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   void _irResultado() {
-    final kanjis = lecciones.map<String>((l) {
-      return l['target'] as String;
+    final kanjis = lecciones.map<Map<String, dynamic>>((l) {
+      return {
+        "kanji": l['target'],
+        "lectura": l['lectura'], // 👈 asegúrate que existe en tu JSON
+        "significado": l['significado'], // 👈 o el campo que uses
+      };
     }).toList();
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => ResultadoScreen(kanjis: kanjis)),
+      MaterialPageRoute(
+        builder: (_) => ResultadoScreen(
+          kanjis: kanjis,
+          nivel: widget.nivel,
+          numeroLeccion: widget.numeroLeccion,
+        ),
+      ),
     );
   }
 
@@ -628,19 +644,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   ),
               ],
             ),
-          ),
-
-          ElevatedButton(
-            onPressed: () {
-              canvasKey.currentState?.clear();
-              setState(() {
-                mostrarSolucion = true;
-                resultado = '';
-                feedback = '';
-                hayTrazos = false;
-              });
-            },
-            child: const Text('Mostrar solución'),
           ),
           Container(
             padding: const EdgeInsets.all(16),

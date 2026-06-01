@@ -71,7 +71,7 @@ flutter:
   # https://flutter.dev/to/asset-from-package
 
   assets:
-    - assets/data/lecciones.json
+    - assets/data/
     - assets/images/
 
   fonts:
