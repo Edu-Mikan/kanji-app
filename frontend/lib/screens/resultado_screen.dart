@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:kanji_app/main.dart';
 
 class ResultadoScreen extends StatelessWidget {
-  final List<String> kanjis;
+  final List<Map<String, dynamic>> kanjis;
+  final String nivel;
+  final int numeroLeccion;
 
-  const ResultadoScreen({super.key, required this.kanjis});
+  const ResultadoScreen({
+    super.key,
+    required this.kanjis,
+    required this.nivel,
+    required this.numeroLeccion,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,10 +32,28 @@ class ResultadoScreen extends StatelessWidget {
             child: ListView.builder(
               itemCount: kanjis.length,
               itemBuilder: (context, index) {
+                final item = kanjis[index];
                 return ListTile(
-                  title: Text(
-                    kanjis[index],
+                  leading: Text(
+                    item["kanji"],
                     style: const TextStyle(fontSize: 32),
+                  ),
+
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item["lectura"],
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        item["significado"],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -36,11 +62,63 @@ class ResultadoScreen extends StatelessWidget {
 
           const SizedBox(height: 10),
 
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text("Volver"),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // ✅ Volver (izquierda)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Volver"),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // ✅ Repetir (centro)
+                Expanded(
+                  flex: 2, // 👈 más ancho
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CanvasScreen(
+                            nivel: nivel,
+                            numeroLeccion: numeroLeccion,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text("Repetir"),
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // ✅ Siguiente (derecha)
+                Expanded(
+                  flex: 2, // 👈 más ancho
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CanvasScreen(
+                            nivel: nivel,
+                            numeroLeccion: numeroLeccion + 1,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text("Siguiente"),
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 20),

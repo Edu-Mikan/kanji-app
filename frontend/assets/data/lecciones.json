@@ -4,34 +4,34 @@
     "frase": "日本語[にほんご]は難[むずか]しいです。",
     "traduccion": "El japonés es difícil.",
     "nivel": "N5",
-    "parte": 1,
+    "leccion": 1,
     "categoria": [],
-    "target":  "難"
+    "target": "難"
   },
   {
     "id": 2,
     "frase": "漢字[かんじ]を勉強[べんきょう]しています。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
-    "parte": 1,
+    "leccion": 1,
     "categoria": [],
     "target": "強"
   },
-   {
+  {
     "id": 3,
     "frase": "漢字[かんじ]を勉強[べんきょう]しています。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
-    "parte": 1,
+    "leccion": 1,
     "categoria": [],
     "target": "勉強"
   },
-     {
+  {
     "id": 4,
     "frase": "漢字[かんじ]を勉強中[べんきょうちゅう]です。",
     "traduccion": "Estoy estudiando kanjis.",
     "nivel": "N5",
-    "parte": 1,
+    "leccion": 1,
     "categoria": [],
     "target": "勉強中"
   }
