@@ -61,10 +61,13 @@ class _CanvasScreenState extends State<CanvasScreen> {
   int indiceKanjiActual = 0;
   String kanjiMostrado = '';
   bool hayTrazos = false;
-  int aciertos = 0;
   Map<String, Map<String, dynamic>> resultados = {};
 
   late final ValidationService _validationService;
+
+  int get aciertosFinales {
+    return resultados.values.where((r) => r["correcto"] == true).length;
+  }
 
   String get kanjiVisible {
     return kanjiObjetivo.substring(
@@ -138,6 +141,17 @@ class _CanvasScreenState extends State<CanvasScreen> {
     }
 
     return tokens;
+  }
+
+  Map<String, dynamic> _crearResultado(String kanji, bool correcto) {
+    final leccion = lecciones[indiceActual];
+
+    return {
+      "kanji": kanji,
+      "lectura": leccion['lectura'],
+      "significado": leccion['significado'],
+      "correcto": correcto,
+    };
   }
 
   Future<void> cargarLeccion() async {
@@ -216,9 +230,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   void _cancelTimer() {
-    if (_drawTimer?.isActive ?? false) {
-      _drawTimer?.cancel();
-    }
+    _drawTimer?.cancel();
   }
 
   String reemplazarHuecos(String texto, String resultado) {
@@ -262,14 +274,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
       if (kanji != null) {
         kanjiMostrado = kanji;
 
-        resultados[kanji] = {
-          "kanji": kanji,
-          "lectura": lecciones[indiceActual]['lectura'],
-          "significado": lecciones[indiceActual]['significado'],
-          "correcto": true,
-        };
-
-        aciertos++;
+        resultados[kanji] = _crearResultado(kanji, true);
         indiceKanjiActual++;
       }
     });
@@ -309,15 +314,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
       final kanji = obtenerKanjiActual();
 
-      resultados.putIfAbsent(
-        kanji,
-        () => {
-          "kanji": kanji,
-          "lectura": lecciones[indiceActual]['lectura'],
-          "significado": lecciones[indiceActual]['significado'],
-          "correcto": false,
-        },
-      );
+      resultados.putIfAbsent(kanji, () => _crearResultado(kanji, false));
     });
 
     // ✅ ocultar después de un tiempo
@@ -428,9 +425,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   String _buildMaskedText(String rawText) {
     if (kanjiObjetivo.isEmpty) return rawText;
 
-    return rawText.contains(kanjiObjetivo)
-        ? rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length)
-        : rawText;
+    return rawText.replaceFirst(kanjiObjetivo, "〇" * kanjiObjetivo.length);
   }
 
   InlineSpan _buildHuecoSpan(String maskedText) {
@@ -482,7 +477,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
           resultados: listaResultados,
           nivel: widget.nivel,
           numeroLeccion: widget.numeroLeccion,
-          aciertos: aciertos,
+          aciertos: aciertosFinales,
         ),
       ),
     );
