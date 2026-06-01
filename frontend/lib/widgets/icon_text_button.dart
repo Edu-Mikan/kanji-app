@@ -4,14 +4,18 @@ class IconTextButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final double scale; // ✅ nuevo
+  final double scale;
+  final Color? iconColor;
+  final Color? textColor;
 
   const IconTextButton({
     super.key,
     required this.icon,
     required this.label,
     required this.onTap,
-    this.scale = 1.0, // ✅ default
+    this.scale = 1.0,
+    this.iconColor,
+    this.textColor,
   });
 
   @override
@@ -37,11 +41,14 @@ class IconTextButton extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 20 * scale, color: Colors.black87),
+              Icon(icon, size: 20 * scale, color: iconColor ?? Colors.black87),
               const SizedBox(height: 2),
               Text(
                 label,
-                style: TextStyle(fontSize: 10 * scale, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 10 * scale,
+                  color: textColor ?? Colors.black87,
+                ),
               ),
             ],
           ),
