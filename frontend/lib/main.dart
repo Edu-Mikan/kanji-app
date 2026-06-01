@@ -61,6 +61,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
   int indiceKanjiActual = 0;
   String kanjiMostrado = '';
   bool hayTrazos = false;
+  int aciertos = 0;
+  Map<String, Map<String, dynamic>> resultados = {};
 
   late final ValidationService _validationService;
 
@@ -242,19 +244,32 @@ class _CanvasScreenState extends State<CanvasScreen> {
     return kanjiObjetivo[indiceKanjiActual];
   }
 
-  // ✅ VALIDACIÓN UNIFICADA
-  void _validacionCorrecta(double score, {bool mostrarKanji = false}) {
+  void _validacionCorrecta(double score) {
     final esUltimoKanji = indiceKanjiActual >= kanjiObjetivo.length - 1;
+
+    // ✅ Obtener el kanji ANTES de modificar el índice
+    String? kanji;
+
+    if (indiceKanjiActual < kanjiObjetivo.length) {
+      kanji = kanjiObjetivo[indiceKanjiActual];
+    }
 
     setState(() {
       resultado = "Score: ${score.toStringAsFixed(2)}";
       feedback = "Bien";
       mostrarFeedbackGrande = true;
 
-      if (indiceKanjiActual < kanjiObjetivo.length) {
-        if (mostrarKanji) {
-          kanjiMostrado = kanjiObjetivo[indiceKanjiActual];
-        }
+      if (kanji != null) {
+        kanjiMostrado = kanji;
+
+        resultados[kanji] = {
+          "kanji": kanji,
+          "lectura": lecciones[indiceActual]['lectura'],
+          "significado": lecciones[indiceActual]['significado'],
+          "correcto": true,
+        };
+
+        aciertos++;
         indiceKanjiActual++;
       }
     });
@@ -291,6 +306,18 @@ class _CanvasScreenState extends State<CanvasScreen> {
       feedback = "Incorrecto";
       mostrarFeedbackGrande = true;
       hayTrazos = true;
+
+      final kanji = obtenerKanjiActual();
+
+      resultados.putIfAbsent(
+        kanji,
+        () => {
+          "kanji": kanji,
+          "lectura": lecciones[indiceActual]['lectura'],
+          "significado": lecciones[indiceActual]['significado'],
+          "correcto": false,
+        },
+      );
     });
 
     // ✅ ocultar después de un tiempo
@@ -314,7 +341,8 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
   Future<void> _autoValidar() async {
     if (_isValidating) return;
-    _isValidating = true;
+
+    setState(() => _isValidating = true);
 
     try {
       final strokes = canvasKey.currentState?.convertirStrokes();
@@ -333,7 +361,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
         _validacionIncorrecta(result.score);
       }
     } finally {
-      _isValidating = false;
+      setState(() => _isValidating = false);
     }
   }
 
@@ -445,21 +473,16 @@ class _CanvasScreenState extends State<CanvasScreen> {
   }
 
   void _irResultado() {
-    final kanjis = lecciones.map<Map<String, dynamic>>((l) {
-      return {
-        "kanji": l['target'],
-        "lectura": l['lectura'], // 👈 asegúrate que existe en tu JSON
-        "significado": l['significado'], // 👈 o el campo que uses
-      };
-    }).toList();
-
+    final listaResultados = resultados.values.toList();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => ResultadoScreen(
-          kanjis: kanjis,
+          //kanjis: kanjis,
+          resultados: listaResultados,
           nivel: widget.nivel,
           numeroLeccion: widget.numeroLeccion,
+          aciertos: aciertos,
         ),
       ),
     );
@@ -482,6 +505,24 @@ class _CanvasScreenState extends State<CanvasScreen> {
     }
   }
 
+  void _toggleFurigana() {
+    setState(() {
+      mostrarFurigana = !mostrarFurigana;
+    });
+
+    _settings.mostrarFurigana = mostrarFurigana;
+    _settings.guardar();
+  }
+
+  void _toggleTraduccion() {
+    setState(() {
+      mostrarTraduccion = !mostrarTraduccion;
+    });
+
+    _settings.mostrarTraduccion = mostrarTraduccion;
+    _settings.guardar();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -499,20 +540,73 @@ class _CanvasScreenState extends State<CanvasScreen> {
         children: [
           // ✅ PROGRESO (PEGADO ARRIBA)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8), // 🔥 clave
-            child: Text(
-              progresoKanji,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Row(
+              children: [
+                // ✅ IZQUIERDA: progreso
+                Expanded(
+                  child: Text(
+                    progresoKanji,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+
+                // ✅ BOTÓN FURIGANA
+                IconTextButton(
+                  icon: mostrarFurigana
+                      ? Icons.visibility_off
+                      : Icons.visibility,
+                  label: mostrarFurigana
+                      ? "Ocultar \nfurigana"
+                      : "Mostrar \nfurigana",
+                  scale: 1.0,
+                  onTap: _toggleFurigana,
+                ),
+
+                const SizedBox(width: 6),
+
+                // ✅ BOTÓN TRADUCCIÓN
+                IconTextButton(
+                  icon: mostrarTraduccion
+                      ? Icons.translate
+                      : Icons.translate_outlined,
+                  label: mostrarTraduccion
+                      ? "Ocultar \ntraducción"
+                      : "Mostrar \ntraducción",
+                  scale: 1.0,
+                  onTap: _toggleTraduccion,
+                  // iconColor: mostrarTraduccion ? Colors.blue : Colors.blueGrey,
+                  // textColor: mostrarTraduccion ? Colors.blue : Colors.blueGrey,
+                ),
+
+                const SizedBox(width: 6),
+
+                // ✅ BOTÓN SOLUCIÓN
+                IconTextButton(
+                  icon: Icons.visibility,
+                  label: "Mostrar \nsolución",
+                  scale: 1.0,
+                  onTap: () {
+                    canvasKey.currentState?.clear();
+                    setState(() {
+                      mostrarSolucion = true;
+                      resultado = '';
+                      feedback = '';
+                      hayTrazos = false;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
 
           // ✅ FRASE (PEGADA PERO CON UN POCO DE ESPACIO)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Column(
               children: [
                 Row(
@@ -520,29 +614,6 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   children: [
                     // ✅ FRASE ocupa todo el espacio disponible
                     Expanded(child: Center(child: _buildFrase())),
-
-                    const SizedBox(width: 8),
-
-                    // ✅ BOTÓN MOSTRAR SOLUCIÓN
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconTextButton(
-                          icon: Icons.visibility,
-                          label: "Solución",
-                          scale: 0.8, // 🔥 más pequeño
-                          onTap: () {
-                            canvasKey.currentState?.clear();
-                            setState(() {
-                              mostrarSolucion = true;
-                              resultado = '';
-                              feedback = '';
-                              hayTrazos = false;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
                   ],
                 ),
 
@@ -570,9 +641,28 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   Positioned(
                     top: 16,
                     right: 16,
-                    child: Text(
-                      kanjiMostrado,
-                      style: const TextStyle(fontSize: 40),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(
+                          16,
+                        ), // ✅ bordes redondeados
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4), // ✅ efecto floating
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        kanjiMostrado,
+                        style: const TextStyle(
+                          fontSize: 48, // ✅ más grande
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
 
@@ -641,6 +731,11 @@ class _CanvasScreenState extends State<CanvasScreen> {
                         });
                       },
                     ),
+                  ),
+                if (_isValidating)
+                  Container(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    child: const Center(child: CircularProgressIndicator()),
                   ),
               ],
             ),

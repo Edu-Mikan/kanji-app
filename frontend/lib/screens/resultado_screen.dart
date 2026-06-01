@@ -2,16 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:kanji_app/main.dart';
 
 class ResultadoScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> kanjis;
+  final List<Map<String, dynamic>> resultados;
   final String nivel;
   final int numeroLeccion;
+  final int aciertos;
 
   const ResultadoScreen({
     super.key,
-    required this.kanjis,
+    required this.resultados,
     required this.nivel,
     required this.numeroLeccion,
+    required this.aciertos,
   });
+
+  String get mensajeResultado {
+    final total = resultados.length;
+
+    if (aciertos == 0) {
+      return "No has acertado ningún kanji, ¡la próxima vez seguro que lo haces mejor! 💪";
+    }
+
+    if (aciertos == total) {
+      return "¡Has acertado todos los kanjis, eres increíble! 🎉";
+    }
+
+    return "Has acertado $aciertos de $total kanjis";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +35,17 @@ class ResultadoScreen extends StatelessWidget {
       appBar: AppBar(title: const Text("Resultado lección")),
       body: Column(
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
 
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              mensajeResultado,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 16),
           const Text(
             "Kanjis practicados",
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
@@ -30,27 +55,46 @@ class ResultadoScreen extends StatelessWidget {
 
           Expanded(
             child: ListView.builder(
-              itemCount: kanjis.length,
+              itemCount: resultados.length,
               itemBuilder: (context, index) {
-                final item = kanjis[index];
+                final item = resultados[index];
+                final correcto = item["correcto"] == true;
+
                 return ListTile(
-                  leading: Text(
-                    item["kanji"],
-                    style: const TextStyle(fontSize: 32),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: correcto ? Colors.green : Colors.red,
+                    ),
+                    child: Icon(
+                      correcto ? Icons.check : Icons.close,
+                      color: Colors.white,
+                    ),
                   ),
 
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  title: Row(
                     children: [
-                      Text(
-                        item["lectura"],
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      Text(
-                        item["significado"],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
+                      Text(item["kanji"], style: const TextStyle(fontSize: 32)),
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item["lectura"],
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              item["significado"],
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -66,7 +110,6 @@ class ResultadoScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // ✅ Volver (izquierda)
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
@@ -78,9 +121,7 @@ class ResultadoScreen extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // ✅ Repetir (centro)
                 Expanded(
-                  flex: 2, // 👈 más ancho
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -99,9 +140,7 @@ class ResultadoScreen extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // ✅ Siguiente (derecha)
                 Expanded(
-                  flex: 2, // 👈 más ancho
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pushReplacement(
