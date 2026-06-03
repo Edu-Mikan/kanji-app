@@ -39,7 +39,7 @@ class _LessonListScreenState extends State<LessonListScreen> {
   // ✅ CARGAR LECCIONES DINÁMICAMENTE
   Future<void> cargarLecciones() async {
     try {
-      final ruta = 'data/lecciones_${widget.nivel}.json';
+      final ruta = 'assets/data/lecciones_${widget.nivel}.json';
       final jsonString = await rootBundle.loadString(ruta);
 
       final data = jsonDecode(jsonString);
