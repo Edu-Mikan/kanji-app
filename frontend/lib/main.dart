@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:kanji_app/screens/loading_screen.dart';
 import 'package:kanji_app/screens/resultado_screen.dart';
+import 'package:kanji_app/services/progress_service.dart';
 import 'package:kanji_app/styles/app_text_styles.dart';
 import 'package:kanji_app/widgets/icon_text_button.dart';
 import 'widgets/drawing_canvas.dart';
@@ -13,7 +15,12 @@ import 'services/validation_service.dart';
 import 'screens/settings_screen.dart';
 import 'services/settings_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Hive.initFlutter();
+  await Hive.openBox('progreso');
+
   runApp(const MyApp());
 }
 
@@ -62,6 +69,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
   String kanjiMostrado = '';
   bool hayTrazos = false;
   Map<String, Map<String, dynamic>> resultados = {};
+  final ProgressService _progress = ProgressService();
 
   late final ValidationService _validationService;
 
@@ -85,7 +93,23 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
     _initSettings();
     cargarLeccion();
+    //_cargarProgresoGuardado();
   }
+
+  // void _cargarProgresoGuardado() {
+  //   final data = _progress.cargar(
+  //     nivel: widget.nivel,
+  //     leccion: widget.numeroLeccion,
+  //   );
+
+  //   if (data == null) return;
+
+  //   setState(() {
+  //     resultados = data.map(
+  //       (key, value) => MapEntry(key, Map<String, dynamic>.from(value)),
+  //     );
+  //   });
+  // }
 
   Future<void> _initSettings() async {
     await _settings.cargar();
@@ -274,7 +298,17 @@ class _CanvasScreenState extends State<CanvasScreen> {
       if (kanji != null) {
         kanjiMostrado = kanji;
 
-        resultados[kanji] = _crearResultado(kanji, true);
+        final existing = resultados[kanji];
+
+        if (existing == null) {
+          // ✅ nunca intentado antes → correcto
+          resultados[kanji] = _crearResultado(kanji, true);
+        } else if (existing["correcto"] == true) {
+          // ✅ ya era correcto → no cambiar nada
+        } else {
+          // ✅ ya falló antes → mantener como incorrecto ❌
+        }
+
         indiceKanjiActual++;
       }
     });
@@ -467,13 +501,22 @@ class _CanvasScreenState extends State<CanvasScreen> {
     return TextSpan(children: spans);
   }
 
-  void _irResultado() {
+  Future<void> _irResultado() async {
     final listaResultados = resultados.values.toList();
+
+    await _progress.guardar(
+      nivel: widget.nivel,
+      leccion: widget.numeroLeccion,
+      resultados: resultados,
+    );
+
+    // ✅ SOLUCIÓN
+    if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder: (_) => ResultadoScreen(
-          //kanjis: kanjis,
           resultados: listaResultados,
           nivel: widget.nivel,
           numeroLeccion: widget.numeroLeccion,
