@@ -240,3 +240,7 @@ app.use("/kanji_svg", express.static("kanji_svg"));
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });
+
+app.get("/ping", (req, res) => {
+  res.status(200).send("ok");
+});

@@ -41,4 +41,16 @@ class ValidationService {
       return null;
     }
   }
+
+  Future<void> ping() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/ping'));
+
+      if (response.statusCode != 200) {
+        throw Exception('Ping failed');
+      }
+    } catch (e) {
+      // ignoramos errores voluntariamente
+    }
+  }
 }
