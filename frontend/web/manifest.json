@@ -1,35 +1,25 @@
 {
-    "name": "kanji_app",
-    "short_name": "kanji_app",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "Un proyecto para aprender kanjis de forma divertida y efectiva.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
-        {
-            "src": "icons/loading_image_kanji_kun.PNG",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/loading_image_kanji_kun.PNG",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/loading_image_kanji_kun.PNG",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/loading_image_kanji_kun.PNG",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ]
+  "name": "kanji_app",
+  "short_name": "kanji_app",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0175C2",
+  "theme_color": "#0175C2",
+  "description": "Un proyecto para aprender kanjis de forma divertida y efectiva.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
