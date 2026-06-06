@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kanji_app/services/validation_service.dart';
 import 'level_screen.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -9,15 +10,35 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
+  late final ValidationService _validationService;
   @override
   void initState() {
     super.initState();
+    _validationService = ValidationService(
+      baseUrl: 'https://kanji-app-mjns.onrender.com',
+    );
     _initApp();
   }
 
-  Future<void> _initApp() async {
-    // ✅ pequeño delay para asegurar render
+  Future<void> _warmUpBackend() async {
+    try {
+      await _validationService.ping();
+    } catch (_) {}
+  }
+
+  Future<void> _fakeMinimumLoad() async {
     await Future.delayed(const Duration(milliseconds: 1500));
+  }
+
+  Future<void> _initApp() async {
+    // 🔥 lanzamos en paralelo (muy importante)
+    await Future.wait([
+      _warmUpBackend(),
+      _fakeMinimumLoad(), // mejora UX
+    ]);
+
+    // ✅ pequeño delay para asegurar render
+    //await Future.delayed(const Duration(milliseconds: 1500));
 
     if (!mounted) return;
 
