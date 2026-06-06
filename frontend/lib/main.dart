@@ -92,7 +92,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
 
     _initSettings();
-    _warmUpBackend();
+    //_warmUpBackend();
     cargarLeccion();
     //_cargarProgresoGuardado();
   }
@@ -112,13 +112,13 @@ class _CanvasScreenState extends State<CanvasScreen> {
   //   });
   // }
 
-  Future<void> _warmUpBackend() async {
-    try {
-      await _validationService.ping();
-    } catch (_) {
-      // ignorar errores
-    }
-  }
+  // Future<void> _warmUpBackend() async {
+  //   try {
+  //     await _validationService.ping();
+  //   } catch (_) {
+  //     // ignorar errores
+  //   }
+  // }
 
   Future<void> _initSettings() async {
     await _settings.cargar();
