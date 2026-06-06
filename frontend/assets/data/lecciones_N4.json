@@ -1,0 +1,167 @@
+[
+  {
+    "id": 1001,
+    "frase": "駅[えき]の近[ちか]くに住[す]んでいます。",
+    "traduccion": "Vivo cerca de la estación.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["ubicacion", "vida_diaria"],
+    "target": "近",
+    "lectura": "ちか",
+    "significado": "cerca"
+  },
+  {
+    "id": 1002,
+    "frase": "兄[あに]は銀[ぎん]行[こう]で働[はたら]いています。",
+    "traduccion": "Mi hermano mayor trabaja en un banco.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["trabajo", "familia"],
+    "target": "銀",
+    "lectura": "ぎん",
+    "significado": "plata"
+  },
+  {
+    "id": 1003,
+    "frase": "荷[に]物[もつ]を運[はこ]ぶのを手[て]伝[つだ]ってください。",
+    "traduccion": "Por favor, ayúdame a transportar el equipaje.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["vida_diaria"],
+    "target": "運",
+    "lectura": "はこ",
+    "significado": "transportar"
+  },
+  {
+    "id": 1004,
+    "frase": "試[し]験[けん]の結[けっ]果[か]を待[ま]っています。",
+    "traduccion": "Estoy esperando los resultados del examen.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["educacion"],
+    "target": "試",
+    "lectura": "し",
+    "significado": "prueba, examen"
+  },
+  {
+    "id": 1005,
+    "frase": "窓[まど]を開[あ]けると涼[すず]しい風[かぜ]が入[はい]ります。",
+    "traduccion": "Al abrir la ventana entra una brisa fresca.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["naturaleza", "vida_diaria"],
+    "target": "涼",
+    "lectura": "すず",
+    "significado": "fresco"
+  },
+  {
+    "id": 1006,
+    "frase": "彼[かれ]は毎日[まいにち]運動[うんどう]しています。",
+    "traduccion": "Él hace ejercicio todos los días.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["salud", "vida_diaria"],
+    "target": "運動",
+    "lectura": "うんどう",
+    "significado": "ejercicio"
+  },
+  {
+    "id": 1007,
+    "frase": "この道[みち]は車[くるま]が多[おお]いです。",
+    "traduccion": "Este camino tiene mucho tráfico.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["vida_diaria"],
+    "target": "道",
+    "lectura": "みち",
+    "significado": "camino"
+  },
+  {
+    "id": 1008,
+    "frase": "彼女[かのじょ]は音楽[おんがく]が大好[だいす]きです。",
+    "traduccion": "A ella le encanta la música.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["hobbies"],
+    "target": "音楽",
+    "lectura": "おんがく",
+    "significado": "música"
+  },
+  {
+    "id": 1009,
+    "frase": "新[あたら]しい服[ふく]を買[か]いました。",
+    "traduccion": "Compré ropa nueva.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["compras", "vida_diaria"],
+    "target": "新",
+    "lectura": "あたら",
+    "significado": "nuevo"
+  },
+  {
+    "id": 1010,
+    "frase": "彼[かれ]は毎朝[まいあさ]新聞[しんぶん]を読[よ]みます。",
+    "traduccion": "Él lee el periódico todas las mañanas.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["vida_diaria", "educacion"],
+    "target": "新聞",
+    "lectura": "しんぶん",
+    "significado": "periódico"
+  },
+  {
+    "id": 1011,
+    "frase": "この映画[えいが]は面白[おもしろ]かったです。",
+    "traduccion": "Esta película fue interesante.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["entretenimiento"],
+    "target": "映画",
+    "lectura": "えいが",
+    "significado": "película"
+  },
+  {
+    "id": 1012,
+    "frase": "彼女[かのじょ]は毎日[まいにち]勉強[べんきょう]しています。",
+    "traduccion": "Ella estudia todos los días.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["educacion"],
+    "target": "勉強",
+    "lectura": "べんきょう",
+    "significado": "estudio"
+  },
+  {
+    "id": 1013,
+    "frase": "この店[みせ]は安[やす]いです。",
+    "traduccion": "Esta tienda es barata.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["compras", "vida_diaria"],
+    "target": "安",
+    "lectura": "やす",
+    "significado": "barato"
+  },
+  {
+    "id": 1014,
+    "frase": "彼[かれ]は毎日[まいにち]運動[うんどう]しています。",
+    "traduccion": "Él hace ejercicio todos los días.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["salud", "vida_diaria"],
+    "target": "運動",
+    "lectura": "うんどう",
+    "significado": "ejercicio"
+  },
+  {
+    "id": 1015,
+    "frase": "この道[みち]は車[くるま]が多[おお]いです。",
+    "traduccion": "Este camino tiene mucho tráfico.",
+    "nivel": "N4",
+    "leccion": 1,
+    "categoria": ["vida_diaria"],
+    "target": "道",
+    "lectura": "みち",
+    "significado": "camino"
+  }
+]

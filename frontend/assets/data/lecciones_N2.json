@@ -1,0 +1,57 @@
+[
+  {
+    "id": 3001,
+    "frase": "彼[かれ]の提[てい]案[あん]は多[おお]くの人[ひと]に支[し]持[じ]された。",
+    "traduccion": "Su propuesta fue apoyada por muchas personas.",
+    "nivel": "N2",
+    "leccion": 1,
+    "categoria": ["negocios", "sociedad"],
+    "target": "提",
+    "lectura": "てい",
+    "significado": "propuesta, presentar"
+  },
+  {
+    "id": 3002,
+    "frase": "企[き]業[ぎょう]は人[じん]材[ざい]育[いく]成[せい]に力[ちから]を入[い]れている。",
+    "traduccion": "La empresa está invirtiendo esfuerzos en la formación de personal.",
+    "nivel": "N2",
+    "leccion": 1,
+    "categoria": ["negocios"],
+    "target": "材",
+    "lectura": "ざい",
+    "significado": "material, recurso humano"
+  },
+  {
+    "id": 3003,
+    "frase": "彼[かれ]は豊[ほう]富[ふ]な経[けい]験[けん]を持[も]っている。",
+    "traduccion": "Tiene una amplia experiencia.",
+    "nivel": "N2",
+    "leccion": 1,
+    "categoria": ["trabajo"],
+    "target": "豊",
+    "lectura": "ほう",
+    "significado": "abundante"
+  },
+  {
+    "id": 3004,
+    "frase": "その事[じ]件[けん]の背[はい]景[けい]を詳[くわ]しく調[しら]べた。",
+    "traduccion": "Investigaron detalladamente el trasfondo de ese incidente.",
+    "nivel": "N2",
+    "leccion": 1,
+    "categoria": ["sociedad"],
+    "target": "景",
+    "lectura": "けい",
+    "significado": "paisaje, escenario"
+  },
+  {
+    "id": 3005,
+    "frase": "慎[しん]重[ちょう]に判[はん]断[だん]する必[ひつ]要[よう]がある。",
+    "traduccion": "Es necesario juzgar con cautela.",
+    "nivel": "N2",
+    "leccion": 1,
+    "categoria": ["pensamiento"],
+    "target": "慎",
+    "lectura": "しん",
+    "significado": "prudencia, cautela"
+  }
+]
