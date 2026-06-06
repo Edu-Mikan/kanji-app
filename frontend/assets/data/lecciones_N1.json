@@ -1,0 +1,57 @@
+[
+  {
+    "id": 4001,
+    "frase": "哲[てつ]学[がく]は人[じん]生[せい]の本[ほん]質[しつ]を探[たん]求[きゅう]する学[がく]問[もん]だ。",
+    "traduccion": "La filosofía es una disciplina que explora la esencia de la vida.",
+    "nivel": "N1",
+    "leccion": 1,
+    "categoria": ["filosofia"],
+    "target": "哲",
+    "lectura": "てつ",
+    "significado": "filosofía, sabiduría"
+  },
+  {
+    "id": 4002,
+    "frase": "彼[かれ]の発[はつ]言[げん]は極[きわ]めて曖[あい]昧[まい]だった。",
+    "traduccion": "Su declaración fue extremadamente ambigua.",
+    "nivel": "N1",
+    "leccion": 1,
+    "categoria": ["comunicacion"],
+    "target": "曖",
+    "lectura": "あい",
+    "significado": "ambiguo"
+  },
+  {
+    "id": 4003,
+    "frase": "複[ふく]雑[ざつ]な現[げん]象[しょう]を理[り]論[ろん]的[てき]に解[かい]析[せき]した。",
+    "traduccion": "Analizó teóricamente un fenómeno complejo.",
+    "nivel": "N1",
+    "leccion": 1,
+    "categoria": ["academico"],
+    "target": "析",
+    "lectura": "せき",
+    "significado": "analizar"
+  },
+  {
+    "id": 4004,
+    "frase": "その仮[か]説[せつ]を実[じっ]証[しょう]する証[しょう]拠[こ]は十[じゅう]分[ぶん]ではない。",
+    "traduccion": "No hay pruebas suficientes para demostrar esa hipótesis.",
+    "nivel": "N1",
+    "leccion": 1,
+    "categoria": ["academico"],
+    "target": "証",
+    "lectura": "しょう",
+    "significado": "prueba, evidencia"
+  },
+  {
+    "id": 4005,
+    "frase": "彼[かれ]は卓[たく]越[えつ]した技[ぎ]術[じゅつ]を持[も]つ職[しょく]人[にん]だ。",
+    "traduccion": "Es un artesano con una técnica sobresaliente.",
+    "nivel": "N1",
+    "leccion": 1,
+    "categoria": ["habilidades"],
+    "target": "卓",
+    "lectura": "たく",
+    "significado": "sobresaliente, excelente"
+  }
+]

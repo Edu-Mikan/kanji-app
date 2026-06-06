@@ -1,0 +1,134 @@
+[
+  {
+    "id": 2001,
+    "frase": "彼[かれ]は責[せき]任[にん]感[かん]の強[つよ]い人[ひと]です。",
+    "traduccion": "Es una persona con un fuerte sentido de la responsabilidad.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "責",
+    "lectura": "せき",
+    "significado": "responsabilidad"
+  },
+  {
+    "id": 2002,
+    "frase": "政[せい]府[ふ]は新[あたら]しい計[けい]画[かく]を発[はっ]表[ぴょう]しました。",
+    "traduccion": "El gobierno anunció un nuevo plan.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["politica"],
+    "target": "政",
+    "lectura": "せい",
+    "significado": "gobierno, política"
+  },
+  {
+    "id": 2003,
+    "frase": "環[かん]境[きょう]保[ほ]護[ご]は重[じゅう]要[よう]な課[か]題[だい]です。",
+    "traduccion": "La protección del medio ambiente es un tema importante.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["medio_ambiente"],
+    "target": "環",
+    "lectura": "かん",
+    "significado": "entorno, ambiente"
+  },
+  {
+    "id": 2004,
+    "frase": "彼[かれ]の説[せつ]明[めい]はとても具[ぐ]体[たい]的[てき]でした。",
+    "traduccion": "Su explicación fue muy concreta.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["comunicacion"],
+    "target": "具",
+    "lectura": "ぐ",
+    "significado": "concreto, herramienta"
+  },
+  {
+    "id": 2005,
+    "frase": "輸[ゆ]入[にゅう]品[ひん]の価[か]格[かく]が上[あ]がっています。",
+    "traduccion": "El precio de los productos importados está aumentando.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["economia"],
+    "target": "輸",
+    "lectura": "ゆ",
+    "significado": "importar/exportar, transportar"
+  },
+  {
+    "id": 2006,
+    "frase": "彼[かれ]は優[ゆう]秀[しゅう]な成[せい]績[せき]を収[おさ]めました。",
+    "traduccion": "Obtuvo resultados excelentes.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["educacion"],
+    "target": "優",
+    "lectura": "ゆう",
+    "significado": "excelente, superior"
+  },
+  {
+    "id": 2007,
+    "frase": "彼[かれ]は多[た]様[よう]な趣[しゅ]味[み]を持[も]っています。",
+    "traduccion": "Tiene una variedad de hobbies.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "様",
+    "lectura": "よう",
+    "significado": "variedad, apariencia"
+  },
+  {
+    "id": 2008,
+    "frase": "彼[かれ]は責[せき]任[にん]感[かん]の強[つよ]い人[ひと]です。",
+    "traduccion": "Es una persona con un fuerte sentido de la responsabilidad.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "任",
+    "lectura": "にん",
+    "significado": "deber, responsabilidad"
+  },
+  {
+    "id": 2009,
+    "frase": "彼[かれ]は責[せき]任[にん]感[かん]の強[つよ]い人[ひと]です。",
+    "traduccion": "Es una persona con un fuerte sentido de la responsabilidad.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "感",
+    "lectura": "かん",
+    "significado": "sentimiento, sensación"
+  },
+  {
+    "id": 2010,
+    "frase": "彼[かれ]は責[せき]任[にん]感[かん]の強[つよ]い人[ひと]です。",
+    "traduccion": "Es una persona con un fuerte sentido de la responsabilidad.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "強",
+    "lectura": "つよ",
+    "significado": "fuerte, poderoso"
+  },
+  {
+    "id": 2011,
+    "frase": "彼[かれ]は責[せき]任[にん]感[かん]の強[つよ]い人[ひと]です。",
+    "traduccion": "Es una persona con un fuerte sentido de la responsabilidad.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "人",
+    "lectura": "ひと",
+    "significado": "persona"
+  },
+  {
+    "id": 2012,
+    "frase": "彼[かれ]は責[せき]任[にん]感[かん]の強[つよ]い人[ひと]です。",
+    "traduccion": "Es una persona con un fuerte sentido de la responsabilidad.",
+    "nivel": "N3",
+    "leccion": 1,
+    "categoria": ["personalidad"],
+    "target": "です",
+    "lectura": "です",
+    "significado": "ser, estar (formal)"
+  }
+]
