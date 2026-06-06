@@ -92,33 +92,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
     );
 
     _initSettings();
-    //_warmUpBackend();
     cargarLeccion();
     //_cargarProgresoGuardado();
   }
-
-  // void _cargarProgresoGuardado() {
-  //   final data = _progress.cargar(
-  //     nivel: widget.nivel,
-  //     leccion: widget.numeroLeccion,
-  //   );
-
-  //   if (data == null) return;
-
-  //   setState(() {
-  //     resultados = data.map(
-  //       (key, value) => MapEntry(key, Map<String, dynamic>.from(value)),
-  //     );
-  //   });
-  // }
-
-  // Future<void> _warmUpBackend() async {
-  //   try {
-  //     await _validationService.ping();
-  //   } catch (_) {
-  //     // ignorar errores
-  //   }
-  // }
 
   Future<void> _initSettings() async {
     await _settings.cargar();
@@ -235,6 +211,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
     indiceKanjiActual = 0;
     kanjiMostrado = '';
+    mostrarSolucion = false;
 
     Future.delayed(const Duration(milliseconds: 50), () {
       canvasKey.currentState?.clear();
@@ -319,6 +296,9 @@ class _CanvasScreenState extends State<CanvasScreen> {
         }
 
         indiceKanjiActual++;
+
+        // ✅ 🔥 IMPORTANTE: ocultar solución al avanzar
+        mostrarSolucion = false;
       }
     });
 
@@ -374,6 +354,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
     setState(() {
       mostrarFeedbackGrande = false;
       kanjiMostrado = '';
+      mostrarSolucion = false;
     });
 
     canvasKey.currentState?.clear();
@@ -637,12 +618,31 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   icon: Icons.visibility,
                   label: "Mostrar \nsolución",
                   scale: 1.0,
+                  // onTap: () {
+                  //   canvasKey.currentState?.clear();
+                  //   setState(() {
+                  //     mostrarSolucion = true;
+                  //     resultado = '';
+                  //     feedback = '';
+                  //     hayTrazos = false;
+                  //   });
+                  // },
                   onTap: () {
                     canvasKey.currentState?.clear();
+
+                    if (indiceKanjiActual < kanjiObjetivo.length) {
+                      final kanji = obtenerKanjiActual();
+
+                      resultados.putIfAbsent(
+                        kanji,
+                        () => _crearResultado(kanji, false),
+                      );
+                    }
+
                     setState(() {
                       mostrarSolucion = true;
                       resultado = '';
-                      feedback = '';
+                      feedback = 'Incorrecto';
                       hayTrazos = false;
                     });
                   },
@@ -717,7 +717,7 @@ class _CanvasScreenState extends State<CanvasScreen> {
                   IgnorePointer(
                     child: Center(
                       child: KanjiSvg(
-                        kanji: kanjiObjetivo,
+                        kanji: obtenerKanjiActual(),
                         size: 250,
                         opacity: 0.15,
                       ),
