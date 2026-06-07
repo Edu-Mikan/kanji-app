@@ -399,7 +399,10 @@ class _CanvasScreenState extends State<CanvasScreen> {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        style: AppTextStyles.jpLarge,
+        style: AppTextStyles.jpLarge.copyWith(
+          fontSize: 36, // 👈 aquí
+        ),
+
         children: (tokens as List)
             .map<InlineSpan>((token) => _buildToken(token))
             .toList(),

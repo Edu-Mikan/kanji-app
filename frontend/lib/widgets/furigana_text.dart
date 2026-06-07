@@ -32,7 +32,7 @@ class FuriganaText extends StatelessWidget {
   Widget build(BuildContext context) {
     return IntrinsicWidth(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 1),
+        padding: const EdgeInsets.symmetric(horizontal: 0),
         child: SizedBox(
           height: 48,
           child: Stack(
@@ -40,7 +40,7 @@ class FuriganaText extends StatelessWidget {
             alignment: Alignment.center,
             children: [
               Transform.translate(
-                offset: const Offset(0, -3),
+                offset: const Offset(0, -2),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(text.length, (i) {
@@ -56,16 +56,35 @@ class FuriganaText extends StatelessWidget {
                       style: esActivo
                           ? AppTextStyles.jpLarge.copyWith(
                               color: Colors.red,
+                              fontSize: 36,
+                              //fontSize: 11, // prueba 9–11
+                              //height: 1.0, // muy importante
                               //decoration: TextDecoration.underline,
                             )
-                          : AppTextStyles.jpLarge,
+                          : AppTextStyles.jpLarge.copyWith(
+                              //color: Colors.red,
+                              fontSize: 36,
+                              //fontSize: 11, // prueba 9–11
+                              //height: 1.0, // muy importante
+                              //decoration: TextDecoration.underline,
+                            ),
                     );
                   }),
                 ),
               ),
               Positioned(
-                top: -16,
-                child: Text(reading, style: AppTextStyles.furigana),
+                top: -12,
+                child: Text(
+                  reading,
+                  style: AppTextStyles.furigana.copyWith(
+                    fontSize: 11.5,
+                    height: 1.0,
+                  ),
+                  textHeightBehavior: const TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false,
+                  ),
+                ),
               ),
             ],
           ),
