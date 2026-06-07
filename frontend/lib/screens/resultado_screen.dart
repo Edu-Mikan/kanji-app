@@ -16,17 +16,48 @@ class ResultadoScreen extends StatelessWidget {
   });
 
   String get mensajeResultado {
-    final total = resultados.length;
+    final total = resultadosAgrupados.length;
 
-    if (aciertos == 0) {
+    final aciertosAgrupados = resultadosAgrupados
+        .where((r) => r["correcto"] == true)
+        .length;
+
+    if (aciertosAgrupados == 0) {
       return "No has acertado ningún kanji, ¡la próxima vez seguro que lo haces mejor! 💪";
     }
 
-    if (aciertos == total) {
+    if (aciertosAgrupados == total) {
       return "¡Has acertado todos los kanjis, eres increíble! 🎉";
     }
 
-    return "Has acertado $aciertos de $total kanjis";
+    return "Has acertado $aciertosAgrupados de $total kanjis";
+  }
+
+  List<Map<String, dynamic>> get resultadosAgrupados {
+    final Map<String, Map<String, dynamic>> agrupados = {};
+
+    for (final r in resultados) {
+      final key =
+          r["lectura"]; // 👈 o mejor: usar un id de palabra si lo tienes
+
+      if (!agrupados.containsKey(key)) {
+        agrupados[key] = {
+          "kanji": "",
+          "lectura": r["lectura"],
+          "significado": r["significado"],
+          "correcto": true,
+        };
+      }
+
+      agrupados[key]!["kanji"] += r["kanji"];
+
+      // si alguno es incorrecto → todo incorrecto
+      if (r["correcto"] == false) {
+        agrupados[key]!["correcto"] = false;
+      }
+    }
+
+    return agrupados.values.toList();
   }
 
   @override
@@ -55,9 +86,11 @@ class ResultadoScreen extends StatelessWidget {
 
           Expanded(
             child: ListView.builder(
-              itemCount: resultados.length,
+              itemCount: resultadosAgrupados.length,
               itemBuilder: (context, index) {
-                final item = resultados[index];
+                final lista = resultadosAgrupados; // 👈 AQUI
+                final item = lista[index];
+
                 final correcto = item["correcto"] == true;
 
                 return ListTile(
@@ -73,27 +106,16 @@ class ResultadoScreen extends StatelessWidget {
                       color: Colors.white,
                     ),
                   ),
-
                   title: Row(
                     children: [
                       Text(item["kanji"], style: const TextStyle(fontSize: 32)),
                       const SizedBox(width: 12),
-
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              item["lectura"],
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            Text(
-                              item["significado"],
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
+                            Text(item["lectura"]),
+                            Text(item["significado"]),
                           ],
                         ),
                       ),
