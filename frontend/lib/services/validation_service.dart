@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:kanji_app/config/app_config.dart';
 
 class ValidationResult {
   final double score;
@@ -11,7 +12,9 @@ class ValidationResult {
 class ValidationService {
   final String baseUrl;
 
-  ValidationService({required this.baseUrl});
+  //ValidationService({required this.baseUrl});
+
+  ValidationService({String? baseUrl}) : baseUrl = baseUrl ?? AppConfig.baseUrl;
 
   Future<ValidationResult?> validarKanji({
     required String kanji,

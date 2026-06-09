@@ -14,9 +14,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    _validationService = ValidationService(
-      baseUrl: 'https://kanji-app-mjns.onrender.com',
-    );
+    _validationService = ValidationService();
     _initApp();
   }
 
