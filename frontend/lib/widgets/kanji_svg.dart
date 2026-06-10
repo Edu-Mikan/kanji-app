@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../config/app_config.dart';
 
 class KanjiSvg extends StatelessWidget {
   final String kanji;
@@ -21,7 +22,7 @@ class KanjiSvg extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fileName = _kanjiToSvgFileName(kanji);
-    final url = 'https://kanji-app-mjns.onrender.com/kanji_svg/$fileName.svg';
+    final url = "${AppConfig.baseUrl}/kanji_svg/$fileName.svg";
     return Opacity(
       opacity: opacity,
       child: SizedBox(
