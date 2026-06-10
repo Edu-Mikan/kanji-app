@@ -104,6 +104,24 @@ function getStrokeType(stroke) {
 function compareStrokes(user, reference) {
   const complexity = reference.length;
 
+  const userCount = user.length;
+  const refCount = reference.length;
+
+  const diff = Math.abs(userCount - refCount);
+  const maxCount = Math.max(userCount, refCount);
+
+  // 🔥 regla fuerte de strokes
+  const ratio = diff / maxCount;
+
+  // 🔥 BLOQUEO REAL por diferencia de strokes
+  if (reference.length >= 6) {
+    const diff = Math.abs(user.length - reference.length);
+
+    if (diff >= 2) {
+      return 10;
+    }
+  }
+
   // ================= HARD ORIENTATION RULE (SIMPLES) =================
 
   if (reference.length <= 3) {
