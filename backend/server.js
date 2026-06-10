@@ -2,14 +2,17 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 
-const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
-
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/kanji_svg", express.static("kanji_svg"));
 
 const PORT = process.env.PORT || 3000;
 
+// 👉 ESTO FALTABA
+const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
+
+// ================= NORMALIZE =================
 function normalizeStrokes(strokes) {
   let minX = Infinity,
     minY = Infinity;
@@ -35,87 +38,10 @@ function normalizeStrokes(strokes) {
   }));
 }
 
-function ordenarStroke(stroke) {
-  const points = stroke.x.map((x, i) => ({
-    x,
-    y: stroke.y[i],
-  }));
-
-  if (points.length < 2) return stroke;
-
-  const ordered = [points[0]];
-  const remaining = points.slice(1);
-
-  while (remaining.length > 0) {
-    const last = ordered[ordered.length - 1];
-
-    let bestIndex = 0;
-    let bestDist = Infinity;
-
-    for (let i = 0; i < remaining.length; i++) {
-      const dx = remaining[i].x - last.x;
-      const dy = remaining[i].y - last.y;
-      const dist = dx * dx + dy * dy;
-
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIndex = i;
-      }
-    }
-
-    ordered.push(remaining.splice(bestIndex, 1)[0]);
-  }
-
-  return {
-    x: ordered.map((p) => p.x),
-    y: ordered.map((p) => p.y),
-  };
-}
-
-function compareStrokes(user, reference) {
-  let total = 0;
-
-  user.forEach((userStroke) => {
-    let bestScore = Infinity;
-
-    reference.forEach((refStroke) => {
-      const len = Math.min(userStroke.x.length, refStroke.x.length);
-
-      let score = 0;
-
-      for (let i = 0; i < len; i++) {
-        const dx = userStroke.x[i] - refStroke.x[i];
-        const dy = userStroke.y[i] - refStroke.y[i];
-        score += Math.sqrt(dx * dx + dy * dy);
-      }
-
-      score = score / len;
-
-      if (score < bestScore) {
-        bestScore = score;
-      }
-    });
-
-    total += bestScore;
-  });
-
-  let finalScore = total / user.length;
-
-  // penalización por número de strokes
-  const strokePenalty = Math.abs(user.length - reference.length);
-
-  // 🔥 divide por nº de strokes para no inflar
-  finalScore = finalScore / Math.sqrt(reference.length);
-
-  finalScore += strokePenalty * 0.6;
-
-  return finalScore;
-}
-
+// ================= RESAMPLE =================
 function resampleStroke(stroke, n = 20) {
   const newX = [];
   const newY = [];
-
   const total = stroke.x.length;
 
   if (total === 0) return { x: [], y: [] };
@@ -126,7 +52,6 @@ function resampleStroke(stroke, n = 20) {
 
     const i1 = Math.floor(idx);
     const i2 = Math.ceil(idx);
-
     const ratio = idx - i1;
 
     const x = stroke.x[i1] * (1 - ratio) + stroke.x[i2] * ratio;
@@ -139,108 +64,160 @@ function resampleStroke(stroke, n = 20) {
   return { x: newX, y: newY };
 }
 
-function alignStrokes(user, reference) {
-  if (!user || user.length === 0) return user;
-  if (!reference || reference.length === 0) return user;
-
-  if (!user[0] || !user[0].x || user[0].x.length === 0) return user;
-  if (!reference[0] || !reference[0].x || reference[0].x.length === 0)
-    return user;
-
-  const offsetX = user[0].x[0] - reference[0].x[0];
-  const offsetY = user[0].y[0] - reference[0].y[0];
-
-  return user.map((stroke) => ({
-    x: stroke.x.map((x) => x - offsetX),
-    y: stroke.y.map((y) => y - offsetY),
-  }));
+// ================= ANGLE =================
+function getStrokeAngle(stroke) {
+  const dx = stroke.x[stroke.x.length - 1] - stroke.x[0];
+  const dy = stroke.y[stroke.y.length - 1] - stroke.y[0];
+  return Math.atan2(dy, dx);
 }
 
-function isValidKanji(strokes) {
-  return (
-    strokes &&
-    strokes.length > 0 &&
-    strokes.every((s) => s.x.length > 0 && s.y.length > 0)
-  );
+function angleDifference(a1, a2) {
+  let diff = Math.abs(a1 - a2);
+  if (diff > Math.PI / 2) {
+    diff = Math.PI - diff;
+  }
+  return diff;
 }
 
-const referenceKanji = [
-  // horizontal
-  {
-    x: [0.2, 0.8],
-    y: [0.5, 0.5],
-  },
-  // vertical
-  {
-    x: [0.5, 0.5],
-    y: [0.2, 0.8],
-  },
-];
+// ================= LENGTH =================
+function strokeLength(stroke) {
+  let len = 0;
+  for (let i = 1; i < stroke.x.length; i++) {
+    const dx = stroke.x[i] - stroke.x[i - 1];
+    const dy = stroke.y[i] - stroke.y[i - 1];
+    len += Math.sqrt(dx * dx + dy * dy);
+  }
+  return len;
+}
 
+// ================= TYPE =================
+function getStrokeType(stroke) {
+  const angle = Math.abs(getStrokeAngle(stroke));
+  const a = angle > Math.PI / 2 ? Math.PI - angle : angle;
+
+  if (a < 0.4) return "horizontal";
+  if (a > 1.1) return "vertical";
+  return "diagonal";
+}
+
+// ================= COMPARE =================
+function compareStrokes(user, reference) {
+  const complexity = reference.length;
+
+  // ================= HARD ORIENTATION RULE (SIMPLES) =================
+
+  if (reference.length <= 3) {
+    const userTypes = user.map(getStrokeType);
+    const refTypes = reference.map(getStrokeType);
+
+    if (userTypes.length === refTypes.length) {
+      for (let i = 0; i < refTypes.length; i++) {
+        if (userTypes[i] !== refTypes[i]) {
+          return 10; // ❌ orientación incorrecta → rechazar
+        }
+      }
+    }
+  }
+
+  // ================= HARD RULE: SIMPLE KANJI =================
+  // 🔥 evita casos como 犬 vs 大
+  if (complexity <= 4 && user.length < reference.length) {
+    return 10;
+  }
+
+  let totalError = 0;
+  let used = new Array(reference.length).fill(false);
+
+  for (let i = 0; i < user.length; i++) {
+    let bestError = Infinity;
+    let bestIndex = -1;
+
+    const u = user[i];
+
+    for (let j = 0; j < reference.length; j++) {
+      if (used[j]) continue;
+
+      const r = reference[j];
+      const len = Math.min(u.x.length, r.x.length);
+
+      let error = 0;
+
+      for (let k = 0; k < len; k++) {
+        const dx = u.x[k] - r.x[k];
+        const dy = u.y[k] - r.y[k];
+        error += dx * dx + dy * dy;
+      }
+
+      error = Math.sqrt(error / len);
+
+      // orientación ligera
+      const angleDiff = angleDifference(getStrokeAngle(u), getStrokeAngle(r));
+      error += angleDiff * 0.2;
+
+      if (error < bestError) {
+        bestError = error;
+        bestIndex = j;
+      }
+    }
+
+    if (bestIndex !== -1) {
+      used[bestIndex] = true;
+      totalError += bestError;
+    } else {
+      totalError += 2; // penalización fuerte
+    }
+  }
+
+  // ================= UNUSED REFERENCE STROKES =================
+  let unused = 0;
+  for (let i = 0; i < used.length; i++) {
+    if (!used[i]) unused++;
+  }
+
+  const missingRatio = unused / reference.length;
+
+  // 🔥 penalización fuerte solo en complejos
+  if (complexity >= 6) {
+    totalError += missingRatio * 4.0;
+  } else {
+    totalError += missingRatio * 2.0;
+  }
+
+  // penalización extra por strokes de más
+  if (user.length > reference.length) {
+    totalError += (user.length - reference.length) * 1.2;
+  }
+
+  // ================= SCORE FINAL =================
+  let score = totalError / Math.max(user.length, reference.length);
+
+  return score;
+}
+
+// ================= ENDPOINT =================
 app.post("/recognize", async (req, res) => {
   try {
     const strokes = req.body.ink.strokes;
+    const targetKanji = req.body.kanji;
 
-    const targetKanji = req.body.kanji || "難";
     const referenceKanji = kanjiDataset[targetKanji];
 
     const normalized = normalizeStrokes(strokes);
+    const resampledUser = normalized.map((s) => resampleStroke(s, 20));
+    const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
 
-    const resampled = normalized.map((s) => resampleStroke(s, 20));
-
-    // ✅ 🔥 FILTRO AQUÍ
-    const filtered = resampled.filter((s) => s.x.length > 5);
-
-    const referenceResampled = referenceKanji.map((s) =>
-      //resampleStroke(s, 20)
-      ordenarStroke(resampleStroke(s, 20)),
-    );
-
-    const cleaned = referenceResampled.filter((s) => s.x.length > 5);
-
-    if (!filtered || filtered.length === 0) {
-      console.log("⚠️ Usuario sin strokes válidos");
-      return res.send({
-        kanji: targetKanji,
-        score: 999,
-      });
-    }
-
-    if (!cleaned || cleaned.length === 0) {
-      console.log("⚠️ Dataset sin strokes válidos");
-      return res.send({
-        kanji: targetKanji,
-        score: 999,
-        strokes: [],
-      });
-    }
-
-    // ✅ 🔥 ALINEAR CON FILTERED
-    const aligned = alignStrokes(filtered, referenceResampled);
-
-    // ✅ 🔥 COMPARAR CON FILTERED
-    const score = compareStrokes(aligned, referenceResampled);
-
-    console.log(`KANJI: ${targetKanji} → SCORE: ${score}`);
+    const score = compareStrokes(resampledUser, resampledRef);
 
     res.send({
       kanji: targetKanji,
       score: score,
-      //strokes: referenceKanji
-      strokes: referenceResampled,
     });
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+    console.error(e);
     res.status(500).send("Error");
   }
 });
 
-app.use("/kanji_svg", express.static("kanji_svg"));
-
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-});
-
-app.get("/ping", (req, res) => {
-  res.status(200).send("ok");
+  console.log(`Server running on port ${PORT}`);
 });
