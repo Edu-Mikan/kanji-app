@@ -229,6 +229,7 @@ app.post("/recognize", async (req, res) => {
     res.send({
       kanji: targetKanji,
       score: score,
+      strokes: referenceKanji.length,
     });
   } catch (e) {
     console.error(e);
