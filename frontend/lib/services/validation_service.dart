@@ -16,6 +16,13 @@ class ValidationService {
 
   ValidationService({String? baseUrl}) : baseUrl = baseUrl ?? AppConfig.baseUrl;
 
+  double _getThresholdFromStrokes(int strokes) {
+    if (strokes <= 3) return 0.7;
+    if (strokes <= 6) return 0.9;
+    if (strokes <= 10) return 1.2;
+    return 1.0;
+  }
+
   Future<ValidationResult?> validarKanji({
     required String kanji,
     required List<Map<String, dynamic>> strokes,
@@ -36,10 +43,15 @@ class ValidationService {
 
       final data = jsonDecode(response.body);
       final score = data['score']?.toDouble();
+      final strokesCount = data['strokes'];
 
       if (score == null) return null;
 
-      return ValidationResult(score: score, isCorrect: score <= 1.5);
+      //return ValidationResult(score: score, isCorrect: score <= 1.5);
+
+      final threshold = _getThresholdFromStrokes(strokesCount);
+
+      return ValidationResult(score: score, isCorrect: score <= threshold);
     } catch (e) {
       return null;
     }
