@@ -73,9 +73,12 @@ function getStrokeAngle(stroke) {
 
 function angleDifference(a1, a2) {
   let diff = Math.abs(a1 - a2);
-  if (diff > Math.PI / 2) {
-    diff = Math.PI - diff;
+
+  // normalizar a [0, π]
+  if (diff > Math.PI) {
+    diff = 2 * Math.PI - diff;
   }
+
   return diff;
 }
 
@@ -95,8 +98,8 @@ function getStrokeType(stroke) {
   const angle = Math.abs(getStrokeAngle(stroke));
   const a = angle > Math.PI / 2 ? Math.PI - angle : angle;
 
-  if (a < 0.4) return "horizontal";
-  if (a > 1.1) return "vertical";
+  if (a < 0.3) return "horizontal";
+  if (a > 1.2) return "vertical";
   return "diagonal";
 }
 
@@ -124,18 +127,34 @@ function compareStrokes(user, reference) {
 
   // ================= HARD ORIENTATION RULE (SIMPLES) =================
 
-  if (reference.length <= 3) {
-    const userTypes = user.map(getStrokeType);
-    const refTypes = reference.map(getStrokeType);
+  // ✅ HARD TYPE RULE (sin ángulo)
+  // if (reference.length <= 3) {
+  //   const userTypes = user.map(getStrokeType);
+  //   const refTypes = reference.map(getStrokeType);
 
-    if (userTypes.length === refTypes.length) {
-      for (let i = 0; i < refTypes.length; i++) {
-        if (userTypes[i] !== refTypes[i]) {
-          return 10; // ❌ orientación incorrecta → rechazar
-        }
-      }
-    }
-  }
+  //   if (userTypes.length === refTypes.length) {
+  //     let used = new Array(user.length).fill(false);
+
+  //     for (let i = 0; i < refTypes.length; i++) {
+  //       let matched = false;
+
+  //       for (let j = 0; j < user.length; j++) {
+  //         if (used[j]) continue;
+
+  //         if (userTypes[j] !== refTypes[i]) continue;
+
+  //         // ✅ SOLO validar tipo, NO ángulo aquí
+  //         used[j] = true;
+  //         matched = true;
+  //         break;
+  //       }
+
+  //       if (!matched) {
+  //         return 10;
+  //       }
+  //     }
+  //   }
+  // }
 
   // ================= HARD RULE: SIMPLE KANJI =================
   // 🔥 evita casos como 犬 vs 大
@@ -166,11 +185,18 @@ function compareStrokes(user, reference) {
         error += dx * dx + dy * dy;
       }
 
-      error = Math.sqrt(error / len);
+      error = Math.sqrt(error / len) * 0.5;
 
       // orientación ligera
+
       const angleDiff = angleDifference(getStrokeAngle(u), getStrokeAngle(r));
-      error += angleDiff * 0.2;
+      const angleWeight = reference.length <= 3 ? 0.2 : 0.15;
+
+      const angleTolerance = reference.length <= 3 ? 0.25 : 0.1;
+
+      if (angleDiff > angleTolerance) {
+        error += (angleDiff - angleTolerance) * angleWeight;
+      }
 
       if (error < bestError) {
         bestError = error;
@@ -224,7 +250,23 @@ app.post("/recognize", async (req, res) => {
     const resampledUser = normalized.map((s) => resampleStroke(s, 20));
     const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
 
+    console.log("USER STROKES COUNT:", resampledUser.length);
+    console.log("REF STROKES COUNT:", resampledRef.length);
+
+    resampledUser.forEach((s, i) => {
+      console.log("User stroke", i, "points:", s.x.length);
+    });
+
     const score = compareStrokes(resampledUser, resampledRef);
+
+    console.log(
+      "User strokes:",
+      strokes,
+      "\nTarget kanji:",
+      targetKanji,
+      "Score:",
+      score,
+    );
 
     res.send({
       kanji: targetKanji,
