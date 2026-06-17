@@ -27,3 +27,5 @@ npm-debug.log
 Thumbs.db
 /frontend/linux/flutter/*.cmake
 /frontend/windows/flutter/*.cmake
+/backend/feedback.jsonl
+/backend/training_data.jsonl

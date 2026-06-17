@@ -374,6 +374,15 @@ class _CanvasScreenState extends State<CanvasScreen> {
 
       if (result == null) return;
 
+      // ✅ enviar feedback al backend
+      unawaited(
+        _validationService.sendFeedback(
+          kanji: obtenerKanjiActual(),
+          score: result.score,
+          isCorrect: result.isCorrect,
+        ),
+      );
+
       if (result.isCorrect) {
         _validacionCorrecta(result.score);
       } else {

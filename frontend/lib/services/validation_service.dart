@@ -12,9 +12,27 @@ class ValidationResult {
 class ValidationService {
   final String baseUrl;
 
-  //ValidationService({required this.baseUrl});
-
   ValidationService({String? baseUrl}) : baseUrl = baseUrl ?? AppConfig.baseUrl;
+
+  Future<void> sendFeedback({
+    required String kanji,
+    required double score,
+    required bool isCorrect,
+  }) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "kanji": kanji,
+          "score": score,
+          "isCorrect": isCorrect,
+        }),
+      );
+    } catch (e) {
+      // no bloqueamos la app si falla
+    }
+  }
 
   double _getThresholdFromStrokes(int strokes) {
     if (strokes <= 3) return 0.7;

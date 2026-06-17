@@ -268,6 +268,67 @@ app.post("/recognize", async (req, res) => {
       score,
     );
 
+    const features = extractFeatures(resampledUser, resampledRef, score);
+
+    const logEntry = {
+      kanji: targetKanji,
+      features,
+      score,
+      timestamp: Date.now(),
+
+      // 🔴 ESTE LO COMPLETARÁS LUEGO DESDE FRONTEND
+      isCorrect: null,
+    };
+
+    // guardar en fichero JSON (simple)
+    fs.appendFileSync("training_data.jsonl", JSON.stringify(logEntry) + "\n");
+
+    // ================= FEATURE EXTRACTION =================
+    function extractFeatures(user, reference, score) {
+      let strokeErrors = [];
+      let angleDiffs = [];
+
+      for (let i = 0; i < Math.min(user.length, reference.length); i++) {
+        const u = user[i];
+        const r = reference[i];
+
+        const len = Math.min(u.x.length, r.x.length);
+        let error = 0;
+
+        for (let k = 0; k < len; k++) {
+          const dx = u.x[k] - r.x[k];
+          const dy = u.y[k] - r.y[k];
+          error += dx * dx + dy * dy;
+        }
+
+        error = Math.sqrt(error / len);
+        strokeErrors.push(error);
+
+        const aDiff = angleDifference(getStrokeAngle(u), getStrokeAngle(r));
+
+        angleDiffs.push(aDiff);
+      }
+
+      return {
+        strokeCountUser: user.length,
+        strokeCountRef: reference.length,
+
+        totalError: score,
+
+        meanStrokeError:
+          strokeErrors.reduce((a, b) => a + b, 0) / (strokeErrors.length || 1),
+
+        maxStrokeError: Math.max(...strokeErrors, 0),
+
+        angleDiffMean:
+          angleDiffs.reduce((a, b) => a + b, 0) / (angleDiffs.length || 1),
+
+        angleDiffMax: Math.max(...angleDiffs, 0),
+
+        unusedStrokes: Math.abs(user.length - reference.length),
+      };
+    }
+
     res.send({
       kanji: targetKanji,
       score: score,
@@ -281,4 +342,12 @@ app.post("/recognize", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+});
+
+app.post("/feedback", (req, res) => {
+  const feedback = req.body;
+
+  fs.appendFileSync("feedback.jsonl", JSON.stringify(feedback) + "\n");
+
+  res.sendStatus(200);
 });
