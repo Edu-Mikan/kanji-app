@@ -453,9 +453,7 @@ app.post("/recognize", async (req, res) => {
   try {
     const strokes = req.body.ink.strokes;
     const targetKanji = req.body.kanji;
-
     const referenceKanji = kanjiDataset[targetKanji];
-
     const normalized = normalizeStrokes(strokes);
     const resampledUser = normalized.map((s) => resampleStroke(s, 20));
     const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
@@ -491,7 +489,7 @@ app.post("/recognize", async (req, res) => {
     };
 
     // guardar en fichero JSON (simple)
-    fs.appendFileSync("training_data.jsonl", JSON.stringify(logEntry) + "\n");
+    //fs.appendFileSync("training_data.jsonl", JSON.stringify(logEntry) + "\n");
 
     // ================= FEATURE EXTRACTION =================
     function extractFeatures(user, reference, score) {
@@ -543,6 +541,7 @@ app.post("/recognize", async (req, res) => {
       kanji: targetKanji,
       score: score,
       strokes: referenceKanji.length,
+      features: features,
     });
   } catch (e) {
     console.error(e);
@@ -555,9 +554,22 @@ app.listen(PORT, () => {
 });
 
 app.post("/feedback", (req, res) => {
-  const feedback = req.body;
+  try {
+    const { kanji, features, score, isCorrect } = req.body;
 
-  fs.appendFileSync("feedback.jsonl", JSON.stringify(feedback) + "\n");
+    const entry = {
+      kanji,
+      features,
+      score,
+      isCorrect,
+      timestamp: Date.now(),
+    };
 
-  res.sendStatus(200);
+    fs.appendFileSync("training_data.jsonl", JSON.stringify(entry) + "\n");
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Error saving feedback:", err);
+    res.status(500).json({ error: "Error saving feedback" });
+  }
 });

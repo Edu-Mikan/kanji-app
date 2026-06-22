@@ -5,8 +5,13 @@ import 'package:kanji_app/config/app_config.dart';
 class ValidationResult {
   final double score;
   final bool isCorrect;
+  final Map<String, dynamic> features; // ✅ NUEVO
 
-  ValidationResult({required this.score, required this.isCorrect});
+  ValidationResult({
+    required this.score,
+    required this.isCorrect,
+    required this.features,
+  });
 }
 
 class ValidationService {
@@ -18,6 +23,7 @@ class ValidationService {
     required String kanji,
     required double score,
     required bool isCorrect,
+    Map<String, dynamic>? features,
   }) async {
     try {
       await http.post(
@@ -27,11 +33,10 @@ class ValidationService {
           "kanji": kanji,
           "score": score,
           "isCorrect": isCorrect,
+          "features": features, // ✅ CLAVE
         }),
       );
-    } catch (e) {
-      // no bloqueamos la app si falla
-    }
+    } catch (e) {}
   }
 
   double _getThresholdFromStrokes(int strokes) {
@@ -62,6 +67,7 @@ class ValidationService {
       final data = jsonDecode(response.body);
       final score = data['score']?.toDouble();
       final strokesCount = data['strokes'];
+      final features = data['features'];
 
       if (score == null) return null;
 
@@ -69,7 +75,11 @@ class ValidationService {
 
       final threshold = _getThresholdFromStrokes(strokesCount);
 
-      return ValidationResult(score: score, isCorrect: score <= threshold);
+      return ValidationResult(
+        score: score,
+        isCorrect: score <= threshold,
+        features: Map<String, dynamic>.from(features),
+      );
     } catch (e) {
       return null;
     }
