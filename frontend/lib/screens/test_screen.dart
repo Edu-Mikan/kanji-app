@@ -24,6 +24,7 @@ class _TestScreenState extends State<TestScreen> {
   late final ValidationService _validationService;
   List<String> kanjiList = [];
   int currentIndex = 0;
+  String? lastFeedbackMessage;
 
   String get currentKanji {
     if (kanjiList.isEmpty) return "";
@@ -38,17 +39,29 @@ class _TestScreenState extends State<TestScreen> {
 
     if (strokes == null || strokes.isEmpty) {
       debugPrint("No hay trazos");
+
+      setState(() {
+        lastFeedbackMessage = "No hay trazos para guardar";
+      });
+
       return;
     }
+
+    final typedStrokes = List<Map<String, dynamic>>.from(strokes);
 
     // ✅ 1. usar ValidationService (recognize)
     final result = await _validationService.validarKanji(
       kanji: currentKanji,
-      strokes: List<Map<String, dynamic>>.from(strokes),
+      strokes: typedStrokes,
     );
 
     if (result == null) {
       debugPrint("Error al validar");
+
+      setState(() {
+        lastFeedbackMessage = "Error al validar";
+      });
+
       return;
     }
 
@@ -58,7 +71,7 @@ class _TestScreenState extends State<TestScreen> {
       score: result.score,
       isCorrect: isCorrectUser,
       features: result.features,
-      strokes: List<Map<String, dynamic>>.from(strokes),
+      strokes: typedStrokes,
       source: "test_screen",
       validationStrategy: result.validationStrategy,
       validationResult: result.validationResult,
@@ -66,6 +79,23 @@ class _TestScreenState extends State<TestScreen> {
     );
 
     debugPrint("Guardado: ${result.score} - correcto: $isCorrectUser");
+
+    // ✅ 3. Mostrar resultado y limpiar canvas, pero SIN pasar al siguiente kanji
+    setState(() {
+      lastFeedbackMessage =
+          "Guardado · ${isCorrectUser ? "Correcto" : "Incorrecto"} · score: ${result.score.toStringAsFixed(3)}";
+    });
+
+    canvasKey.currentState?.clear();
+  }
+
+  void clearCanvasOnly() {
+    canvasKey.currentState?.clear();
+
+    setState(() {
+      strokes.clear();
+      lastFeedbackMessage = null;
+    });
   }
 
   Future<void> cargarLeccion() async {
@@ -90,7 +120,9 @@ class _TestScreenState extends State<TestScreen> {
       setState(() {
         currentIndex++;
         strokes.clear();
+        lastFeedbackMessage = null;
       });
+
       canvasKey.currentState?.clear();
     } else {
       Navigator.pop(context);
@@ -142,42 +174,97 @@ class _TestScreenState extends State<TestScreen> {
             ),
           ),
 
-          const SizedBox(height: 30),
+          //const SizedBox(height: 30),
+          const SizedBox(height: 16),
+
+          if (lastFeedbackMessage != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                lastFeedbackMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+
+          const SizedBox(height: 20),
 
           // BOTONES
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
             children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 15,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+                    onPressed: () async {
+                      await sendResult(true);
+                    },
+                    child: const Text(
+                      "Correcto",
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
-                ),
-                onPressed: () async {
-                  await sendResult(true);
-                  nextKanji();
-                },
-                child: const Text("Correcto", style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+                    onPressed: () async {
+                      await sendResult(false);
+                    },
+                    child: const Text(
+                      "Incorrecto",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
               ),
-
-              const SizedBox(width: 20),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 30,
-                    vertical: 15,
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+                    onPressed: clearCanvasOnly,
+                    child: const Text("Borrar", style: TextStyle(fontSize: 18)),
                   ),
-                ),
-                onPressed: () async {
-                  await sendResult(false);
-                  nextKanji();
-                },
-                child: const Text("Incorrecto", style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+                    onPressed: nextKanji,
+                    child: const Text(
+                      "Siguiente",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
