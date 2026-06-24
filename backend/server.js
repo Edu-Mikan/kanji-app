@@ -8,8 +8,7 @@ app.use(express.json());
 app.use("/kanji_svg", express.static("kanji_svg"));
 
 const PORT = process.env.PORT || 3000;
-
-// 👉 ESTO FALTABA
+const ALGORITHM_VERSION = "heuristic-v1";
 const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
 
 // ================= NORMALIZE =================
@@ -32,9 +31,12 @@ function normalizeStrokes(strokes) {
 
   const size = Math.max(maxX - minX, maxY - minY);
 
+  // Evita división por cero si llega un trazo degenerado
+  const safeSize = size === 0 ? 1 : size;
+
   return strokes.map((stroke) => ({
-    x: stroke.x.map((x) => (x - minX) / size),
-    y: stroke.y.map((y) => (y - minY) / size),
+    x: stroke.x.map((x) => (x - minX) / safeSize),
+    y: stroke.y.map((y) => (y - minY) / safeSize),
   }));
 }
 
@@ -62,6 +64,17 @@ function resampleStroke(stroke, n = 20) {
   }
 
   return { x: newX, y: newY };
+}
+
+function prepareTrainingStrokes(strokes) {
+  const normalized = normalizeStrokes(strokes);
+  const resampled = normalized.map((s) => resampleStroke(s, 20));
+
+  return {
+    raw: strokes,
+    normalized,
+    resampled,
+  };
 }
 
 // ================= ANGLE =================
@@ -458,23 +471,23 @@ app.post("/recognize", async (req, res) => {
     const resampledUser = normalized.map((s) => resampleStroke(s, 20));
     const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
 
-    console.log("USER STROKES COUNT:", resampledUser.length);
-    console.log("REF STROKES COUNT:", resampledRef.length);
+    // console.log("USER STROKES COUNT:", resampledUser.length);
+    // console.log("REF STROKES COUNT:", resampledRef.length);
 
-    resampledUser.forEach((s, i) => {
-      console.log("User stroke", i, "points:", s.x.length);
-    });
+    // resampledUser.forEach((s, i) => {
+    //   console.log("User stroke", i, "points:", s.x.length);
+    // });
 
     const score = compareStrokes(resampledUser, resampledRef);
 
-    console.log(
-      "User strokes:",
-      strokes,
-      "\nTarget kanji:",
-      targetKanji,
-      "Score:",
-      score,
-    );
+    // console.log(
+    //   "User strokes:",
+    //   strokes,
+    //   "\nTarget kanji:",
+    //   targetKanji,
+    //   "Score:",
+    //   score,
+    // );
 
     const features = extractFeatures(resampledUser, resampledRef, score);
 
@@ -542,6 +555,7 @@ app.post("/recognize", async (req, res) => {
       score: score,
       strokes: referenceKanji.length,
       features: features,
+      algorithmVersion: ALGORITHM_VERSION,
     });
   } catch (e) {
     console.error(e);
@@ -549,19 +563,30 @@ app.post("/recognize", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
 app.post("/feedback", (req, res) => {
   try {
-    const { kanji, features, score, isCorrect } = req.body;
+    const { kanji, features, score, isCorrect, strokes, source } = req.body;
+
+    let strokesData = null;
+
+    if (strokes && Array.isArray(strokes) && strokes.length > 0) {
+      const prepared = prepareTrainingStrokes(strokes);
+
+      strokesData = {
+        strokesRaw: prepared.raw,
+        strokesNormalized: prepared.normalized,
+        strokesResampled: prepared.resampled,
+      };
+    }
 
     const entry = {
+      source: source ?? "unknown",
+      algorithmVersion: ALGORITHM_VERSION,
       kanji,
       features,
       score,
       isCorrect,
+      ...(strokesData ?? {}),
       timestamp: Date.now(),
     };
 
@@ -572,4 +597,8 @@ app.post("/feedback", (req, res) => {
     console.error("Error saving feedback:", err);
     res.status(500).json({ error: "Error saving feedback" });
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
