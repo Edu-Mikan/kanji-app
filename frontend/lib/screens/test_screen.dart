@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import '../services/validation_service.dart';
 import '../widgets/drawing_canvas.dart';
 
@@ -38,7 +37,7 @@ class _TestScreenState extends State<TestScreen> {
     final strokes = canvasKey.currentState?.convertirStrokes();
 
     if (strokes == null || strokes.isEmpty) {
-      print("No hay trazos");
+      debugPrint("No hay trazos");
       return;
     }
 
@@ -49,7 +48,7 @@ class _TestScreenState extends State<TestScreen> {
     );
 
     if (result == null) {
-      print("Error al validar");
+      debugPrint("Error al validar");
       return;
     }
 
@@ -59,9 +58,11 @@ class _TestScreenState extends State<TestScreen> {
       score: result.score,
       isCorrect: isCorrectUser,
       features: result.features,
+      strokes: List<Map<String, dynamic>>.from(strokes),
+      source: "test_screen",
     );
 
-    print("Guardado: ${result.score} - correcto: $isCorrectUser");
+    debugPrint("Guardado: ${result.score} - correcto: $isCorrectUser");
   }
 
   Future<void> cargarLeccion() async {

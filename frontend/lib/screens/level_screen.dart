@@ -45,7 +45,7 @@ class _LevelScreenState extends State<LevelScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("TEST MODE"),
+                  const Text("Modo entrenamiento IA"),
                   Switch(
                     value: isTestMode,
                     onChanged: (value) {

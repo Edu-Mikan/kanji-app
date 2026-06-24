@@ -24,6 +24,8 @@ class ValidationService {
     required double score,
     required bool isCorrect,
     Map<String, dynamic>? features,
+    List<Map<String, dynamic>>? strokes,
+    String source = "unknown",
   }) async {
     try {
       await http.post(
@@ -33,10 +35,14 @@ class ValidationService {
           "kanji": kanji,
           "score": score,
           "isCorrect": isCorrect,
-          "features": features, // ✅ CLAVE
+          "features": features,
+          "strokes": strokes,
+          "source": source,
         }),
       );
-    } catch (e) {}
+    } catch (e) {
+      // no bloqueamos la app si falla
+    }
   }
 
   double _getThresholdFromStrokes(int strokes) {
