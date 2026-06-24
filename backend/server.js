@@ -2,6 +2,22 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 
+const {
+  normalizeStrokes,
+  resampleStroke,
+  getStrokeAngle,
+  angleDifference,
+  strokeLength,
+  getStrokeVectors,
+  compareStrokeShape,
+  getDominantAngle,
+  strokeBoundingBox,
+  classifyAngle,
+} = require("./services/stroke_utils");
+
+const { extractAllFeatures } = require("./services/feature_extractor");
+const { validateSimpleKanji } = require("./services/simple_kanji_rules");
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -10,61 +26,6 @@ app.use("/kanji_svg", express.static("kanji_svg"));
 const PORT = process.env.PORT || 3000;
 const ALGORITHM_VERSION = "heuristic-v1";
 const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
-
-// ================= NORMALIZE =================
-function normalizeStrokes(strokes) {
-  let minX = Infinity,
-    minY = Infinity;
-  let maxX = -Infinity,
-    maxY = -Infinity;
-
-  strokes.forEach((stroke) => {
-    stroke.x.forEach((x) => {
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-    });
-    stroke.y.forEach((y) => {
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    });
-  });
-
-  const size = Math.max(maxX - minX, maxY - minY);
-
-  // Evita división por cero si llega un trazo degenerado
-  const safeSize = size === 0 ? 1 : size;
-
-  return strokes.map((stroke) => ({
-    x: stroke.x.map((x) => (x - minX) / safeSize),
-    y: stroke.y.map((y) => (y - minY) / safeSize),
-  }));
-}
-
-// ================= RESAMPLE =================
-function resampleStroke(stroke, n = 20) {
-  const newX = [];
-  const newY = [];
-  const total = stroke.x.length;
-
-  if (total === 0) return { x: [], y: [] };
-
-  for (let i = 0; i < n; i++) {
-    const t = i / (n - 1);
-    const idx = t * (total - 1);
-
-    const i1 = Math.floor(idx);
-    const i2 = Math.ceil(idx);
-    const ratio = idx - i1;
-
-    const x = stroke.x[i1] * (1 - ratio) + stroke.x[i2] * ratio;
-    const y = stroke.y[i1] * (1 - ratio) + stroke.y[i2] * ratio;
-
-    newX.push(x);
-    newY.push(y);
-  }
-
-  return { x: newX, y: newY };
-}
 
 function prepareTrainingStrokes(strokes) {
   const normalized = normalizeStrokes(strokes);
@@ -77,80 +38,6 @@ function prepareTrainingStrokes(strokes) {
   };
 }
 
-// ================= ANGLE =================
-function getStrokeAngle(stroke) {
-  const dx = stroke.x[stroke.x.length - 1] - stroke.x[0];
-  const dy = stroke.y[stroke.y.length - 1] - stroke.y[0];
-  return Math.atan2(dy, dx);
-}
-
-function angleDifference(a1, a2) {
-  let diff = Math.abs(a1 - a2);
-
-  // normalizar a [0, π]
-  if (diff > Math.PI) {
-    diff = 2 * Math.PI - diff;
-  }
-
-  // 🔥 CLAVE ABSOLUTA: orientación (no dirección)
-  // hace que θ y θ+π sean equivalentes
-  if (diff > Math.PI / 2) {
-    diff = Math.PI - diff;
-  }
-
-  return diff;
-}
-
-// ================= LENGTH =================
-function strokeLength(stroke) {
-  let len = 0;
-  for (let i = 1; i < stroke.x.length; i++) {
-    const dx = stroke.x[i] - stroke.x[i - 1];
-    const dy = stroke.y[i] - stroke.y[i - 1];
-    len += Math.sqrt(dx * dx + dy * dy);
-  }
-  return len;
-}
-
-// ================= VECTORS =================
-function getStrokeVectors(stroke) {
-  let vectors = [];
-  for (let i = 0; i < stroke.x.length - 1; i++) {
-    vectors.push({
-      dx: stroke.x[i + 1] - stroke.x[i],
-      dy: stroke.y[i + 1] - stroke.y[i],
-    });
-  }
-  return vectors;
-}
-
-// ================= SHAPE =================
-function compareStrokeShape(u, r) {
-  const uv = getStrokeVectors(u);
-  const rv = getStrokeVectors(r);
-
-  let error = 0;
-  const len = Math.min(uv.length, rv.length);
-
-  for (let i = 0; i < len; i++) {
-    const dot = uv[i].dx * rv[i].dx + uv[i].dy * rv[i].dy;
-    const magU = Math.sqrt(uv[i].dx ** 2 + uv[i].dy ** 2);
-    const magR = Math.sqrt(rv[i].dx ** 2 + rv[i].dy ** 2);
-
-    const cos = dot / (magU * magR + 1e-6);
-    //error += 1 - cos; // diferencia angular real
-
-    let local = 1 - cos;
-
-    // 🔥 ignorar micro-error (importante)
-    if (local < 0.05) local = 0;
-
-    error += local;
-  }
-
-  return error / (len || 1);
-}
-
 // ================= TYPE =================
 function getStrokeType(stroke) {
   const angle = Math.abs(getStrokeAngle(stroke));
@@ -158,46 +45,6 @@ function getStrokeType(stroke) {
 
   if (a < 0.3) return "horizontal";
   if (a > 1.2) return "vertical";
-  return "diagonal";
-}
-
-// ================= DOMINANT ANGLE =================
-function getDominantAngle(stroke) {
-  let sum = 0;
-  for (let i = 0; i < stroke.x.length - 1; i++) {
-    const dx = stroke.x[i + 1] - stroke.x[i];
-    const dy = stroke.y[i + 1] - stroke.y[i];
-    sum += Math.atan2(dy, dx);
-  }
-  return sum / (stroke.x.length - 1 || 1);
-}
-
-// ================= BOUNDING BOX =================
-function strokeBoundingBox(stroke) {
-  return {
-    minX: Math.min(...stroke.x),
-    maxX: Math.max(...stroke.x),
-    minY: Math.min(...stroke.y),
-    maxY: Math.max(...stroke.y),
-  };
-}
-
-function classifyAngle(angle) {
-  // 🔥 normalizar a [0, π]
-  let a = Math.abs(angle);
-
-  if (a > Math.PI) {
-    a = 2 * Math.PI - a;
-  }
-
-  if (a > Math.PI / 2) {
-    a = Math.PI - a;
-  }
-
-  // 🔥 ahora sí clasificar correctamente
-  if (a < 0.3) return "horizontal";
-  if (Math.abs(a - Math.PI / 2) < 0.3) return "vertical";
-
   return "diagonal";
 }
 
@@ -467,88 +314,48 @@ app.post("/recognize", async (req, res) => {
     const strokes = req.body.ink.strokes;
     const targetKanji = req.body.kanji;
     const referenceKanji = kanjiDataset[targetKanji];
+
+    if (!referenceKanji) {
+      return res.status(404).json({
+        error: `Kanji not found in dataset: ${targetKanji}`,
+      });
+    }
+
     const normalized = normalizeStrokes(strokes);
     const resampledUser = normalized.map((s) => resampleStroke(s, 20));
     const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
-
-    // console.log("USER STROKES COUNT:", resampledUser.length);
-    // console.log("REF STROKES COUNT:", resampledRef.length);
-
-    // resampledUser.forEach((s, i) => {
-    //   console.log("User stroke", i, "points:", s.x.length);
-    // });
-
     const score = compareStrokes(resampledUser, resampledRef);
 
-    // console.log(
-    //   "User strokes:",
-    //   strokes,
-    //   "\nTarget kanji:",
-    //   targetKanji,
-    //   "Score:",
-    //   score,
-    // );
+    const features = extractAllFeatures({
+      userResampled: resampledUser,
+      referenceResampled: resampledRef,
+      userNormalized: normalized,
+      score,
+    });
 
-    const features = extractFeatures(resampledUser, resampledRef, score);
-
-    const logEntry = {
+    const simpleValidation = validateSimpleKanji({
       kanji: targetKanji,
       features,
-      score,
-      timestamp: Date.now(),
+    });
 
-      // 🔴 ESTE LO COMPLETARÁS LUEGO DESDE FRONTEND
-      isCorrect: null,
-    };
+    const validationStrategy = simpleValidation
+      ? simpleValidation.strategy
+      : "heuristic_score";
+
+    const validationResult = simpleValidation
+      ? simpleValidation.isCorrect
+      : null;
+
+    // const logEntry = {
+    //   kanji: targetKanji,
+    //   features,
+    //   score,
+    //   timestamp: Date.now(),
+    //   isCorrect: null,
+    // };
 
     // guardar en fichero JSON (simple)
     //fs.appendFileSync("training_data.jsonl", JSON.stringify(logEntry) + "\n");
-
-    // ================= FEATURE EXTRACTION =================
-    function extractFeatures(user, reference, score) {
-      let strokeErrors = [];
-      let angleDiffs = [];
-
-      for (let i = 0; i < Math.min(user.length, reference.length); i++) {
-        const u = user[i];
-        const r = reference[i];
-
-        const len = Math.min(u.x.length, r.x.length);
-        let error = 0;
-
-        for (let k = 0; k < len; k++) {
-          const dx = u.x[k] - r.x[k];
-          const dy = u.y[k] - r.y[k];
-          error += dx * dx + dy * dy;
-        }
-
-        error = Math.sqrt(error / len);
-        strokeErrors.push(error);
-
-        const aDiff = angleDifference(getStrokeAngle(u), getStrokeAngle(r));
-
-        angleDiffs.push(aDiff);
-      }
-
-      return {
-        strokeCountUser: user.length,
-        strokeCountRef: reference.length,
-
-        totalError: score,
-
-        meanStrokeError:
-          strokeErrors.reduce((a, b) => a + b, 0) / (strokeErrors.length || 1),
-
-        maxStrokeError: Math.max(...strokeErrors, 0),
-
-        angleDiffMean:
-          angleDiffs.reduce((a, b) => a + b, 0) / (angleDiffs.length || 1),
-
-        angleDiffMax: Math.max(...angleDiffs, 0),
-
-        unusedStrokes: Math.abs(user.length - reference.length),
-      };
-    }
 
     res.send({
       kanji: targetKanji,
@@ -556,6 +363,9 @@ app.post("/recognize", async (req, res) => {
       strokes: referenceKanji.length,
       features: features,
       algorithmVersion: ALGORITHM_VERSION,
+      simpleValidation,
+      validationStrategy,
+      validationResult,
     });
   } catch (e) {
     console.error(e);
@@ -565,7 +375,17 @@ app.post("/recognize", async (req, res) => {
 
 app.post("/feedback", (req, res) => {
   try {
-    const { kanji, features, score, isCorrect, strokes, source } = req.body;
+    const {
+      kanji,
+      features,
+      score,
+      isCorrect,
+      strokes,
+      source,
+      validationStrategy,
+      validationResult,
+      simpleValidation,
+    } = req.body;
 
     let strokesData = null;
 
@@ -579,13 +399,28 @@ app.post("/feedback", (req, res) => {
       };
     }
 
+    // const entry = {
+    //   source: source ?? "unknown",
+    //   algorithmVersion: ALGORITHM_VERSION,
+    //   kanji,
+    //   features,
+    //   score,
+    //   isCorrect,
+    //   ...(strokesData ?? {}),
+    //   timestamp: Date.now(),
+    // };
     const entry = {
       source: source ?? "unknown",
       algorithmVersion: ALGORITHM_VERSION,
       kanji,
       features,
       score,
+      // Feedback manual del usuario en TestScreen
       isCorrect,
+      // Resultado de la estrategia automática del backend
+      validationStrategy: validationStrategy ?? "unknown",
+      validationResult: validationResult ?? null,
+      simpleValidation: simpleValidation ?? null,
       ...(strokesData ?? {}),
       timestamp: Date.now(),
     };
