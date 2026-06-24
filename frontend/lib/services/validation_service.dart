@@ -5,12 +5,19 @@ import 'package:kanji_app/config/app_config.dart';
 class ValidationResult {
   final double score;
   final bool isCorrect;
-  final Map<String, dynamic> features; // ✅ NUEVO
+  final Map<String, dynamic> features;
+
+  final String? validationStrategy;
+  final bool? validationResult;
+  final Map<String, dynamic>? simpleValidation;
 
   ValidationResult({
     required this.score,
     required this.isCorrect,
     required this.features,
+    this.validationStrategy,
+    this.validationResult,
+    this.simpleValidation,
   });
 }
 
@@ -26,6 +33,9 @@ class ValidationService {
     Map<String, dynamic>? features,
     List<Map<String, dynamic>>? strokes,
     String source = "unknown",
+    String? validationStrategy,
+    bool? validationResult,
+    Map<String, dynamic>? simpleValidation,
   }) async {
     try {
       await http.post(
@@ -38,6 +48,9 @@ class ValidationService {
           "features": features,
           "strokes": strokes,
           "source": source,
+          "validationStrategy": validationStrategy,
+          "validationResult": validationResult,
+          "simpleValidation": simpleValidation,
         }),
       );
     } catch (e) {
@@ -71,20 +84,32 @@ class ValidationService {
       }
 
       final data = jsonDecode(response.body);
+
       final score = data['score']?.toDouble();
-      final strokesCount = data['strokes'];
       final features = data['features'];
+      final strokesCount = data['strokes'];
 
-      if (score == null) return null;
+      if (score == null || features == null) return null;
 
-      //return ValidationResult(score: score, isCorrect: score <= 1.5);
+      final validationStrategy = data['validationStrategy'] as String?;
+      final validationResult = data['validationResult'] as bool?;
+      final simpleValidationRaw = data['simpleValidation'];
 
       final threshold = _getThresholdFromStrokes(strokesCount);
 
+      // Si backend trae una validación simple, usamos esa.
+      // Si no, seguimos usando score <= threshold.
+      final bool finalIsCorrect = validationResult ?? (score <= threshold);
+
       return ValidationResult(
         score: score,
-        isCorrect: score <= threshold,
+        isCorrect: finalIsCorrect,
         features: Map<String, dynamic>.from(features),
+        validationStrategy: validationStrategy,
+        validationResult: validationResult,
+        simpleValidation: simpleValidationRaw == null
+            ? null
+            : Map<String, dynamic>.from(simpleValidationRaw),
       );
     } catch (e) {
       return null;

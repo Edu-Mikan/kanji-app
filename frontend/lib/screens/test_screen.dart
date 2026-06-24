@@ -60,6 +60,9 @@ class _TestScreenState extends State<TestScreen> {
       features: result.features,
       strokes: List<Map<String, dynamic>>.from(strokes),
       source: "test_screen",
+      validationStrategy: result.validationStrategy,
+      validationResult: result.validationResult,
+      simpleValidation: result.simpleValidation,
     );
 
     debugPrint("Guardado: ${result.score} - correcto: $isCorrectUser");
