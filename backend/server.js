@@ -373,7 +373,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.post("/mongo/reconnect", async (req, res) => {
+/* app.post("/mongo/reconnect", async (req, res) => {
   try {
     feedbackCollection = null;
     mongoConnectionError = null;
@@ -402,7 +402,7 @@ app.post("/mongo/reconnect", async (req, res) => {
     });
   }
 });
-
+ */
 app.post("/recognize", async (req, res) => {
   try {
     const strokes = req.body.ink.strokes;
