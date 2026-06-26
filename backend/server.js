@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
+const crypto = require("crypto");
+const { MongoClient } = require("mongodb");
 
 const {
   normalizeStrokes,
@@ -20,12 +22,52 @@ const { validateSimpleKanji } = require("./services/simple_kanji_rules");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 app.use("/kanji_svg", express.static("kanji_svg"));
 
 const PORT = process.env.PORT || 3000;
 const ALGORITHM_VERSION = "heuristic-v1";
+const TRAINING_DATA_SCHEMA_VERSION = 1;
+
+const MONGO_URI = process.env.MONGO_URI;
+
+// Como solo has podido añadir una variable en Render,
+// dejamos estos valores fijos por defecto en el código.
+const MONGO_DB_NAME = "kanji_app";
+const MONGO_COLLECTION_FEEDBACK = "feedback_samples";
+
+let mongoClient = null;
+let feedbackCollection = null;
+
 const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
+
+async function connectMongoIfConfigured() {
+  if (!MONGO_URI) {
+    console.log("MONGO_URI no configurada. Se usará training_data.jsonl.");
+    return;
+  }
+
+  if (feedbackCollection) {
+    return;
+  }
+
+  mongoClient = new MongoClient(MONGO_URI);
+
+  await mongoClient.connect();
+
+  const db = mongoClient.db(MONGO_DB_NAME);
+  feedbackCollection = db.collection(MONGO_COLLECTION_FEEDBACK);
+
+  await feedbackCollection.createIndex({ kanji: 1 });
+  await feedbackCollection.createIndex({ expectedKanji: 1 });
+  await feedbackCollection.createIndex({ isCorrect: 1 });
+  await feedbackCollection.createIndex({ createdAt: -1 });
+  await feedbackCollection.createIndex({ recognitionId: 1 });
+
+  console.log(
+    `Conectado a MongoDB: ${MONGO_DB_NAME}.${MONGO_COLLECTION_FEEDBACK}`,
+  );
+}
 
 function prepareTrainingStrokes(strokes) {
   const normalized = normalizeStrokes(strokes);
@@ -321,6 +363,8 @@ app.post("/recognize", async (req, res) => {
       });
     }
 
+    const recognitionId = crypto.randomUUID();
+    const recognizeStartedAt = Date.now();
     const normalized = normalizeStrokes(strokes);
     const resampledUser = normalized.map((s) => resampleStroke(s, 20));
     const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
@@ -366,6 +410,10 @@ app.post("/recognize", async (req, res) => {
       simpleValidation,
       validationStrategy,
       validationResult,
+      recognitionId,
+      timestamp: recognizeStartedAt,
+      recognizeStartedAt,
+      schemaVersion: TRAINING_DATA_SCHEMA_VERSION,
     });
   } catch (e) {
     console.error(e);
@@ -373,10 +421,12 @@ app.post("/recognize", async (req, res) => {
   }
 });
 
-app.post("/feedback", (req, res) => {
+app.post("/feedback", async (req, res) => {
   try {
     const {
+      recognitionId,
       kanji,
+      expectedKanji,
       features,
       score,
       isCorrect,
@@ -385,6 +435,14 @@ app.post("/feedback", (req, res) => {
       validationStrategy,
       validationResult,
       simpleValidation,
+
+      // Campos opcionales útiles para ML futuro
+      sessionId,
+      userId,
+      durationMs,
+      canvas,
+      clientInfo,
+      feedbackType,
     } = req.body;
 
     let strokesData = null;
@@ -399,41 +457,86 @@ app.post("/feedback", (req, res) => {
       };
     }
 
-    // const entry = {
-    //   source: source ?? "unknown",
-    //   algorithmVersion: ALGORITHM_VERSION,
-    //   kanji,
-    //   features,
-    //   score,
-    //   isCorrect,
-    //   ...(strokesData ?? {}),
-    //   timestamp: Date.now(),
-    // };
+    const now = Date.now();
+
     const entry = {
+      schemaVersion: TRAINING_DATA_SCHEMA_VERSION,
+
+      recognitionId: recognitionId ?? crypto.randomUUID(),
+
       source: source ?? "unknown",
       algorithmVersion: ALGORITHM_VERSION,
+
+      // Mantengo kanji por compatibilidad
       kanji,
+
+      // Nombre más claro para ML futuro
+      expectedKanji: expectedKanji ?? kanji,
+
       features,
       score,
-      // Feedback manual del usuario en TestScreen
+
+      // Feedback manual del usuario/tester
       isCorrect,
+
+      // Tipo de feedback, por si más adelante tienes varios
+      // Ej: "manual_debug", "user_feedback", "auto_log"
+      feedbackType: feedbackType ?? "manual_debug",
+
       // Resultado de la estrategia automática del backend
       validationStrategy: validationStrategy ?? "unknown",
       validationResult: validationResult ?? null,
       simpleValidation: simpleValidation ?? null,
+
+      // Contexto opcional
+      sessionId: sessionId ?? null,
+      userId: userId ?? null,
+      durationMs: durationMs ?? null,
+      canvas: canvas ?? null,
+      clientInfo: clientInfo ?? null,
+
       ...(strokesData ?? {}),
-      timestamp: Date.now(),
+
+      timestamp: now,
+      createdAt: new Date(now).toISOString(),
     };
 
-    fs.appendFileSync("training_data.jsonl", JSON.stringify(entry) + "\n");
+    let mongoInsertedId = null;
 
-    res.json({ ok: true });
+    if (feedbackCollection) {
+      const result = await feedbackCollection.insertOne(entry);
+      mongoInsertedId = result.insertedId;
+    } else {
+      fs.appendFileSync("training_data.jsonl", JSON.stringify(entry) + "\n");
+    }
+
+    res.json({
+      ok: true,
+      recognitionId: entry.recognitionId,
+      savedTo: feedbackCollection ? "mongo" : "jsonl",
+      mongoInsertedId,
+    });
   } catch (err) {
     console.error("Error saving feedback:", err);
     res.status(500).json({ error: "Error saving feedback" });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
+
+async function startServer() {
+  try {
+    await connectMongoIfConfigured();
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (err) {
+    console.error("Error arrancando servidor:", err);
+    process.exit(1);
+  }
+}
+
+startServer();
