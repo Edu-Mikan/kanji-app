@@ -526,17 +526,14 @@ app.post("/feedback", async (req, res) => {
 //   console.log(`Server running on port ${PORT}`);
 // });
 
-async function startServer() {
-  try {
-    await connectMongoIfConfigured();
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (err) {
-    console.error("Error arrancando servidor:", err);
-    process.exit(1);
-  }
-}
-
-startServer();
+  connectMongoIfConfigured().catch((err) => {
+    console.error(
+      "No se pudo conectar a MongoDB. Se usará training_data.jsonl como fallback:",
+      err,
+    );
+    feedbackCollection = null;
+  });
+});
