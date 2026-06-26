@@ -38,11 +38,17 @@ const MONGO_COLLECTION_FEEDBACK = "feedback_samples";
 
 let mongoClient = null;
 let feedbackCollection = null;
+let mongoConnectionError = null;
+let mongoConnectionAttemptedAt = null;
 
 const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
 
 async function connectMongoIfConfigured() {
+  mongoConnectionAttemptedAt = new Date().toISOString();
+  mongoConnectionError = null;
+
   if (!MONGO_URI) {
+    mongoConnectionError = "MONGO_URI no configurada";
     console.log("MONGO_URI no configurada. Se usará training_data.jsonl.");
     return;
   }
@@ -51,7 +57,11 @@ async function connectMongoIfConfigured() {
     return;
   }
 
-  mongoClient = new MongoClient(MONGO_URI);
+  console.log("Intentando conectar a MongoDB Atlas...");
+
+  mongoClient = new MongoClient(MONGO_URI, {
+    serverSelectionTimeoutMS: 10000,
+  });
 
   await mongoClient.connect();
 
@@ -351,6 +361,48 @@ function compareStrokes(user, reference) {
 }
 
 // ================= ENDPOINT =================
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    mongoUriConfigured: Boolean(process.env.MONGO_URI),
+    mongoConnected: Boolean(feedbackCollection),
+    mongoConnectionAttemptedAt,
+    mongoConnectionError,
+    storage: feedbackCollection ? "mongo" : "jsonl",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.post("/mongo/reconnect", async (req, res) => {
+  try {
+    feedbackCollection = null;
+    mongoConnectionError = null;
+
+    await connectMongoIfConfigured();
+
+    res.json({
+      ok: true,
+      mongoUriConfigured: Boolean(process.env.MONGO_URI),
+      mongoConnected: Boolean(feedbackCollection),
+      storage: feedbackCollection ? "mongo" : "jsonl",
+      mongoConnectionAttemptedAt,
+      mongoConnectionError,
+    });
+  } catch (err) {
+    mongoConnectionError = err.message;
+    feedbackCollection = null;
+
+    res.status(500).json({
+      ok: false,
+      mongoUriConfigured: Boolean(process.env.MONGO_URI),
+      mongoConnected: false,
+      storage: "jsonl",
+      mongoConnectionAttemptedAt,
+      mongoConnectionError: err.message,
+    });
+  }
+});
+
 app.post("/recognize", async (req, res) => {
   try {
     const strokes = req.body.ink.strokes;
@@ -530,6 +582,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 
   connectMongoIfConfigured().catch((err) => {
+    mongoConnectionError = err.message;
     console.error(
       "No se pudo conectar a MongoDB. Se usará training_data.jsonl como fallback:",
       err,
