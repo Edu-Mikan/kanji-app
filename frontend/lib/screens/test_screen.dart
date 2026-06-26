@@ -76,6 +76,11 @@ class _TestScreenState extends State<TestScreen> {
       validationStrategy: result.validationStrategy,
       validationResult: result.validationResult,
       simpleValidation: result.simpleValidation,
+
+      // Nuevos campos
+      recognitionId: result.recognitionId,
+      schemaVersion: result.schemaVersion,
+      feedbackType: "manual_debug",
     );
 
     debugPrint("Guardado: ${result.score} - correcto: $isCorrectUser");

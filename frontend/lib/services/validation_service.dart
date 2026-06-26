@@ -6,10 +6,15 @@ class ValidationResult {
   final double score;
   final bool isCorrect;
   final Map<String, dynamic> features;
-
   final String? validationStrategy;
   final bool? validationResult;
   final Map<String, dynamic>? simpleValidation;
+
+  // Nuevos campos devueltos por backend
+  final String? recognitionId;
+  final int? schemaVersion;
+  final int? recognizeStartedAt;
+  final String? expectedKanji;
 
   ValidationResult({
     required this.score,
@@ -18,6 +23,10 @@ class ValidationResult {
     this.validationStrategy,
     this.validationResult,
     this.simpleValidation,
+    this.recognitionId,
+    this.schemaVersion,
+    this.recognizeStartedAt,
+    this.expectedKanji,
   });
 }
 
@@ -36,6 +45,17 @@ class ValidationService {
     String? validationStrategy,
     bool? validationResult,
     Map<String, dynamic>? simpleValidation,
+
+    // Nuevos campos para backend / ML futuro
+    String? recognitionId,
+    String? expectedKanji,
+    int? schemaVersion,
+    String? sessionId,
+    String? userId,
+    int? durationMs,
+    Map<String, dynamic>? canvas,
+    Map<String, dynamic>? clientInfo,
+    String? feedbackType,
   }) async {
     try {
       await http.post(
@@ -43,6 +63,7 @@ class ValidationService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           "kanji": kanji,
+          "expectedKanji": expectedKanji ?? kanji,
           "score": score,
           "isCorrect": isCorrect,
           "features": features,
@@ -51,6 +72,16 @@ class ValidationService {
           "validationStrategy": validationStrategy,
           "validationResult": validationResult,
           "simpleValidation": simpleValidation,
+
+          // Nuevos campos
+          "recognitionId": recognitionId,
+          "schemaVersion": schemaVersion,
+          "sessionId": sessionId,
+          "userId": userId,
+          "durationMs": durationMs,
+          "canvas": canvas,
+          "clientInfo": clientInfo,
+          "feedbackType": feedbackType,
         }),
       );
     } catch (e) {
@@ -94,7 +125,10 @@ class ValidationService {
       final validationStrategy = data['validationStrategy'] as String?;
       final validationResult = data['validationResult'] as bool?;
       final simpleValidationRaw = data['simpleValidation'];
-
+      final recognitionId = data['recognitionId'] as String?;
+      final schemaVersion = data['schemaVersion'] as int?;
+      final recognizeStartedAt = data['recognizeStartedAt'] as int?;
+      final expectedKanji = data['expectedKanji'] as String? ?? kanji;
       final threshold = _getThresholdFromStrokes(strokesCount);
 
       // Si backend trae una validación simple, usamos esa.
@@ -110,6 +144,10 @@ class ValidationService {
         simpleValidation: simpleValidationRaw == null
             ? null
             : Map<String, dynamic>.from(simpleValidationRaw),
+        recognitionId: recognitionId,
+        schemaVersion: schemaVersion,
+        recognizeStartedAt: recognizeStartedAt,
+        expectedKanji: expectedKanji,
       );
     } catch (e) {
       return null;
