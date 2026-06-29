@@ -121,7 +121,7 @@ function normalizeAngleAbs(angle) {
 }
 
 // ================= GEOMETRY FEATURES =================
-function extractGeometryFeatures(userNormalized, userResampled) {
+/* function extractGeometryFeatures(userNormalized, userResampled) {
   const box = getStrokesBoundingBox(userNormalized);
 
   const bboxWidth = box.width;
@@ -151,6 +151,57 @@ function extractGeometryFeatures(userNormalized, userResampled) {
       coarseAngles.reduce((a, b) => a + b, 0) / (coarseAngles.length || 1),
 
     coarseAngleAbsMax: coarseAngles.length > 0 ? Math.max(...coarseAngles) : 0,
+  };
+} */
+function extractGeometryFeatures(userNormalized, userResampled) {
+  const box = getStrokesBoundingBox(userNormalized);
+
+  const bboxWidth = box.width;
+  const bboxHeight = box.height;
+  const aspectRatio = bboxWidth / (bboxHeight + 1e-6);
+
+  const straightnessValues = userResampled.map(strokeStraightness);
+
+  const coarseAngles = userResampled.map((stroke) =>
+    normalizeAngleAbs(getStrokeAngle(stroke)),
+  );
+
+  const perStroke = userNormalized.map((normalizedStroke, index) => {
+    const resampledStroke = userResampled[index] ?? normalizedStroke;
+    const strokeBox = strokeBoundingBox(normalizedStroke);
+
+    const width = strokeBox.maxX - strokeBox.minX;
+    const height = strokeBox.maxY - strokeBox.minY;
+
+    return {
+      index,
+      minX: strokeBox.minX,
+      maxX: strokeBox.maxX,
+      minY: strokeBox.minY,
+      maxY: strokeBox.maxY,
+      width,
+      height,
+      centerX: (strokeBox.minX + strokeBox.maxX) / 2,
+      centerY: (strokeBox.minY + strokeBox.maxY) / 2,
+      angleAbs: normalizeAngleAbs(getStrokeAngle(resampledStroke)),
+      straightness: strokeStraightness(resampledStroke),
+      length: strokeLength(resampledStroke),
+    };
+  });
+
+  return {
+    bboxWidth,
+    bboxHeight,
+    aspectRatio,
+    straightnessMean:
+      straightnessValues.reduce((a, b) => a + b, 0) /
+      (straightnessValues.length || 1),
+    straightnessMin:
+      straightnessValues.length > 0 ? Math.min(...straightnessValues) : 0,
+    coarseAngleAbsMean:
+      coarseAngles.reduce((a, b) => a + b, 0) / (coarseAngles.length || 1),
+    coarseAngleAbsMax: coarseAngles.length > 0 ? Math.max(...coarseAngles) : 0,
+    perStroke,
   };
 }
 

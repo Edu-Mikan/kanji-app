@@ -4,6 +4,9 @@ const SIMPLE_KANJI_RULES = {
   一: {
     pattern: "single_horizontal_line",
   },
+  二: {
+    pattern: "two_horizontal_lines",
+  },
 };
 
 /**
@@ -24,22 +27,15 @@ function validateSimpleKanji({ kanji, features }) {
     return validateSingleHorizontalLine(features);
   }
 
+  if (rule.pattern === "two_horizontal_lines") {
+    return validateTwoHorizontalLines(features);
+  }
+
   return null;
 }
 
 /**
  * Validador para 一
- *
- * Según tus datos:
- * - Correctos:
- *   bboxHeight aprox 0.004 - 0.20
- *   aspectRatio > 4.9
- *   coarseAngleAbsMean < 0.20
- *
- * - Incorrectos:
- *   bboxHeight aprox 0.73 - 1.0
- *   aspectRatio muy bajo
- *   coarseAngleAbsMean mucho mayor
  */
 function validateSingleHorizontalLine(features) {
   const geometry = features.geometry;
@@ -54,22 +50,11 @@ function validateSingleHorizontalLine(features) {
 
   const checks = {
     strokeCount: features.strokeCountUser === 1,
-
-    // Tras normalizar, una línea horizontal debería ocupar casi todo el ancho
-    bboxWidth: geometry.bboxWidth >= 0.85,
-
-    // Para 一, la altura relativa debe ser baja.
-    // Usamos 0.25 como margen inicial porque tus correctos llegan aprox a 0.20.
+    bboxWidth: geometry.bboxWidth >= 0.7,
     bboxHeight: geometry.bboxHeight <= 0.25,
-
-    // Relación ancho/alto alta = forma horizontal.
-    aspectRatio: geometry.aspectRatio >= 4.0,
-
-    // Rectitud alta. No diferencia horizontal/vertical, pero descarta garabatos.
-    straightness: geometry.straightnessMean >= 0.94,
-
-    // Ángulo respecto a horizontal. 0 = horizontal, 1.57 = vertical.
-    coarseAngle: geometry.coarseAngleAbsMean <= 0.25,
+    aspectRatio: geometry.aspectRatio >= 3.0,
+    straightnessMean: geometry.straightnessMean >= 0.88,
+    coarseAngleAbsMean: geometry.coarseAngleAbsMean <= 0.3,
   };
 
   const isCorrect = Object.values(checks).every(Boolean);
@@ -79,11 +64,111 @@ function validateSingleHorizontalLine(features) {
     strategy: "single_horizontal_line",
     checks,
     thresholds: {
-      bboxWidthMin: 0.85,
+      bboxWidthMin: 0.7,
       bboxHeightMax: 0.25,
-      aspectRatioMin: 4.0,
-      straightnessMeanMin: 0.94,
-      coarseAngleAbsMeanMax: 0.25,
+      aspectRatioMin: 3.0,
+      straightnessMeanMin: 0.88,
+      coarseAngleAbsMeanMax: 0.3,
+    },
+  };
+}
+
+/**
+ * Validador para 二
+ *
+ * Estructura esperada:
+ * - 2 trazos
+ * - ambos horizontales
+ * - ambos bastante rectos
+ * - un trazo arriba y otro abajo
+ * - separación vertical razonable
+ * - el trazo inferior no debería ser mucho más corto que el superior
+ */
+function validateTwoHorizontalLines(features) {
+  const geometry = features.geometry;
+
+  if (!geometry) {
+    return {
+      isCorrect: false,
+      strategy: "two_horizontal_lines",
+      reason: "missing_geometry_features",
+    };
+  }
+
+  const perStroke = geometry.perStroke ?? [];
+
+  if (perStroke.length !== 2) {
+    return {
+      isCorrect: false,
+      strategy: "two_horizontal_lines",
+      reason: "invalid_stroke_count",
+      checks: {
+        strokeCount: features.strokeCountUser === 2,
+      },
+      thresholds: {
+        expectedStrokeCount: 2,
+      },
+    };
+  }
+
+  const sortedByY = [...perStroke].sort((a, b) => a.centerY - b.centerY);
+  const top = sortedByY[0];
+  const bottom = sortedByY[1];
+
+  const verticalGap = bottom.centerY - top.centerY;
+
+  const bothHorizontal = perStroke.every((stroke) => stroke.angleAbs <= 0.28);
+  const bothStraight = perStroke.every((stroke) => stroke.straightness >= 0.85);
+
+  const bottomNotMuchShorter = bottom.width >= top.width * 0.7;
+
+  const checks = {
+    strokeCount: features.strokeCountUser === 2,
+    referenceStrokeCount: features.strokeCountRef === 2,
+
+    // Forma global de 二
+    bboxWidth: geometry.bboxWidth >= 0.7,
+    bboxHeight: geometry.bboxHeight >= 0.25 && geometry.bboxHeight <= 0.85,
+    aspectRatio: geometry.aspectRatio >= 1.1 && geometry.aspectRatio <= 3.2,
+
+    // Trazos horizontales y rectos
+    bothHorizontal,
+    bothStraight,
+    straightnessMean: geometry.straightnessMean >= 0.88,
+    coarseAngleAbsMean: geometry.coarseAngleAbsMean <= 0.22,
+    coarseAngleAbsMax: geometry.coarseAngleAbsMax <= 0.32,
+
+    // Estructura interna
+    topAboveBottom: top.centerY < bottom.centerY,
+    verticalGap: verticalGap >= 0.18,
+    bottomNotMuchShorter,
+  };
+
+  const isCorrect = Object.values(checks).every(Boolean);
+
+  return {
+    isCorrect,
+    strategy: "two_horizontal_lines",
+    checks,
+    details: {
+      top,
+      bottom,
+      verticalGap,
+    },
+    thresholds: {
+      expectedStrokeCount: 2,
+      bboxWidthMin: 0.7,
+      bboxHeightMin: 0.25,
+      bboxHeightMax: 0.85,
+      aspectRatioMin: 1.1,
+      aspectRatioMax: 3.2,
+      strokeAngleAbsMax: 0.28,
+      straightnessPerStrokeMin: 0.85,
+      straightnessMeanMin: 0.88,
+      coarseAngleAbsMeanMax: 0.22,
+      coarseAngleAbsMax: 0.32,
+      verticalGapMin: 0.18,
+      bottomWidthVsTopWidthMinRatio: 0.7,
     },
   };
 }
