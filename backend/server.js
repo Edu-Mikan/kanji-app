@@ -26,7 +26,7 @@ app.use(express.json({ limit: "5mb" }));
 app.use("/kanji_svg", express.static("kanji_svg"));
 
 const PORT = process.env.PORT || 3000;
-const ALGORITHM_VERSION = "heuristic-v1";
+const ALGORITHM_VERSION = "heuristic-v2";
 const TRAINING_DATA_SCHEMA_VERSION = 1;
 
 const MONGO_URI = process.env.MONGO_URI;
@@ -517,11 +517,6 @@ app.post("/feedback", async (req, res) => {
 
     let strokesData = null;
 
-    console.log("feedback received:", {
-      recognitionId,
-      kanji,
-    });
-
     if (strokes && Array.isArray(strokes) && strokes.length > 0) {
       const prepared = prepareTrainingStrokes(strokes);
 
@@ -578,8 +573,6 @@ app.post("/feedback", async (req, res) => {
 
     let mongoInsertedId = null;
 
-    console.log(feedbackCollection);
-
     if (feedbackCollection) {
       const result = await feedbackCollection.insertOne(entry);
       mongoInsertedId = result.insertedId;
@@ -598,10 +591,6 @@ app.post("/feedback", async (req, res) => {
     res.status(500).json({ error: "Error saving feedback" });
   }
 });
-
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
