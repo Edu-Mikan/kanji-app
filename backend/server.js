@@ -350,12 +350,12 @@ function compareStrokes(user, reference) {
     totalError += 2.5;
   }
 
+  if (totalError > 20) {
+    totalError = 20;
+  }
+
   let score = totalError / reference.length;
   score = Math.min(score, 10);
-
-  if (totalError > 8) {
-    totalError = 8;
-  }
 
   return score;
 }
@@ -420,13 +420,13 @@ app.post("/recognize", async (req, res) => {
     const normalized = normalizeStrokes(strokes);
     const resampledUser = normalized.map((s) => resampleStroke(s, 20));
     const resampledRef = referenceKanji.map((s) => resampleStroke(s, 20));
-    const score = compareStrokes(resampledUser, resampledRef);
+    const heuristicScore = compareStrokes(resampledUser, resampledRef);
 
     const features = extractAllFeatures({
       userResampled: resampledUser,
       referenceResampled: resampledRef,
       userNormalized: normalized,
-      score,
+      score: heuristicScore,
     });
 
     const simpleValidation = validateSimpleKanji({
@@ -442,6 +442,20 @@ app.post("/recognize", async (req, res) => {
       ? simpleValidation.isCorrect
       : null;
 
+    // Score final que verá frontend/test_screen.
+    // Para kanjis con regla simple, la regla simple manda.
+    let finalScore = heuristicScore;
+
+    if (simpleValidation) {
+      finalScore = simpleValidation.isCorrect
+        ? Math.min(heuristicScore, 0.5)
+        : 10;
+    }
+
+    // Guardamos también el score heurístico original para debug.
+    features.heuristicScore = heuristicScore;
+    features.totalError = finalScore;
+
     // const logEntry = {
     //   kanji: targetKanji,
     //   features,
@@ -455,8 +469,12 @@ app.post("/recognize", async (req, res) => {
 
     res.send({
       kanji: targetKanji,
-      score: score,
+      //score: score,
       strokes: referenceKanji.length,
+
+      score: finalScore,
+      heuristicScore,
+
       features: features,
       algorithmVersion: ALGORITHM_VERSION,
       simpleValidation,
@@ -498,6 +516,11 @@ app.post("/feedback", async (req, res) => {
     } = req.body;
 
     let strokesData = null;
+
+    console.log("feedback received:", {
+      recognitionId,
+      kanji,
+    });
 
     if (strokes && Array.isArray(strokes) && strokes.length > 0) {
       const prepared = prepareTrainingStrokes(strokes);
@@ -554,6 +577,8 @@ app.post("/feedback", async (req, res) => {
     };
 
     let mongoInsertedId = null;
+
+    console.log(feedbackCollection);
 
     if (feedbackCollection) {
       const result = await feedbackCollection.insertOne(entry);
