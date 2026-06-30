@@ -367,14 +367,14 @@ function validateFourBoxKanji(features) {
     // Forma global de caja. En tus datos correctos, aspectRatio ronda aprox 0.84 - 1.12.
     bboxWidth: geometry.bboxWidth >= 0.45,
     bboxHeight: geometry.bboxHeight >= 0.7,
-    aspectRatio: geometry.aspectRatio >= 0.45 && geometry.aspectRatio <= 1.35,
+    aspectRatio: geometry.aspectRatio >= 0.45 && geometry.aspectRatio <= 1.45,
 
     // Trazo 0: vertical izquierdo
     leftStrokeIsVertical: s0.angleAbs >= 1.25,
-    leftStrokeIsThin: s0.width <= 0.2,
+    leftStrokeIsThin: s0.width <= 0.27,
     leftStrokeIsTall: s0.height >= 0.38,
     leftStrokeOnLeft: s0.centerX <= 0.2,
-    leftStrokeStraight: s0.straightness >= 0.95,
+    leftStrokeStraight: s0.straightness >= 0.8,
 
     // Trazo 1: trazo exterior largo/envolvente.
     // Este trazo suele tener straightness baja porque no es una línea recta.
@@ -384,11 +384,11 @@ function validateFourBoxKanji(features) {
     outerStrokeHasBoxLikeAngle: s1.angleAbs >= 0.4 && s1.angleAbs <= 1.35,
 
     // Trazo 2: vertical interior izquierdo
-    innerLeftIsVertical: s2.angleAbs >= 1.15,
-    innerLeftIsThin: s2.width <= 0.2,
+    innerLeftIsVertical: s2.angleAbs >= 1.1,
+    innerLeftIsThin: s2.width <= 0.23,
     innerLeftHasHeight: s2.height >= 0.2,
     innerLeftInExpectedZone: s2.centerX >= 0.12 && s2.centerX <= 0.5,
-    innerLeftStraight: s2.straightness >= 0.9,
+    innerLeftStraight: s2.straightness >= 0.85,
 
     // Trazo 3: interior derecho/inclinado
     innerRightHasVerticalComponent: s3.angleAbs >= 0.4 && s3.angleAbs <= 1.65,
@@ -402,8 +402,10 @@ function validateFourBoxKanji(features) {
     bottomStrokeIsWide:
       s4.width >= 0.35 || s4.width >= geometry.bboxWidth * 0.65,
     bottomStrokeIsFlat: s4.height <= 0.2,
-    bottomStrokeIsLow: s4.centerY >= 0.65,
-    bottomStrokeStraight: s4.straightness >= 0.9,
+    bottomStrokeIsLow:
+      s4.centerY >= 0.58 ||
+      (s4.centerY > s2.centerY + 0.25 && s4.centerY > s3.centerY + 0.2),
+    bottomStrokeStraight: s4.straightness >= 0.88,
   };
 
   const isCorrect = Object.values(checks).every(Boolean);
@@ -426,24 +428,25 @@ function validateFourBoxKanji(features) {
       bboxWidthMin: 0.45,
       bboxHeightMin: 0.7,
       aspectRatioMin: 0.45,
-      aspectRatioMax: 1.35,
+      aspectRatioMax: 1.45,
 
       leftStrokeAngleAbsMin: 1.25,
-      leftStrokeWidthMax: 0.2,
+      leftStrokeWidthMax: 0.27,
       leftStrokeHeightMin: 0.38,
       leftStrokeCenterXMax: 0.2,
+      leftStrokeStraightnessMin: 0.8,
 
       outerStrokeWidthMinRatioVsBBox: 0.7,
       outerStrokeHeightMinRatioVsBBox: 0.7,
       outerStrokeAngleAbsMin: 0.4,
       outerStrokeAngleAbsMax: 1.35,
 
-      innerLeftAngleAbsMin: 1.15,
-      innerLeftWidthMax: 0.2,
+      innerLeftAngleAbsMin: 1.1,
+      innerLeftWidthMax: 0.23,
       innerLeftHeightMin: 0.2,
       innerLeftCenterXMin: 0.12,
       innerLeftCenterXMax: 0.5,
-
+      innerLeftStraightnessMin: 0.85,
       innerRightAngleAbsMin: 0.4,
       innerRightAngleAbsMax: 1.65,
       innerRightWidthMin: 0.1,
@@ -456,7 +459,8 @@ function validateFourBoxKanji(features) {
       bottomStrokeWidthMin: 0.35,
       bottomStrokeWidthMinRatioVsBBox: 0.65,
       bottomStrokeHeightMax: 0.2,
-      bottomStrokeCenterYMin: 0.65,
+      bottomStrokeCenterYMin: 0.58,
+      bottomStrokeStraightnessMin: 0.88,
     },
   };
 }

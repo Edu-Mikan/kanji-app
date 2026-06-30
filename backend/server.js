@@ -447,9 +447,33 @@ app.post("/recognize", async (req, res) => {
     let finalScore = heuristicScore;
 
     if (simpleValidation) {
-      finalScore = simpleValidation.isCorrect
-        ? Math.min(heuristicScore, 0.5)
-        : 10;
+      if (simpleValidation.isCorrect) {
+        finalScore = Math.min(heuristicScore, 0.5);
+      } else {
+        const checks = simpleValidation.checks ?? {};
+
+        const hardFailedChecks = [
+          "strokeCount",
+          "referenceStrokeCount",
+          "topAboveMiddle",
+          "middleAboveBottom",
+          "bothGapsReasonable",
+          "gapsBalanced",
+        ].filter((checkName) => checks[checkName] === false);
+
+        const hasHardFailure =
+          hardFailedChecks.length > 0 ||
+          simpleValidation.reason === "missing_geometry_features" ||
+          simpleValidation.reason === "invalid_stroke_count";
+
+        if (hasHardFailure) {
+          finalScore = 10;
+        } else {
+          // Fallo blando: no lo damos como perfecto,
+          // pero tampoco lo hundimos a 10.
+          finalScore = Math.min(Math.max(heuristicScore, 0.75), 1.5);
+        }
+      }
     }
 
     // Guardamos también el score heurístico original para debug.
