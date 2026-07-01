@@ -201,10 +201,14 @@ function compareStrokes(user, reference) {
     }
   }
 
-  // 🔥 regla fuerte SOLO si completamente incoherente
-  // 🔥 SOLO aplicar para 2 o más strokes
-  if (reference.length >= 2 && mismatch === refTypes.length) {
+  // Para kanjis de 3 o mas trazos, rechazo duro por tipos.
+  if (reference.length >= 3 && mismatch === refTypes.length) {
     return 10;
+  }
+
+  if (reference.length === 2 && mismatch === refTypes.length) {
+    // Penalización moderada, pero dejamos que la comparación de forma decida.
+    totalError += 0.25;
   }
 
   // 🔥 ordenar strokes por ángulo para mejorar matching
@@ -452,14 +456,81 @@ app.post("/recognize", async (req, res) => {
       } else {
         const checks = simpleValidation.checks ?? {};
 
-        const hardFailedChecks = [
-          "strokeCount",
-          "referenceStrokeCount",
-          "topAboveMiddle",
-          "middleAboveBottom",
-          "bothGapsReasonable",
-          "gapsBalanced",
-        ].filter((checkName) => checks[checkName] === false);
+        const hardFailedChecksByStrategy = {
+          cross_kanji: [
+            "strokeCount",
+            "referenceStrokeCount",
+            "hasHorizontal",
+            "hasVertical",
+            "crosses",
+            "verticalNearCenter",
+            "horizontalNearCenter",
+          ],
+
+          roku_kanji: [
+            "strokeCount",
+            "referenceStrokeCount",
+            "hasTopMark",
+            "hasMiddleHorizontal",
+            "hasTwoLowerStrokes",
+            "leftDiagonal",
+            "rightDiagonal",
+            "topAboveHorizontal",
+            "horizontalAboveLower",
+            "leftRightSeparated",
+            "lowerBelowHorizontal",
+          ],
+
+          three_horizontal_lines: [
+            "strokeCount",
+            "referenceStrokeCount",
+            "topAboveMiddle",
+            "middleAboveBottom",
+            "bothGapsReasonable",
+            "gapsBalanced",
+          ],
+          shichi_kanji: [
+            "strokeCount",
+            "referenceStrokeCount",
+            "hasTopHorizontal",
+            "hasSecondStroke",
+            "secondStrokeDiagonalOrHook",
+            "secondStrokeStartsNearTopZone",
+            "secondStrokeOnRightSide",
+            "secondStrokeExtendsDown",
+            "topCrossesSecondXRange",
+            "globalAspectReasonable",
+          ],
+
+          hachi_kanji: [
+            "strokeCount",
+            "referenceStrokeCount",
+            "leftOnLeft",
+            "rightOnRight",
+            "leftRightSeparated",
+            "leftDiagonal",
+            "rightDiagonal",
+            "rightTallerOrSimilar",
+            "notTooHorizontal",
+            "leftNotMuchHigherThanRight",
+          ],
+          default: [
+            "strokeCount",
+            "referenceStrokeCount",
+            "topAboveMiddle",
+            "middleAboveBottom",
+            "bothGapsReasonable",
+            "gapsBalanced",
+          ],
+        };
+
+        const hardCheckNames =
+          hardFailedChecksByStrategy[simpleValidation.strategy] ??
+          hardFailedChecksByStrategy.default;
+
+        const hardFailedChecks = hardCheckNames.filter(
+          (checkName) => checks[checkName] === false,
+        );
 
         const hasHardFailure =
           hardFailedChecks.length > 0 ||
