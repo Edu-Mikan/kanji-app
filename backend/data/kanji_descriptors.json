@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": null,
+  "source": {
+    "file": "kanji_full.json",
+    "algorithm": "manual-initial-v1",
+    "filter": {
+      "type": "manual_initial_set"
+    }
+  },
+  "descriptors": {
+    "八": {
+      "kanji": "八",
+      "enabled": true,
+      "source": "manual_initial",
+      "strokeCount": 2,
+      "pattern": "two_separated_diagonals",
+      "confidence": "medium",
+      "strokes": [
+        {
+          "id": "leftStroke",
+          "sourceIndex": 0,
+          "type": "diagonal",
+          "zoneX": "left",
+          "zoneY": "middle_bottom",
+          "expected": {
+            "angleAbs": {
+              "min": 0.85,
+              "max": 1.55
+            },
+            "width": {
+              "min": 0.05
+            },
+            "height": {
+              "min": 0.35
+            },
+            "centerX": {
+              "max": 0.35
+            },
+            "straightness": {
+              "min": 0.9
+            }
+          }
+        },
+        {
+          "id": "rightStroke",
+          "sourceIndex": 1,
+          "type": "diagonal",
+          "zoneX": "right",
+          "zoneY": "middle_bottom",
+          "expected": {
+            "angleAbs": {
+              "min": 0.8,
+              "max": 1.35
+            },
+            "width": {
+              "min": 0.15
+            },
+            "height": {
+              "min": 0.45
+            },
+            "centerX": {
+              "min": 0.5
+            },
+            "straightness": {
+              "min": 0.75
+            }
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "leftStroke",
+          "to": "rightStroke"
+        },
+        {
+          "type": "centerXGap",
+          "from": "leftStroke",
+          "to": "rightStroke",
+          "min": 0.35
+        },
+        {
+          "type": "heightRatio",
+          "from": "rightStroke",
+          "to": "leftStroke",
+          "min": 0.6
+        },
+        {
+          "type": "centerYNotMuchHigher",
+          "from": "leftStroke",
+          "to": "rightStroke",
+          "tolerance": 0.12
+        },
+        {
+          "type": "direction",
+          "stroke": "leftStroke",
+          "deltaXMax": -0.05,
+          "deltaYMin": 0.2
+        },
+        {
+          "type": "direction",
+          "stroke": "rightStroke",
+          "deltaXMin": 0.05,
+          "deltaYMin": 0.2
+        }
+      ],
+      "globalChecks": {
+        "bboxHeight": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "leftStroke.matches",
+        "rightStroke.matches",
+        "leftOf.leftStroke.rightStroke",
+        "centerXGap.leftStroke.rightStroke",
+        "heightRatio.rightStroke.leftStroke",
+        "bboxHeight",
+        "direction.leftStroke",
+        "direction.rightStroke"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Descriptor inicial manual para 八, basado en los datos de entrenamiento analizados."
+      }
+    }
+  }
+}

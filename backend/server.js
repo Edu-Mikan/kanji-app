@@ -19,6 +19,12 @@ const {
 
 const { extractAllFeatures } = require("./services/feature_extractor");
 const { validateSimpleKanji } = require("./services/simple_kanji_rules");
+const {
+  loadKanjiDescriptors,
+  getKanjiDescriptor,
+} = require("./services/descriptor_loader");
+
+const { validateByDescriptor } = require("./services/descriptor_validator");
 
 const app = express();
 app.use(cors());
@@ -42,6 +48,7 @@ let mongoConnectionError = null;
 let mongoConnectionAttemptedAt = null;
 
 const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
+const kanjiDescriptors = loadKanjiDescriptors();
 
 async function connectMongoIfConfigured() {
   mongoConnectionAttemptedAt = new Date().toISOString();
@@ -438,13 +445,25 @@ app.post("/recognize", async (req, res) => {
       features,
     });
 
-    const validationStrategy = simpleValidation
-      ? simpleValidation.strategy
+    let descriptorValidation = null;
+
+    if (!simpleValidation) {
+      const descriptor = getKanjiDescriptor(kanjiDescriptors, targetKanji);
+
+      descriptorValidation = validateByDescriptor({
+        kanji: targetKanji,
+        features,
+        descriptor,
+      });
+    }
+
+    const validation = simpleValidation ?? descriptorValidation;
+
+    const validationStrategy = validation
+      ? validation.strategy
       : "heuristic_score";
 
-    const validationResult = simpleValidation
-      ? simpleValidation.isCorrect
-      : null;
+    const validationResult = validation ? validation.isCorrect : null;
 
     // Score final que verá frontend/test_screen.
     // Para kanjis con regla simple, la regla simple manda.
@@ -512,7 +531,8 @@ app.post("/recognize", async (req, res) => {
             "rightDiagonal",
             "rightTallerOrSimilar",
             "notTooHorizontal",
-            "leftNotMuchHigherThanRight",
+            "leftStrokeDirection",
+            "rightStrokeDirection",
           ],
           default: [
             "strokeCount",
@@ -545,11 +565,22 @@ app.post("/recognize", async (req, res) => {
           finalScore = Math.min(Math.max(heuristicScore, 0.75), 1.5);
         }
       }
+    } else if (descriptorValidation) {
+      finalScore = descriptorValidation.score;
     }
 
     // Guardamos también el score heurístico original para debug.
     features.heuristicScore = heuristicScore;
     features.totalError = finalScore;
+
+    if (descriptorValidation) {
+      features.descriptorMatchScore = descriptorValidation.descriptorMatchScore;
+      features.descriptorFailedChecks = descriptorValidation.failedChecks;
+      features.descriptorHardFailedChecks =
+        descriptorValidation.hardFailedChecks;
+      features.descriptorPattern = descriptorValidation.pattern;
+      features.descriptorRoleMatches = descriptorValidation.roleMatches;
+    }
 
     // const logEntry = {
     //   kanji: targetKanji,
@@ -564,15 +595,16 @@ app.post("/recognize", async (req, res) => {
 
     res.send({
       kanji: targetKanji,
-      //score: score,
       strokes: referenceKanji.length,
-
       score: finalScore,
       heuristicScore,
-
       features: features,
       algorithmVersion: ALGORITHM_VERSION,
+
       simpleValidation,
+      descriptorValidation,
+      validation,
+
       validationStrategy,
       validationResult,
       recognitionId,
