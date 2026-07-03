@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import 'lesson_list_screen.dart';
+import 'training_kanji_list_screen.dart';
 
 class LevelScreen extends StatefulWidget {
   const LevelScreen({super.key});
@@ -10,7 +11,6 @@ class LevelScreen extends StatefulWidget {
 }
 
 class _LevelScreenState extends State<LevelScreen> {
-  bool isTestMode = false;
   final List<String> niveles = const ['Kana', 'N5', 'N4', 'N3', 'N2', 'N1'];
 
   String getImageForNivel(String nivel) {
@@ -38,26 +38,25 @@ class _LevelScreenState extends State<LevelScreen> {
       appBar: AppBar(title: const Text('Selecciona nivel')),
       body: Column(
         children: [
-          // ✅ TOGGLE TEST MODE (solo si config lo permite)
           if (AppConfig.testModeEnabled)
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Modo entrenamiento IA"),
-                  Switch(
-                    value: isTestMode,
-                    onChanged: (value) {
-                      setState(() {
-                        isTestMode = value;
-                      });
-                    },
-                  ),
-                ],
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.psychology),
+                  label: const Text('Entrenamiento IA'),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const TrainingKanjiListScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-
           // ✅ GRID ORIGINAL (sin tocar lógica)
           Expanded(
             child: GridView.builder(
@@ -80,10 +79,7 @@ class _LevelScreenState extends State<LevelScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => LessonListScreen(
-                            nivel: nivel,
-                            isTestMode: isTestMode, // ✅ CLAVE
-                          ),
+                          builder: (_) => LessonListScreen(nivel: nivel),
                         ),
                       );
                     },

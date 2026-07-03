@@ -131,6 +131,45 @@
       "debug": {
         "notes": "Descriptor inicial manual para 八, basado en los datos de entrenamiento analizados."
       }
+    },
+    "十": {
+      "pattern": "cross",
+
+      "strokeCount": 2,
+
+      "strokes": [
+        {
+          "id": "horizontal",
+          "expected": {
+            "angleAbs": { "max": 0.25 },
+            "width": { "min": 0.45 },
+            "height": { "max": 0.25 }
+          }
+        },
+        {
+          "id": "vertical",
+          "expected": {
+            "angleAbs": { "min": 1.2 },
+            "height": { "min": 0.45 },
+            "width": { "max": 0.25 }
+          }
+        }
+      ],
+
+      "relations": [
+        {
+          "type": "crosses",
+          "from": "horizontal",
+          "to": "vertical"
+        }
+      ],
+
+      "hardChecks": [
+        "strokeCount",
+        "horizontal.matches",
+        "vertical.matches",
+        "crosses.horizontal.vertical"
+      ]
     }
   }
 }

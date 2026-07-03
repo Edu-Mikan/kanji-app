@@ -3,17 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kanji_app/main.dart';
 import '../services/progress_service.dart';
-import 'test_screen.dart';
 
 class LessonListScreen extends StatefulWidget {
   final String nivel;
-  final bool isTestMode;
 
-  const LessonListScreen({
-    super.key,
-    required this.nivel,
-    required this.isTestMode,
-  });
+  const LessonListScreen({super.key, required this.nivel});
 
   @override
   State<LessonListScreen> createState() => _LessonListScreenState();
@@ -117,15 +111,10 @@ class _LessonListScreenState extends State<LessonListScreen> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => widget.isTestMode
-                      ? TestScreen(
-                          nivel: widget.nivel,
-                          numeroLeccion: numeroLeccion,
-                        )
-                      : CanvasScreen(
-                          nivel: widget.nivel,
-                          numeroLeccion: numeroLeccion,
-                        ),
+                  builder: (_) => CanvasScreen(
+                    nivel: widget.nivel,
+                    numeroLeccion: numeroLeccion,
+                  ),
                 ),
               );
 
