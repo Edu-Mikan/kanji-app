@@ -1,3 +1,22 @@
 {
-  "kanjis": ["一", "二", "三", "人", "大", "八"]
+  "categories": [
+    {
+      "id": "basic_strokes",
+      "name": "Trazos básicos",
+      "description": "Kanji muy simples para validar trazos básicos",
+      "kanjis": ["一", "二", "三", "八"]
+    },
+    {
+      "id": "simple_combinations",
+      "name": "Combinaciones simples",
+      "description": "Combinación de trazos básicos",
+      "kanjis": ["人", "大", "天"]
+    },
+    {
+      "id": "four_strokes",
+      "name": "Kanjis de 4 trazos",
+      "description": "Entrenamiento por complejidad",
+      "kanjis": ["木", "中", "日"]
+    }
+  ]
 }
