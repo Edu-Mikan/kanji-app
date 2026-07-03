@@ -19,9 +19,9 @@ const SIMPLE_KANJI_RULES = {
   七: {
     pattern: "shichi_kanji",
   },
-  八: {
-    pattern: "hachi_kanji",
-  },
+  // 八: {
+  //   pattern: "hachi_kanji",
+  // },
   十: {
     pattern: "cross_kanji",
   },
@@ -970,11 +970,28 @@ function validateHachiKanji(features) {
 
   const notTooHorizontal = geometry.bboxHeight >= 0.5;
 
-  // En los datos correctos, el centro vertical del trazo izquierdo
-  // suele estar igual o algo por debajo del derecho.
-  // Permitimos una pequeña tolerancia porque hay casos correctos muy justos.
+  // Check blando/informativo: NO lo usamos para isCorrect.
   const leftNotMuchHigherThanRight =
     leftStroke.centerY >= rightStroke.centerY - 0.06;
+
+  const directionAvailable =
+    typeof leftStroke.deltaX === "number" &&
+    typeof leftStroke.deltaY === "number" &&
+    typeof rightStroke.deltaX === "number" &&
+    typeof rightStroke.deltaY === "number";
+
+  // En 八 correcto:
+  // - el trazo izquierdo debe bajar hacia la izquierda: deltaX negativo, deltaY positivo
+  // - el trazo derecho debe bajar hacia la derecha: deltaX positivo, deltaY positivo
+  //
+  // Si la muestra es antigua y no tiene deltaX/deltaY, no la rechazamos aquí.
+  const leftStrokeDirection =
+    !directionAvailable ||
+    (leftStroke.deltaX <= -0.05 && leftStroke.deltaY >= 0.2);
+
+  const rightStrokeDirection =
+    !directionAvailable ||
+    (rightStroke.deltaX >= 0.05 && rightStroke.deltaY >= 0.2);
 
   const checks = {
     strokeCount,
@@ -989,7 +1006,14 @@ function validateHachiKanji(features) {
 
     rightTallerOrSimilar,
     notTooHorizontal,
+
+    leftStrokeDirection,
+    rightStrokeDirection,
+  };
+
+  const softChecks = {
     leftNotMuchHigherThanRight,
+    directionAvailable,
   };
 
   const isCorrect = Object.values(checks).every(Boolean);
@@ -999,6 +1023,7 @@ function validateHachiKanji(features) {
     score: isCorrect ? 0.5 : 10,
     strategy: "hachi_kanji",
     checks,
+    softChecks,
     details: {
       leftStroke,
       rightStroke,
@@ -1025,6 +1050,11 @@ function validateHachiKanji(features) {
 
       rightHeightRatioVsLeftMin: 0.75,
       bboxHeightMin: 0.5,
+
+      leftDeltaXMax: -0.05,
+      rightDeltaXMin: 0.05,
+      deltaYMin: 0.2,
+
       leftCenterYMinVsRightCenterY: -0.06,
     },
   };

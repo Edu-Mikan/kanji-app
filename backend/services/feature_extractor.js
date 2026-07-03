@@ -173,6 +173,19 @@ function extractGeometryFeatures(userNormalized, userResampled) {
     const width = strokeBox.maxX - strokeBox.minX;
     const height = strokeBox.maxY - strokeBox.minY;
 
+    const pointCount = Math.min(
+      normalizedStroke.x?.length ?? 0,
+      normalizedStroke.y?.length ?? 0,
+    );
+
+    const startX = pointCount > 0 ? normalizedStroke.x[0] : null;
+    const startY = pointCount > 0 ? normalizedStroke.y[0] : null;
+    const endX = pointCount > 0 ? normalizedStroke.x[pointCount - 1] : null;
+    const endY = pointCount > 0 ? normalizedStroke.y[pointCount - 1] : null;
+
+    const deltaX = startX != null && endX != null ? endX - startX : null;
+    const deltaY = startY != null && endY != null ? endY - startY : null;
+
     return {
       index,
       minX: strokeBox.minX,
@@ -186,6 +199,29 @@ function extractGeometryFeatures(userNormalized, userResampled) {
       angleAbs: normalizeAngleAbs(getStrokeAngle(resampledStroke)),
       straightness: strokeStraightness(resampledStroke),
       length: strokeLength(resampledStroke),
+      startX,
+      startY,
+      endX,
+      endY,
+      deltaX,
+      deltaY,
+      directionX:
+        deltaX == null
+          ? "unknown"
+          : deltaX > 0.05
+            ? "right"
+            : deltaX < -0.05
+              ? "left"
+              : "neutral",
+
+      directionY:
+        deltaY == null
+          ? "unknown"
+          : deltaY > 0.05
+            ? "down"
+            : deltaY < -0.05
+              ? "up"
+              : "neutral",
     };
   });
 
