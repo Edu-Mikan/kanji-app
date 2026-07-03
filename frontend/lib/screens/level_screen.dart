@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import 'lesson_list_screen.dart';
-import 'training_kanji_list_screen.dart';
+import 'training_category_screen.dart';
 
 class LevelScreen extends StatefulWidget {
   const LevelScreen({super.key});
@@ -50,7 +50,7 @@ class _LevelScreenState extends State<LevelScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => const TrainingKanjiListScreen(),
+                        builder: (_) => const TrainingCategoryScreen(),
                       ),
                     );
                   },

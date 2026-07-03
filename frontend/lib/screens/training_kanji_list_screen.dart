@@ -1,12 +1,15 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
 import 'test_screen.dart';
 
 class TrainingKanjiListScreen extends StatefulWidget {
-  const TrainingKanjiListScreen({super.key});
+  final String title;
+  final List<String> kanjis;
+
+  const TrainingKanjiListScreen({
+    super.key,
+    required this.title,
+    required this.kanjis,
+  });
 
   @override
   State<TrainingKanjiListScreen> createState() =>
@@ -14,50 +17,32 @@ class TrainingKanjiListScreen extends StatefulWidget {
 }
 
 class _TrainingKanjiListScreenState extends State<TrainingKanjiListScreen> {
-  List<String> kanjis = [];
-
-  @override
-  void initState() {
-    super.initState();
-    cargarKanjis();
-  }
-
-  Future<void> cargarKanjis() async {
-    final jsonString = await rootBundle.loadString(
-      'assets/data/training_kanji.json',
-    );
-
-    final data = jsonDecode(jsonString);
-
-    setState(() {
-      kanjis = List<String>.from(data['kanjis']);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Entrenamiento IA')),
-      body: kanjis.isEmpty
+      appBar: AppBar(title: Text(widget.title)),
+      body: widget.kanjis.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
+                crossAxisCount: 5,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
               ),
-              itemCount: kanjis.length,
+              itemCount: widget.kanjis.length,
               itemBuilder: (context, index) {
-                final kanji = kanjis[index];
+                final kanji = widget.kanjis[index];
 
                 return InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            TestScreen(kanjiList: kanjis, initialIndex: index),
+                        builder: (_) => TestScreen(
+                          kanjiList: widget.kanjis,
+                          initialIndex: index,
+                        ),
                       ),
                     );
                   },
