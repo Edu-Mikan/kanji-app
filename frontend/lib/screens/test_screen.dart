@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'dart:convert';
 import '../services/validation_service.dart';
 import '../widgets/drawing_canvas.dart';
 
 class TestScreen extends StatefulWidget {
-  final String nivel;
-  final int numeroLeccion;
-
+  final List<String> kanjiList;
+  final int initialIndex;
   const TestScreen({
     super.key,
-    required this.nivel,
-    required this.numeroLeccion,
+    required this.kanjiList,
+    required this.initialIndex,
   });
 
   @override
@@ -22,17 +19,20 @@ class _TestScreenState extends State<TestScreen> {
   final GlobalKey<DrawingCanvasState> canvasKey = GlobalKey();
 
   late final ValidationService _validationService;
-  List<String> kanjiList = [];
-  int currentIndex = 0;
+  late int currentIndex;
   String? lastFeedbackMessage;
 
   String get currentKanji {
-    if (kanjiList.isEmpty) return "";
-    return kanjiList[currentIndex];
+    if (widget.kanjiList.isEmpty) return "";
+    return widget.kanjiList[currentIndex];
   }
 
   // Aquí integrarás tu canvas real
   List<dynamic> strokes = [];
+
+  bool get canGoPrevious => currentIndex > 0;
+
+  bool get canGoNext => currentIndex < widget.kanjiList.length - 1;
 
   Future<void> sendResult(bool isCorrectUser) async {
     final strokes = canvasKey.currentState?.convertirStrokes();
@@ -103,58 +103,70 @@ class _TestScreenState extends State<TestScreen> {
     });
   }
 
-  Future<void> cargarLeccion() async {
-    final ruta = 'assets/data/lecciones_${widget.nivel}.json';
-    final jsonString = await rootBundle.loadString(ruta);
-    final data = jsonDecode(jsonString);
+  void nextKanji() {
+    if (currentIndex >= widget.kanjiList.length - 1) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Último kanji')));
 
-    final leccionData = data.where((l) {
-      return l['leccion'] == widget.numeroLeccion;
-    }).toList();
+      return;
+    }
 
-    // 🔥 extraer SOLO los kanjis objetivo
-    kanjiList = leccionData.map<String>((l) => l['target'] as String).toList();
+    setState(() {
+      currentIndex++;
+      strokes.clear();
+      lastFeedbackMessage = null;
+    });
 
-    setState(() {});
+    canvasKey.currentState?.clear();
   }
 
-  void nextKanji() {
-    if (kanjiList.isEmpty) return;
+  void previousKanji() {
+    if (currentIndex <= 0) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Primer kanji')));
 
-    if (currentIndex < kanjiList.length - 1) {
-      setState(() {
-        currentIndex++;
-        strokes.clear();
-        lastFeedbackMessage = null;
-      });
-
-      canvasKey.currentState?.clear();
-    } else {
-      Navigator.pop(context);
+      return;
     }
+
+    setState(() {
+      currentIndex--;
+      strokes.clear();
+      lastFeedbackMessage = null;
+    });
+
+    canvasKey.currentState?.clear();
   }
 
   @override
   void initState() {
     super.initState();
     _validationService = ValidationService();
-    cargarLeccion();
+    //cargarKanjis();
+
+    currentIndex = widget.initialIndex;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (kanjiList.isEmpty) {
+    if (widget.kanjiList.isEmpty) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("TEST · ${widget.nivel} L${widget.numeroLeccion}"),
+        title: const Text("Entrenamiento IA"),
         backgroundColor: Colors.orange, // visual de modo debug
       ),
       backgroundColor: Colors.white,
       body: Column(
         children: [
+          Text(
+            '${currentIndex + 1} / ${widget.kanjiList.length}',
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+
           const SizedBox(height: 40),
 
           // KANJI
@@ -263,7 +275,25 @@ class _TestScreenState extends State<TestScreen> {
                         vertical: 14,
                       ),
                     ),
-                    onPressed: nextKanji,
+
+                    onPressed: canGoPrevious ? previousKanji : null,
+
+                    child: const Text(
+                      "Anterior",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 14,
+                      ),
+                    ),
+
+                    onPressed: canGoNext ? nextKanji : null,
+
                     child: const Text(
                       "Siguiente",
                       style: TextStyle(fontSize: 18),

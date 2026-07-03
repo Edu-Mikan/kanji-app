@@ -22,9 +22,9 @@ const SIMPLE_KANJI_RULES = {
   // 八: {
   //   pattern: "hachi_kanji",
   // },
-  十: {
-    pattern: "cross_kanji",
-  },
+  // 十: {
+  //   pattern: "cross_kanji",
+  // },
 };
 
 /**
