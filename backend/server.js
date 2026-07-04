@@ -473,84 +473,13 @@ app.post("/recognize", async (req, res) => {
       if (simpleValidation.isCorrect) {
         finalScore = Math.min(heuristicScore, 0.5);
       } else {
-        const checks = simpleValidation.checks ?? {};
-
-        const hardFailedChecksByStrategy = {
-          cross_kanji: [
-            "strokeCount",
-            "referenceStrokeCount",
-            "hasHorizontal",
-            "hasVertical",
-            "crosses",
-            "verticalNearCenter",
-            "horizontalNearCenter",
-          ],
-
-          roku_kanji: [
-            "strokeCount",
-            "referenceStrokeCount",
-            "hasTopMark",
-            "hasMiddleHorizontal",
-            "hasTwoLowerStrokes",
-            "leftDiagonal",
-            "rightDiagonal",
-            "topAboveHorizontal",
-            "horizontalAboveLower",
-            "leftRightSeparated",
-            "lowerBelowHorizontal",
-          ],
-
-          three_horizontal_lines: [
-            "strokeCount",
-            "referenceStrokeCount",
-            "topAboveMiddle",
-            "middleAboveBottom",
-            "bothGapsReasonable",
-            "gapsBalanced",
-          ],
-          shichi_kanji: [
-            "strokeCount",
-            "referenceStrokeCount",
-            "hasTopHorizontal",
-            "hasSecondStroke",
-            "secondStrokeDiagonalOrHook",
-            "secondStrokeStartsNearTopZone",
-            "secondStrokeOnRightSide",
-            "secondStrokeExtendsDown",
-            "topCrossesSecondXRange",
-            "globalAspectReasonable",
-          ],
-
-          hachi_kanji: [
-            "strokeCount",
-            "referenceStrokeCount",
-            "leftOnLeft",
-            "rightOnRight",
-            "leftRightSeparated",
-            "leftDiagonal",
-            "rightDiagonal",
-            "rightTallerOrSimilar",
-            "notTooHorizontal",
-            "leftStrokeDirection",
-            "rightStrokeDirection",
-          ],
-          default: [
-            "strokeCount",
-            "referenceStrokeCount",
-            "topAboveMiddle",
-            "middleAboveBottom",
-            "bothGapsReasonable",
-            "gapsBalanced",
-          ],
-        };
-
-        const hardCheckNames =
-          hardFailedChecksByStrategy[simpleValidation.strategy] ??
-          hardFailedChecksByStrategy.default;
-
-        const hardFailedChecks = hardCheckNames.filter(
-          (checkName) => checks[checkName] === false,
-        );
+        const hardFailedChecks = Array.isArray(
+          simpleValidation.hardFailedChecks,
+        )
+          ? simpleValidation.hardFailedChecks
+          : Object.entries(simpleValidation.checks ?? {})
+              .filter(([, value]) => value === false)
+              .map(([checkName]) => checkName);
 
         const hasHardFailure =
           hardFailedChecks.length > 0 ||
@@ -560,8 +489,6 @@ app.post("/recognize", async (req, res) => {
         if (hasHardFailure) {
           finalScore = 10;
         } else {
-          // Fallo blando: no lo damos como perfecto,
-          // pero tampoco lo hundimos a 10.
           finalScore = Math.min(Math.max(heuristicScore, 0.75), 1.5);
         }
       }

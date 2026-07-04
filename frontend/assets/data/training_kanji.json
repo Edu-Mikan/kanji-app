@@ -1,22 +1,107 @@
 {
   "categories": [
     {
-      "id": "basic_strokes",
-      "name": "Trazos básicos",
-      "description": "Kanji muy simples para validar trazos básicos",
-      "kanjis": ["一", "二", "三", "八"]
+      "id": "strokes_1",
+      "name": "1 trazo",
+      "description": "Kanjis de un solo trazo",
+      "kanjis": ["一", "乙"]
     },
     {
-      "id": "simple_combinations",
-      "name": "Combinaciones simples",
-      "description": "Combinación de trazos básicos",
-      "kanjis": ["人", "大", "天"]
+      "id": "strokes_2",
+      "name": "2 trazos",
+      "description": "Kanjis de dos trazos",
+      "kanjis": [
+        "二",
+        "十",
+        "人",
+        "入",
+        "八",
+        "力",
+        "刀",
+        "丁",
+        "七",
+        "九",
+        "又"
+      ]
     },
     {
-      "id": "four_strokes",
-      "name": "Kanjis de 4 trazos",
-      "description": "Entrenamiento por complejidad",
-      "kanjis": ["木", "中", "日"]
+      "id": "strokes_3",
+      "name": "3 trazos",
+      "description": "Kanjis de tres trazos",
+      "kanjis": [
+        "三",
+        "上",
+        "下",
+        "口",
+        "土",
+        "士",
+        "大",
+        "小",
+        "山",
+        "川",
+        "子",
+        "女",
+        "千",
+        "工",
+        "夕",
+        "丸",
+        "才",
+        "寸",
+        "弓",
+        "干"
+      ]
+    },
+    {
+      "id": "strokes_4",
+      "name": "4 trazos",
+      "description": "Kanjis de cuatro trazos",
+      "kanjis": [
+        "木",
+        "日",
+        "月",
+        "水",
+        "火",
+        "犬",
+        "王",
+        "天",
+        "中",
+        "手",
+        "心",
+        "文",
+        "友",
+        "元",
+        "牛",
+        "戸",
+        "止",
+        "比",
+        "反",
+        "井",
+        "毛",
+        "父",
+        "氏",
+        "公",
+        "内",
+        "円",
+        "少",
+        "太",
+        "方",
+        "化",
+        "片",
+        "切",
+        "引",
+        "分",
+        "午",
+        "升",
+        "丹",
+        "予",
+        "互"
+      ]
+    },
+    {
+      "id": "strokes_5",
+      "name": "5 trazos",
+      "description": "Kanjis de cinco trazos",
+      "kanjis": ["四"]
     }
   ]
 }
