@@ -194,7 +194,7 @@
 
         "minWideStrokeWidth": 0.45,
         "wideStrokeMinXMax": 0.15,
-        "wideStrokeMaxXMin": 0.55,
+        "wideStrokeMaxXMin": 0.5,
         "wideStrokeCenterYMin": 0.45,
 
         "minStraightnessMean": 0.55,
@@ -217,8 +217,8 @@
         "minHeightVsWidthRatio": 1.4,
         "minWidthVsHeightRatio": 1.4,
 
-        "leftStrokeCenterXMax": 0.38,
-        "leftStrokeMinXMax": 0.25,
+        "leftStrokeCenterXMax": 0.42,
+        "leftStrokeMinXMax": 0.3,
         "leftStrokeMinHeight": 0.35,
 
         "bottomStrokeCenterYMin": 0.5,
