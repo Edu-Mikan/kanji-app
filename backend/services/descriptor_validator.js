@@ -3,6 +3,14 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     return null;
   }
 
+  if (descriptor.pattern === "three_vertical_zones") {
+    return validateThreeVerticalZones({
+      kanji,
+      features,
+      descriptor,
+    });
+  }
+
   const geometry = features?.geometry;
 
   if (!geometry) {
@@ -448,6 +456,249 @@ function simplifyRoleMatches(roleMatches) {
   }
 
   return result;
+}
+
+function validateThreeVerticalZones({ kanji, features, descriptor }) {
+  const geometry = features.geometry;
+
+  if (!geometry) {
+    return {
+      isCorrect: false,
+      score: 10,
+      strategy: "descriptor_three_vertical_zones",
+      reason: "missing_geometry_features",
+      pattern: descriptor.pattern,
+    };
+  }
+
+  const perStroke = geometry.perStroke ?? [];
+  const rules = descriptor.rules ?? {};
+  const expectedStrokeCount = descriptor.expectedStrokeCount ?? 3;
+
+  if (perStroke.length !== expectedStrokeCount) {
+    const checks = {
+      strokeCount: features.strokeCountUser === expectedStrokeCount,
+      referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
+    };
+
+    const hardFailedChecks = Object.entries(checks)
+      .filter(([, value]) => value === false)
+      .map(([checkName]) => checkName);
+
+    return {
+      isCorrect: false,
+      score: 10,
+      strategy: "descriptor_three_vertical_zones",
+      reason: "invalid_stroke_count",
+      pattern: descriptor.pattern,
+      checks,
+      failedChecks: hardFailedChecks,
+      hardFailedChecks,
+      softFailedChecks: [],
+      thresholds: {
+        expectedStrokeCount,
+      },
+    };
+  }
+
+  const minBboxWidth = rules.minBboxWidth ?? 0.35;
+  const minBboxHeight = rules.minBboxHeight ?? 0.55;
+
+  const minVerticalAngleAbs = rules.minVerticalAngleAbs ?? 0.65;
+  const minHeightVsWidthRatio = rules.minHeightVsWidthRatio ?? 1.05;
+
+  const minCenterVerticalHeight = rules.minCenterVerticalHeight ?? 0.6;
+  const minRightVerticalHeight = rules.minRightVerticalHeight ?? 0.4;
+
+  const centerVerticalCenterXMin = rules.centerVerticalCenterXMin ?? 0.25;
+  const centerVerticalCenterXMax = rules.centerVerticalCenterXMax ?? 0.55;
+
+  const rightStrokeCenterXMin = rules.rightStrokeCenterXMin ?? 0.55;
+  const minRightCenterGap = rules.minRightCenterGap ?? 0.18;
+
+  const minWideStrokeWidth = rules.minWideStrokeWidth ?? 0.45;
+  const wideStrokeMinXMax = rules.wideStrokeMinXMax ?? 0.15;
+  const wideStrokeMaxXMin = rules.wideStrokeMaxXMin ?? 0.55;
+  const wideStrokeCenterYMin = rules.wideStrokeCenterYMin ?? 0.5;
+
+  const minStraightnessMean = rules.minStraightnessMean ?? 0.55;
+  const maxSoftFailures = rules.maxSoftFailures ?? 3;
+
+  const isVerticalish = (stroke) => {
+    const heightDominates =
+      stroke.height >= stroke.width * minHeightVsWidthRatio;
+
+    const angleLooksVertical = stroke.angleAbs >= minVerticalAngleAbs;
+
+    return heightDominates || angleLooksVertical;
+  };
+
+  // En 山 real, uno de los trazos suele ser ancho/inferior.
+  // Lo identificamos como el trazo de mayor anchura.
+  const sortedByWidth = [...perStroke].sort((a, b) => b.width - a.width);
+  const wideStroke = sortedByWidth[0];
+
+  // Los otros dos deberían ser el trazo central y el derecho.
+  const remainingStrokes = perStroke
+    .filter((stroke) => stroke !== wideStroke)
+    .sort((a, b) => a.centerX - b.centerX);
+
+  const centerVerticalStroke = remainingStrokes[0] ?? null;
+  const rightVerticalStroke = remainingStrokes[1] ?? null;
+
+  const rightCenterGap =
+    centerVerticalStroke && rightVerticalStroke
+      ? rightVerticalStroke.centerX - centerVerticalStroke.centerX
+      : 0;
+
+  const checks = {
+    strokeCount: features.strokeCountUser === expectedStrokeCount,
+    referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
+
+    bboxWidth: geometry.bboxWidth >= minBboxWidth,
+    bboxHeight: geometry.bboxHeight >= minBboxHeight,
+
+    hasWideStroke: Boolean(wideStroke),
+    hasCenterVerticalStroke: Boolean(centerVerticalStroke),
+    hasRightVerticalStroke: Boolean(rightVerticalStroke),
+
+    wideStrokeIsWide:
+      Boolean(wideStroke) && wideStroke.width >= minWideStrokeWidth,
+    wideStrokeTouchesLeft:
+      Boolean(wideStroke) && wideStroke.minX <= wideStrokeMinXMax,
+    wideStrokeExtendsRight:
+      Boolean(wideStroke) && wideStroke.maxX >= wideStrokeMaxXMin,
+    wideStrokeIsLower:
+      Boolean(wideStroke) && wideStroke.centerY >= wideStrokeCenterYMin,
+
+    centerVerticalIsVerticalish:
+      Boolean(centerVerticalStroke) && isVerticalish(centerVerticalStroke),
+    centerVerticalHasHeight:
+      Boolean(centerVerticalStroke) &&
+      centerVerticalStroke.height >= minCenterVerticalHeight,
+    centerVerticalInExpectedZone:
+      Boolean(centerVerticalStroke) &&
+      centerVerticalStroke.centerX >= centerVerticalCenterXMin &&
+      centerVerticalStroke.centerX <= centerVerticalCenterXMax,
+
+    rightVerticalIsVerticalish:
+      Boolean(rightVerticalStroke) && isVerticalish(rightVerticalStroke),
+    rightVerticalHasHeight:
+      Boolean(rightVerticalStroke) &&
+      rightVerticalStroke.height >= minRightVerticalHeight,
+    rightVerticalInRightZone:
+      Boolean(rightVerticalStroke) &&
+      rightVerticalStroke.centerX >= rightStrokeCenterXMin,
+
+    rightSeparatedFromCenter: rightCenterGap >= minRightCenterGap,
+
+    straightnessMean: geometry.straightnessMean >= minStraightnessMean,
+
+    // Check blando: el trazo ancho suele estar por debajo del inicio del central.
+    wideStrokeStartsBelowCenterTop:
+      Boolean(wideStroke) &&
+      Boolean(centerVerticalStroke) &&
+      wideStroke.minY >= centerVerticalStroke.minY + 0.15,
+  };
+
+  const hardCheckNames = [
+    "strokeCount",
+    "referenceStrokeCount",
+
+    "bboxWidth",
+    "bboxHeight",
+
+    "hasWideStroke",
+    "hasCenterVerticalStroke",
+    "hasRightVerticalStroke",
+
+    "wideStrokeIsWide",
+    "wideStrokeTouchesLeft",
+    "wideStrokeExtendsRight",
+    "wideStrokeIsLower",
+
+    "centerVerticalIsVerticalish",
+    "centerVerticalHasHeight",
+    "centerVerticalInExpectedZone",
+
+    "rightVerticalIsVerticalish",
+    "rightVerticalHasHeight",
+    "rightVerticalInRightZone",
+
+    "rightSeparatedFromCenter",
+  ];
+
+  const softCheckNames = ["straightnessMean", "wideStrokeStartsBelowCenterTop"];
+
+  const hardFailedChecks = hardCheckNames.filter(
+    (checkName) => checks[checkName] === false,
+  );
+
+  const softFailedChecks = softCheckNames.filter(
+    (checkName) => checks[checkName] === false,
+  );
+
+  const failedChecks = [...hardFailedChecks, ...softFailedChecks];
+
+  const totalChecks = Object.keys(checks).length || 1;
+  const passedChecks = Object.values(checks).filter(Boolean).length;
+  const descriptorMatchScore = passedChecks / totalChecks;
+
+  const isCorrect =
+    hardFailedChecks.length === 0 && softFailedChecks.length <= maxSoftFailures;
+
+  const hasHardFailure = hardFailedChecks.length > 0;
+
+  return {
+    isCorrect,
+    score: isCorrect ? 0.5 : hasHardFailure ? 10 : 0.75,
+    strategy: "descriptor_three_vertical_zones",
+    pattern: descriptor.pattern,
+    kanji,
+
+    checks,
+    failedChecks,
+    hardFailedChecks,
+    softFailedChecks,
+    descriptorMatchScore,
+
+    descriptor,
+
+    details: {
+      wideStroke,
+      centerVerticalStroke,
+      rightVerticalStroke,
+      allStrokes: perStroke,
+      rightCenterGap,
+    },
+
+    thresholds: {
+      expectedStrokeCount,
+
+      minBboxWidth,
+      minBboxHeight,
+
+      minVerticalAngleAbs,
+      minHeightVsWidthRatio,
+
+      minCenterVerticalHeight,
+      minRightVerticalHeight,
+
+      centerVerticalCenterXMin,
+      centerVerticalCenterXMax,
+
+      rightStrokeCenterXMin,
+      minRightCenterGap,
+
+      minWideStrokeWidth,
+      wideStrokeMinXMax,
+      wideStrokeMaxXMin,
+      wideStrokeCenterYMin,
+
+      minStraightnessMean,
+      maxSoftFailures,
+    },
+  };
 }
 
 module.exports = {
