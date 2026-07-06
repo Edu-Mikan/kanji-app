@@ -200,6 +200,46 @@
         "minStraightnessMean": 0.55,
         "maxSoftFailures": 3
       }
+    },
+    "口": {
+      "enabled": true,
+      "pattern": "box_pattern",
+      "expectedStrokeCount": 3,
+      "description": "Patrón de caja simple: trazo izquierdo vertical, trazo exterior superior/derecho y trazo inferior horizontal.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.45,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.8,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.55,
+        "minHeightVsWidthRatio": 1.4,
+        "minWidthVsHeightRatio": 1.4,
+
+        "leftStrokeCenterXMax": 0.38,
+        "leftStrokeMinXMax": 0.25,
+        "leftStrokeMinHeight": 0.35,
+
+        "bottomStrokeCenterYMin": 0.5,
+        "bottomStrokeMinWidth": 0.25,
+        "bottomStrokeMaxYMin": 0.5,
+
+        "outerStrokeMinWidth": 0.35,
+        "outerStrokeMinHeight": 0.35,
+        "outerStrokeMinYMax": 0.35,
+        "outerStrokeMaxXMin": 0.58,
+        "outerStrokeMaxYMin": 0.45,
+
+        "minBoxHorizontalCoverage": 0.55,
+        "minBoxVerticalCoverage": 0.45,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 3,
+
+        "bottomStrokeDeltaYMin": -0.15,
+        "outerStrokeMaxStraightness": 0.88
+      }
     }
   }
 }
