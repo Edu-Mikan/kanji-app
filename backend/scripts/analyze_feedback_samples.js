@@ -326,6 +326,76 @@ function countBy(items, getKey) {
   return result;
 }
 
+function incrementCounter(counter, key) {
+  if (!key) {
+    return;
+  }
+
+  counter[key] = (counter[key] ?? 0) + 1;
+}
+
+function incrementCounterMany(counter, keys) {
+  for (const key of keys ?? []) {
+    incrementCounter(counter, key);
+  }
+}
+
+function getSampleHardFailedChecks(sample) {
+  const hardChecks = new Set();
+
+  for (const checkName of sample.simpleValidation?.hardFailedChecks ?? []) {
+    hardChecks.add(checkName);
+  }
+
+  for (const checkName of sample.descriptorValidation?.hardFailedChecks ?? []) {
+    hardChecks.add(checkName);
+  }
+
+  for (const checkName of sample.features?.descriptorHardFailedChecks ?? []) {
+    hardChecks.add(checkName);
+  }
+
+  // Fallback para validadores antiguos que no tengan hardFailedChecks/softFailedChecks.
+  if (
+    sample.simpleValidation &&
+    !Array.isArray(sample.simpleValidation.hardFailedChecks) &&
+    !Array.isArray(sample.simpleValidation.softFailedChecks)
+  ) {
+    for (const [checkName, value] of Object.entries(
+      sample.simpleValidation.checks ?? {},
+    )) {
+      if (value === false) {
+        hardChecks.add(checkName);
+      }
+    }
+  }
+
+  return [...hardChecks];
+}
+
+function getSampleSoftFailedChecks(sample) {
+  const hardChecks = new Set(getSampleHardFailedChecks(sample));
+  const softChecks = new Set();
+
+  for (const checkName of sample.simpleValidation?.softFailedChecks ?? []) {
+    softChecks.add(checkName);
+  }
+
+  for (const checkName of sample.descriptorValidation?.softFailedChecks ?? []) {
+    softChecks.add(checkName);
+  }
+
+  // En algunos registros locales solo tenemos descriptorFailedChecks en features.
+  // Si un failedCheck no está en hard, lo tratamos como soft/informativo.
+  for (const checkName of sample.features?.descriptorFailedChecks ?? []) {
+    if (!hardChecks.has(checkName)) {
+      softChecks.add(checkName);
+    }
+  }
+
+  return [...softChecks];
+}
+
 function getScoreBand(score) {
   if (!isNumber(score)) {
     return "no_score";
@@ -518,51 +588,30 @@ function analyzeSamples(samples, options) {
     const hardFailedChecks = {};
     const softFailedChecks = {};
 
-    for (const sample of simpleValidationSamples) {
-      const simpleValidation = sample.simpleValidation;
+    const hardFailedChecksCorrect = {};
+    const hardFailedChecksIncorrect = {};
+    const hardFailedChecksUnknown = {};
 
-      for (const checkName of simpleValidation.hardFailedChecks ?? []) {
-        hardFailedChecks[checkName] = (hardFailedChecks[checkName] ?? 0) + 1;
-      }
+    const softFailedChecksCorrect = {};
+    const softFailedChecksIncorrect = {};
+    const softFailedChecksUnknown = {};
 
-      for (const checkName of simpleValidation.softFailedChecks ?? []) {
-        softFailedChecks[checkName] = (softFailedChecks[checkName] ?? 0) + 1;
-      }
+    for (const sample of kanjiSamples) {
+      const sampleHardFailedChecks = getSampleHardFailedChecks(sample);
+      const sampleSoftFailedChecks = getSampleSoftFailedChecks(sample);
 
-      if (
-        !Array.isArray(simpleValidation.hardFailedChecks) &&
-        !Array.isArray(simpleValidation.softFailedChecks)
-      ) {
-        for (const [checkName, value] of Object.entries(
-          simpleValidation.checks ?? {},
-        )) {
-          if (value === false) {
-            hardFailedChecks[checkName] =
-              (hardFailedChecks[checkName] ?? 0) + 1;
-          }
-        }
-      }
-    }
+      incrementCounterMany(hardFailedChecks, sampleHardFailedChecks);
+      incrementCounterMany(softFailedChecks, sampleSoftFailedChecks);
 
-    for (const sample of descriptorValidationSamples) {
-      const descriptorHardFailedChecks =
-        sample.descriptorValidation?.hardFailedChecks ??
-        sample.features?.descriptorHardFailedChecks ??
-        [];
-
-      const descriptorFailedChecks =
-        sample.descriptorValidation?.failedChecks ??
-        sample.features?.descriptorFailedChecks ??
-        [];
-
-      for (const checkName of descriptorHardFailedChecks) {
-        hardFailedChecks[checkName] = (hardFailedChecks[checkName] ?? 0) + 1;
-      }
-
-      for (const checkName of descriptorFailedChecks) {
-        if (!descriptorHardFailedChecks.includes(checkName)) {
-          softFailedChecks[checkName] = (softFailedChecks[checkName] ?? 0) + 1;
-        }
+      if (sample.isCorrect === true) {
+        incrementCounterMany(hardFailedChecksCorrect, sampleHardFailedChecks);
+        incrementCounterMany(softFailedChecksCorrect, sampleSoftFailedChecks);
+      } else if (sample.isCorrect === false) {
+        incrementCounterMany(hardFailedChecksIncorrect, sampleHardFailedChecks);
+        incrementCounterMany(softFailedChecksIncorrect, sampleSoftFailedChecks);
+      } else {
+        incrementCounterMany(hardFailedChecksUnknown, sampleHardFailedChecks);
+        incrementCounterMany(softFailedChecksUnknown, sampleSoftFailedChecks);
       }
     }
 
@@ -605,6 +654,14 @@ function analyzeSamples(samples, options) {
       hardFailedChecks,
       softFailedChecks,
 
+      hardFailedChecksCorrect,
+      hardFailedChecksIncorrect,
+      hardFailedChecksUnknown,
+
+      softFailedChecksCorrect,
+      softFailedChecksIncorrect,
+      softFailedChecksUnknown,
+
       recommendation,
 
       examples: {
@@ -646,22 +703,12 @@ function toExample(sample) {
     isCorrect: sample.isCorrect,
     validationStrategy: sample.validationStrategy,
     validationResult: sample.validationResult,
-    hardFailedChecks:
-      sample.simpleValidation?.hardFailedChecks ??
-      sample.descriptorValidation?.hardFailedChecks ??
-      sample.features?.descriptorHardFailedChecks ??
-      null,
-
-    softFailedChecks:
-      sample.simpleValidation?.softFailedChecks ??
-      sample.descriptorValidation?.softFailedChecks ??
-      null,
-
-    failedChecks:
-      sample.simpleValidation?.failedChecks ??
-      sample.descriptorValidation?.failedChecks ??
-      sample.features?.descriptorFailedChecks ??
-      null,
+    hardFailedChecks: getSampleHardFailedChecks(sample),
+    softFailedChecks: getSampleSoftFailedChecks(sample),
+    failedChecks: [
+      ...getSampleHardFailedChecks(sample),
+      ...getSampleSoftFailedChecks(sample),
+    ],
   };
 }
 
@@ -700,6 +747,14 @@ function formatNumber(value, digits = 3) {
   }
 
   return value.toFixed(digits);
+}
+
+function printCheckCounter(title, counter) {
+  if (!counter || Object.keys(counter).length === 0) {
+    return;
+  }
+
+  console.log(`${title}: ${JSON.stringify(counter)}`);
 }
 
 function printReport(report) {
@@ -769,17 +824,33 @@ function printKanjiReport(report) {
     `Structural validation: simple=${report.simpleValidationCount}, descriptor=${report.descriptorValidationCount}`,
   );
 
-  if (Object.keys(report.hardFailedChecks).length > 0) {
-    console.log(
-      `Hard failed checks: ${JSON.stringify(report.hardFailedChecks)}`,
-    );
-  }
+  printCheckCounter("Hard failed checks total", report.hardFailedChecks);
+  printCheckCounter(
+    "Hard failed checks in correct samples",
+    report.hardFailedChecksCorrect,
+  );
+  printCheckCounter(
+    "Hard failed checks in incorrect samples",
+    report.hardFailedChecksIncorrect,
+  );
+  printCheckCounter(
+    "Hard failed checks in unknown-label samples",
+    report.hardFailedChecksUnknown,
+  );
 
-  if (Object.keys(report.softFailedChecks).length > 0) {
-    console.log(
-      `Soft failed checks: ${JSON.stringify(report.softFailedChecks)}`,
-    );
-  }
+  printCheckCounter("Soft failed checks total", report.softFailedChecks);
+  printCheckCounter(
+    "Soft failed checks in correct samples",
+    report.softFailedChecksCorrect,
+  );
+  printCheckCounter(
+    "Soft failed checks in incorrect samples",
+    report.softFailedChecksIncorrect,
+  );
+  printCheckCounter(
+    "Soft failed checks in unknown-label samples",
+    report.softFailedChecksUnknown,
+  );
 
   console.log(
     `Recommendation: ${report.recommendation.action} ` +
