@@ -170,6 +170,36 @@
         "vertical.matches",
         "crosses.horizontal.vertical"
       ]
+    },
+    "山": {
+      "enabled": true,
+      "pattern": "three_vertical_zones",
+      "expectedStrokeCount": 3,
+      "description": "Patrón inicial para 山: trazo central vertical, trazo derecho vertical y trazo ancho inferior/lateral que cubre la base.",
+      "rules": {
+        "minBboxWidth": 0.35,
+        "minBboxHeight": 0.55,
+
+        "minVerticalAngleAbs": 0.65,
+        "minHeightVsWidthRatio": 1.05,
+
+        "minCenterVerticalHeight": 0.5,
+        "minRightVerticalHeight": 0.22,
+
+        "centerVerticalCenterXMin": 0.25,
+        "centerVerticalCenterXMax": 0.58,
+
+        "rightStrokeCenterXMin": 0.55,
+        "minRightCenterGap": 0.18,
+
+        "minWideStrokeWidth": 0.45,
+        "wideStrokeMinXMax": 0.15,
+        "wideStrokeMaxXMin": 0.55,
+        "wideStrokeCenterYMin": 0.45,
+
+        "minStraightnessMean": 0.55,
+        "maxSoftFailures": 3
+      }
     }
   }
 }
