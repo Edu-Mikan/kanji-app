@@ -240,6 +240,54 @@
         "bottomStrokeDeltaYMin": -0.15,
         "outerStrokeMaxStraightness": 0.88
       }
+    },
+    "日": {
+      "enabled": true,
+      "pattern": "box_with_inner_horizontal",
+      "expectedStrokeCount": 4,
+      "description": "Patrón de caja con trazo horizontal interior: trazo izquierdo vertical, trazo exterior superior/derecho, trazo medio horizontal y trazo inferior horizontal.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.55,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.8,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.55,
+        "minHeightVsWidthRatio": 1.4,
+        "minWidthVsHeightRatio": 1.4,
+
+        "leftStrokeCenterXMax": 0.42,
+        "leftStrokeMinXMax": 0.3,
+        "leftStrokeMinHeight": 0.45,
+
+        "outerStrokeMinWidth": 0.35,
+        "outerStrokeMinHeight": 0.45,
+        "outerStrokeMinYMax": 0.35,
+        "outerStrokeMaxXMin": 0.5,
+        "outerStrokeMaxYMin": 0.55,
+        "outerStrokeMaxStraightness": 0.9,
+
+        "middleStrokeCenterYMin": 0.28,
+        "middleStrokeCenterYMax": 0.72,
+        "middleStrokeMinWidth": 0.22,
+        "middleStrokeMaxHeight": 0.25,
+        "middleStrokeDeltaYMin": -0.15,
+
+        "bottomStrokeCenterYMin": 0.62,
+        "bottomStrokeMinWidth": 0.3,
+        "bottomStrokeMaxYMin": 0.65,
+        "bottomStrokeDeltaYMin": -0.15,
+
+        "minMiddleBottomGap": 0.08,
+        "minMiddleOuterTopGap": 0.08,
+
+        "minBoxHorizontalCoverage": 0.5,
+        "minBoxVerticalCoverage": 0.55,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 3
+      }
     }
   }
 }
