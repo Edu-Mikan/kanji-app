@@ -269,3 +269,37 @@ Incorrect with score 10: 10
 Validation strategies: {"descriptor_open_box_with_inner_vertical_and_horizontals":24}
 
 Structural validation:
+
+---
+
+### 木 - tree_cross_pattern
+
+Fecha: 2026-07-07
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 木
+- Pattern: tree_cross_pattern
+- Validator: validateTreeCrossPattern
+
+#### Resultado de referencia
+
+Resultado obtenido mediante revalidación con el validador actual.
+
+Total samples: 52  
+Manual correct: 47  
+Manual incorrect: 5
+
+False negatives: 0  
+False positives: 0
+
+Correct with score 10: 0  
+Incorrect with score 10: 5
+
+Validation strategies: {"descriptor_tree_cross_pattern":52}
+
+Structural validation:
+
+```txt
+simple=0, descriptor=52
+```
