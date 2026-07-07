@@ -343,6 +343,59 @@
         "minStraightnessMean": 0.5,
         "maxSoftFailures": 4
       }
+    },
+    "田": {
+      "enabled": true,
+      "pattern": "box_with_inner_cross",
+      "expectedStrokeCount": 5,
+      "description": "Patrón de caja con cruz interior: trazo izquierdo vertical, trazo exterior superior/derecho, trazo horizontal interior, trazo vertical interior y trazo inferior horizontal.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.55,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.8,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.6,
+        "minHeightVsWidthRatio": 1.35,
+        "minWidthVsHeightRatio": 1.35,
+
+        "leftStrokeCenterXMax": 0.42,
+        "leftStrokeMinXMax": 0.3,
+        "leftStrokeMinHeight": 0.45,
+
+        "outerStrokeMinWidth": 0.35,
+        "outerStrokeMinHeight": 0.45,
+        "outerStrokeMinYMax": 0.35,
+        "outerStrokeMaxXMin": 0.44,
+        "outerStrokeMaxYMin": 0.48,
+        "outerStrokeMaxStraightness": 0.92,
+
+        "innerHorizontalCenterYMin": 0.28,
+        "innerHorizontalCenterYMax": 0.72,
+        "innerHorizontalMinWidth": 0.22,
+        "innerHorizontalMaxHeight": 0.3,
+        "innerHorizontalDeltaYMin": -0.22,
+
+        "innerVerticalCenterXMin": 0.25,
+        "innerVerticalCenterXMax": 0.75,
+        "innerVerticalMinHeight": 0.3,
+        "innerVerticalMaxWidth": 0.3,
+
+        "bottomStrokeCenterYMin": 0.48,
+        "bottomStrokeMinWidth": 0.25,
+        "bottomStrokeMaxYMin": 0.48,
+        "bottomStrokeDeltaYMin": -0.22,
+
+        "minHorizontalBottomGap": 0.06,
+        "minHorizontalOuterTopGap": 0.06,
+
+        "minBoxHorizontalCoverage": 0.44,
+        "minBoxVerticalCoverage": 0.55,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 4
+      }
     }
   }
 }
