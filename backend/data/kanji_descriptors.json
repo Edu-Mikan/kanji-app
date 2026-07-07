@@ -237,7 +237,7 @@
         "minStraightnessMean": 0.5,
         "maxSoftFailures": 3,
 
-        "bottomStrokeDeltaYMin": -0.15,
+        "bottomStrokeDeltaYMin": -0.22,
         "outerStrokeMaxStraightness": 0.88
       }
     },
@@ -287,6 +287,61 @@
 
         "minStraightnessMean": 0.5,
         "maxSoftFailures": 3
+      }
+    },
+    "目": {
+      "enabled": true,
+      "pattern": "box_with_two_inner_horizontals",
+      "expectedStrokeCount": 5,
+      "description": "Patrón de caja con dos trazos horizontales interiores: trazo izquierdo vertical, trazo exterior superior/derecho, dos trazos interiores horizontales y trazo inferior horizontal.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.6,
+        "aspectRatioMin": 0.4,
+        "aspectRatioMax": 1.8,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.6,
+        "minHeightVsWidthRatio": 1.35,
+        "minWidthVsHeightRatio": 1.35,
+
+        "leftStrokeCenterXMax": 0.42,
+        "leftStrokeMinXMax": 0.3,
+        "leftStrokeMinHeight": 0.5,
+
+        "outerStrokeMinWidth": 0.35,
+        "outerStrokeMinHeight": 0.5,
+        "outerStrokeMinYMax": 0.35,
+        "outerStrokeMaxXMin": 0.44,
+        "outerStrokeMaxYMin": 0.55,
+        "outerStrokeMaxStraightness": 0.92,
+
+        "upperInnerStrokeCenterYMin": 0.2,
+        "upperInnerStrokeCenterYMax": 0.58,
+        "upperInnerStrokeMinWidth": 0.2,
+        "upperInnerStrokeMaxHeight": 0.3,
+        "upperInnerStrokeDeltaYMin": -0.18,
+
+        "lowerInnerStrokeCenterYMin": 0.38,
+        "lowerInnerStrokeCenterYMax": 0.78,
+        "lowerInnerStrokeMinWidth": 0.2,
+        "lowerInnerStrokeMaxHeight": 0.25,
+        "lowerInnerStrokeDeltaYMin": -0.25,
+
+        "bottomStrokeCenterYMin": 0.65,
+        "bottomStrokeMinWidth": 0.25,
+        "bottomStrokeMaxYMin": 0.65,
+        "bottomStrokeDeltaYMin": -0.22,
+
+        "minUpperLowerGap": 0.06,
+        "minLowerBottomGap": 0.06,
+        "minUpperOuterTopGap": 0.06,
+
+        "minBoxHorizontalCoverage": 0.44,
+        "minBoxVerticalCoverage": 0.55,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 4
       }
     }
   }

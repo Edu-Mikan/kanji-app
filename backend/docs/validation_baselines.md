@@ -98,3 +98,44 @@ Motivo:
 - El falso positivo detectado no se considera crítico para la experiencia de usuario.
 
 Estado: baseline candidata aceptada.
+
+---
+
+### 目 - box_with_two_inner_horizontals
+
+Fecha: 2026-07-07
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 目
+- Pattern: box_with_two_inner_horizontals
+- Validator: validateBoxWithTwoInnerHorizontals
+
+#### Resultado de referencia
+
+Total samples: 12  
+Manual correct: 7  
+Manual incorrect: 5  
+False negatives: 0  
+False positives: 0  
+Correct with score 10: 0  
+Incorrect with score 10: 5
+
+Validation strategies: {"descriptor_box_with_two_inner_horizontals":12}
+
+#### Observaciones
+
+Los fallos duros aparecen únicamente en muestras incorrectas.
+
+Checks relevantes en incorrectos:
+
+```txt
+strokeCount
+leftStrokeIsLeft
+leftStrokeHasHeight
+outerStrokeHasWidth
+outerStrokeHasCorner
+upperInnerStrokeYInRange
+upperBelowOuterTop
+lowerInsideBoxX
+```
