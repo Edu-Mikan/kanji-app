@@ -425,17 +425,38 @@ function getPatternHint(kanji) {
     一: "single_horizontal_line",
     二: "two_horizontal_lines",
     三: "three_horizontal_lines",
-    四: "box_with_inner_strokes",
+
+    // Patrones ya implementados con descriptor específico.
     口: "box_pattern",
     山: "three_vertical_zones",
+    日: "box_with_inner_horizontal",
+    目: "box_with_two_inner_horizontals",
+
+    // Patrones próximos/probables.
+    四: "box_with_inner_strokes",
+    田: "box_with_inner_cross",
+    回: "nested_box_pattern",
+    白: "box_with_top_mark_or_inner_horizontal",
+
     上: "vertical_with_horizontals",
     下: "vertical_with_horizontals",
     土: "vertical_with_two_horizontals",
     士: "vertical_with_two_horizontals",
+    王: "vertical_with_three_horizontals",
+    生: "vertical_with_multiple_horizontals",
+
     人: "two_diagonal_strokes",
     入: "two_diagonal_strokes",
+    八: "two_separated_diagonals",
     大: "central_crossing_diagonals",
     小: "center_vertical_with_side_dots",
+
+    十: "cross",
+    木: "tree_cross_pattern",
+    本: "tree_with_bottom_mark",
+    未: "tree_with_upper_horizontal_bias",
+    末: "tree_with_lower_horizontal_bias",
+
     丁: "horizontal_with_vertical_tail",
     刀: "hook_or_blade_pattern",
     力: "hook_or_power_pattern",
