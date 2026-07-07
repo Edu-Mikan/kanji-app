@@ -209,3 +209,35 @@ Validation strategies:
 ```txt
 {"descriptor_box_with_inner_cross":16,"descriptor_box_pattern":17,"descriptor_three_vertical_zones":19,"descriptor_box_with_inner_horizontal":18,"descriptor_box_with_two_inner_horizontals":12}
 ```
+
+---
+
+### 回 - nested_box_pattern
+
+Fecha: 2026-07-07
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 回
+- Pattern: nested_box_pattern
+- Validator: validateNestedBoxPattern
+
+#### Resultado de referencia
+
+Total samples: 31  
+Manual correct: 18  
+Manual incorrect: 13
+
+False negatives: 0  
+False positives: 0
+
+Correct with score 10: 0  
+Incorrect with score 10: 13
+
+Validation strategies: {"descriptor_nested_box_pattern":31}
+
+Structural validation:
+
+```txt
+simple=0, descriptor=31
+```
