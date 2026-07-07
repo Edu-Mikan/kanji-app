@@ -139,3 +139,41 @@ upperInnerStrokeYInRange
 upperBelowOuterTop
 lowerInsideBoxX
 ```
+
+---
+
+### 田 - box_with_inner_cross
+
+Fecha: 2026-07-07
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 田
+- Pattern: box_with_inner_cross
+- Validator: validateBoxWithInnerCross
+
+#### Resultado de referencia
+
+Total samples: 16  
+Manual correct: 12  
+Manual incorrect: 4
+
+False negatives: 0  
+False positives: 2
+
+Correct with score 10: 0  
+Incorrect with score 10: 2
+
+Validation strategies: {"descriptor_box_with_inner_cross":16}
+
+Structural validation:
+
+```txt
+simple=0, descriptor=16
+```
+
+#### Observaciones
+
+Falso positivo conocido: 田 vs 用
+Se detecta una confusión conocida entre 田 y 用.
+En algunos casos, un dibujo similar a 用 puede pasar el descriptor de 田 porque ambos comparten una estructura visual parecida.

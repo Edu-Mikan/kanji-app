@@ -35,6 +35,14 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     });
   }
 
+  if (descriptor.pattern === "box_with_inner_cross") {
+    return validateBoxWithInnerCross({
+      kanji,
+      features,
+      descriptor,
+    });
+  }
+
   const geometry = features?.geometry;
 
   if (!geometry) {
@@ -2223,6 +2231,600 @@ function validateBoxWithTwoInnerHorizontals({ kanji, features, descriptor }) {
       minLowerBottomGap,
       minUpperOuterTopGap,
 
+      minBoxHorizontalCoverage,
+      minBoxVerticalCoverage,
+
+      minStraightnessMean,
+      maxSoftFailures,
+    },
+  };
+}
+
+function validateBoxWithInnerCross({ kanji, features, descriptor }) {
+  const geometry = features.geometry;
+
+  if (!geometry) {
+    return {
+      isCorrect: false,
+      score: 10,
+      strategy: "descriptor_box_with_inner_cross",
+      reason: "missing_geometry_features",
+      pattern: descriptor.pattern,
+    };
+  }
+
+  const perStroke = geometry.perStroke ?? [];
+  const rules = descriptor.rules ?? {};
+  const expectedStrokeCount = descriptor.expectedStrokeCount ?? 5;
+
+  if (perStroke.length !== expectedStrokeCount) {
+    const checks = {
+      strokeCount: features.strokeCountUser === expectedStrokeCount,
+      referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
+    };
+
+    const hardFailedChecks = Object.entries(checks)
+      .filter(([, value]) => value === false)
+      .map(([checkName]) => checkName);
+
+    return {
+      isCorrect: false,
+      score: 10,
+      strategy: "descriptor_box_with_inner_cross",
+      reason: "invalid_stroke_count",
+      pattern: descriptor.pattern,
+      checks,
+      failedChecks: hardFailedChecks,
+      hardFailedChecks,
+      softFailedChecks: [],
+      thresholds: {
+        expectedStrokeCount,
+      },
+    };
+  }
+
+  const minBboxWidth = rules.minBboxWidth ?? 0.45;
+  const minBboxHeight = rules.minBboxHeight ?? 0.55;
+  const aspectRatioMin = rules.aspectRatioMin ?? 0.45;
+  const aspectRatioMax = rules.aspectRatioMax ?? 1.8;
+
+  const minVerticalAngleAbs = rules.minVerticalAngleAbs ?? 0.85;
+  const minHorizontalAngleMax = rules.minHorizontalAngleMax ?? 0.6;
+  const minHeightVsWidthRatio = rules.minHeightVsWidthRatio ?? 1.35;
+  const minWidthVsHeightRatio = rules.minWidthVsHeightRatio ?? 1.35;
+
+  const leftStrokeCenterXMax = rules.leftStrokeCenterXMax ?? 0.42;
+  const leftStrokeMinXMax = rules.leftStrokeMinXMax ?? 0.3;
+  const leftStrokeMinHeight = rules.leftStrokeMinHeight ?? 0.45;
+
+  const outerStrokeMinWidth = rules.outerStrokeMinWidth ?? 0.35;
+  const outerStrokeMinHeight = rules.outerStrokeMinHeight ?? 0.45;
+  const outerStrokeMinYMax = rules.outerStrokeMinYMax ?? 0.35;
+  const outerStrokeMaxXMin = rules.outerStrokeMaxXMin ?? 0.44;
+  const outerStrokeMaxYMin = rules.outerStrokeMaxYMin ?? 0.55;
+  const outerStrokeMaxStraightness = rules.outerStrokeMaxStraightness ?? 0.92;
+
+  const innerHorizontalCenterYMin = rules.innerHorizontalCenterYMin ?? 0.28;
+  const innerHorizontalCenterYMax = rules.innerHorizontalCenterYMax ?? 0.72;
+  const innerHorizontalMinWidth = rules.innerHorizontalMinWidth ?? 0.22;
+  const innerHorizontalMaxHeight = rules.innerHorizontalMaxHeight ?? 0.3;
+  const innerHorizontalDeltaYMin = rules.innerHorizontalDeltaYMin ?? -0.22;
+
+  const innerVerticalCenterXMin = rules.innerVerticalCenterXMin ?? 0.25;
+  const innerVerticalCenterXMax = rules.innerVerticalCenterXMax ?? 0.75;
+  const innerVerticalMinHeight = rules.innerVerticalMinHeight ?? 0.3;
+  const innerVerticalMaxWidth = rules.innerVerticalMaxWidth ?? 0.3;
+
+  const bottomStrokeCenterYMin = rules.bottomStrokeCenterYMin ?? 0.62;
+  const bottomStrokeMinWidth = rules.bottomStrokeMinWidth ?? 0.25;
+  const bottomStrokeMaxYMin = rules.bottomStrokeMaxYMin ?? 0.62;
+  const bottomStrokeDeltaYMin = rules.bottomStrokeDeltaYMin ?? -0.22;
+
+  const minHorizontalBottomGap = rules.minHorizontalBottomGap ?? 0.06;
+  const minHorizontalOuterTopGap = rules.minHorizontalOuterTopGap ?? 0.06;
+
+  const minBoxHorizontalCoverage = rules.minBoxHorizontalCoverage ?? 0.44;
+  const minBoxVerticalCoverage = rules.minBoxVerticalCoverage ?? 0.55;
+
+  const minStraightnessMean = rules.minStraightnessMean ?? 0.5;
+  const maxSoftFailures = rules.maxSoftFailures ?? 4;
+
+  const isVerticalish = (stroke) => {
+    const heightDominates =
+      stroke.height >= stroke.width * minHeightVsWidthRatio;
+
+    const angleLooksVertical = stroke.angleAbs >= minVerticalAngleAbs;
+
+    return heightDominates || angleLooksVertical;
+  };
+
+  const isHorizontalish = (stroke) => {
+    const widthDominates =
+      stroke.width >= stroke.height * minWidthVsHeightRatio;
+
+    const angleLooksHorizontal = stroke.angleAbs <= minHorizontalAngleMax;
+
+    return widthDominates || angleLooksHorizontal;
+  };
+
+  function rolePenalty(condition, penalty = 1) {
+    return condition ? 0 : penalty;
+  }
+
+  function scoreLeftStrokeCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerX - 0.15) * 2 +
+      stroke.minX * 2 +
+      rolePenalty(isVerticalish(stroke), 2) +
+      rolePenalty(stroke.height >= leftStrokeMinHeight, 1.5) +
+      rolePenalty(stroke.centerX <= leftStrokeCenterXMax, 1) +
+      rolePenalty(stroke.minX <= leftStrokeMinXMax, 1)
+    );
+  }
+
+  function scoreOuterStrokeCandidate(stroke) {
+    return (
+      Math.abs(stroke.maxX - 1.0) * 2 +
+      stroke.minY +
+      rolePenalty(stroke.width >= outerStrokeMinWidth, 1.5) +
+      rolePenalty(stroke.height >= outerStrokeMinHeight, 1.5) +
+      rolePenalty(stroke.minY <= outerStrokeMinYMax, 1) +
+      rolePenalty(stroke.maxX >= outerStrokeMaxXMin, 1) +
+      rolePenalty(stroke.maxY >= outerStrokeMaxYMin, 1) +
+      rolePenalty(stroke.straightness <= outerStrokeMaxStraightness, 2)
+    );
+  }
+
+  function scoreInnerHorizontalStrokeCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerY - 0.5) * 2 +
+      rolePenalty(isHorizontalish(stroke), 2) +
+      rolePenalty(stroke.width >= innerHorizontalMinWidth, 1.5) +
+      rolePenalty(stroke.height <= innerHorizontalMaxHeight, 1) +
+      rolePenalty(stroke.centerY >= innerHorizontalCenterYMin, 1) +
+      rolePenalty(stroke.centerY <= innerHorizontalCenterYMax, 1) +
+      rolePenalty(stroke.deltaY >= innerHorizontalDeltaYMin, 1)
+    );
+  }
+
+  function scoreInnerVerticalStrokeCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerX - 0.5) * 2 +
+      rolePenalty(isVerticalish(stroke), 2) +
+      rolePenalty(stroke.height >= innerVerticalMinHeight, 1.5) +
+      rolePenalty(stroke.width <= innerVerticalMaxWidth, 1) +
+      rolePenalty(stroke.centerX >= innerVerticalCenterXMin, 1) +
+      rolePenalty(stroke.centerX <= innerVerticalCenterXMax, 1)
+    );
+  }
+
+  function scoreBottomStrokeCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerY - 0.84) * 2 +
+      Math.max(0, bottomStrokeCenterYMin - stroke.centerY) * 3 +
+      Math.max(0, bottomStrokeMaxYMin - stroke.maxY) * 3 +
+      rolePenalty(isHorizontalish(stroke), 2) +
+      rolePenalty(stroke.width >= bottomStrokeMinWidth, 1.5) +
+      rolePenalty(stroke.deltaY >= bottomStrokeDeltaYMin, 1.5)
+    );
+  }
+
+  let bestRoleAssignment = null;
+  let bestRoleAssignmentScore = Infinity;
+
+  for (const leftCandidate of perStroke) {
+    for (const outerCandidate of perStroke) {
+      if (outerCandidate === leftCandidate) {
+        continue;
+      }
+
+      for (const innerHorizontalCandidate of perStroke) {
+        if (
+          innerHorizontalCandidate === leftCandidate ||
+          innerHorizontalCandidate === outerCandidate
+        ) {
+          continue;
+        }
+
+        for (const innerVerticalCandidate of perStroke) {
+          if (
+            innerVerticalCandidate === leftCandidate ||
+            innerVerticalCandidate === outerCandidate ||
+            innerVerticalCandidate === innerHorizontalCandidate
+          ) {
+            continue;
+          }
+
+          for (const bottomCandidate of perStroke) {
+            if (
+              bottomCandidate === leftCandidate ||
+              bottomCandidate === outerCandidate ||
+              bottomCandidate === innerHorizontalCandidate ||
+              bottomCandidate === innerVerticalCandidate
+            ) {
+              continue;
+            }
+
+            const horizontalBottomOrderPenalty =
+              innerHorizontalCandidate.centerY < bottomCandidate.centerY
+                ? 0
+                : 3;
+
+            const score =
+              scoreLeftStrokeCandidate(leftCandidate) +
+              scoreOuterStrokeCandidate(outerCandidate) +
+              scoreInnerHorizontalStrokeCandidate(innerHorizontalCandidate) +
+              scoreInnerVerticalStrokeCandidate(innerVerticalCandidate) +
+              scoreBottomStrokeCandidate(bottomCandidate) +
+              horizontalBottomOrderPenalty;
+
+            if (score < bestRoleAssignmentScore) {
+              bestRoleAssignmentScore = score;
+              bestRoleAssignment = {
+                leftStroke: leftCandidate,
+                outerStroke: outerCandidate,
+                innerHorizontalStroke: innerHorizontalCandidate,
+                innerVerticalStroke: innerVerticalCandidate,
+                bottomStroke: bottomCandidate,
+              };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const leftStroke = bestRoleAssignment?.leftStroke ?? null;
+  const outerStroke = bestRoleAssignment?.outerStroke ?? null;
+  const innerHorizontalStroke =
+    bestRoleAssignment?.innerHorizontalStroke ?? null;
+  const innerVerticalStroke = bestRoleAssignment?.innerVerticalStroke ?? null;
+  const bottomStroke = bestRoleAssignment?.bottomStroke ?? null;
+
+  const boxMinX = Math.min(...perStroke.map((stroke) => stroke.minX));
+  const boxMaxX = Math.max(...perStroke.map((stroke) => stroke.maxX));
+  const boxMinY = Math.min(...perStroke.map((stroke) => stroke.minY));
+  const boxMaxY = Math.max(...perStroke.map((stroke) => stroke.maxY));
+
+  const boxHorizontalCoverage = boxMaxX - boxMinX;
+  const boxVerticalCoverage = boxMaxY - boxMinY;
+
+  const horizontalBottomGap =
+    innerHorizontalStroke && bottomStroke
+      ? bottomStroke.centerY - innerHorizontalStroke.centerY
+      : 0;
+
+  const horizontalOuterTopGap =
+    innerHorizontalStroke && outerStroke
+      ? innerHorizontalStroke.centerY - outerStroke.minY
+      : 0;
+
+  const innerCrosses =
+    Boolean(innerHorizontalStroke) &&
+    Boolean(innerVerticalStroke) &&
+    innerHorizontalStroke.minX <= innerVerticalStroke.centerX &&
+    innerHorizontalStroke.maxX >= innerVerticalStroke.centerX &&
+    innerVerticalStroke.minY <= innerHorizontalStroke.centerY &&
+    innerVerticalStroke.maxY >= innerHorizontalStroke.centerY;
+
+  const checks = {
+    strokeCount: features.strokeCountUser === expectedStrokeCount,
+    referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
+
+    bboxWidth: geometry.bboxWidth >= minBboxWidth,
+    bboxHeight: geometry.bboxHeight >= minBboxHeight,
+    aspectRatio:
+      geometry.aspectRatio >= aspectRatioMin &&
+      geometry.aspectRatio <= aspectRatioMax,
+
+    hasLeftStroke: Boolean(leftStroke),
+    hasOuterStroke: Boolean(outerStroke),
+    hasInnerHorizontalStroke: Boolean(innerHorizontalStroke),
+    hasInnerVerticalStroke: Boolean(innerVerticalStroke),
+    hasBottomStroke: Boolean(bottomStroke),
+
+    leftStrokeIsLeft:
+      Boolean(leftStroke) &&
+      leftStroke.centerX <= leftStrokeCenterXMax &&
+      leftStroke.minX <= leftStrokeMinXMax,
+
+    leftStrokeIsVerticalish: Boolean(leftStroke) && isVerticalish(leftStroke),
+
+    leftStrokeHasHeight:
+      Boolean(leftStroke) && leftStroke.height >= leftStrokeMinHeight,
+
+    outerStrokeHasWidth:
+      Boolean(outerStroke) && outerStroke.width >= outerStrokeMinWidth,
+
+    outerStrokeHasHeight:
+      Boolean(outerStroke) && outerStroke.height >= outerStrokeMinHeight,
+
+    outerStrokeStartsNearTop:
+      Boolean(outerStroke) && outerStroke.minY <= outerStrokeMinYMax,
+
+    outerStrokeExtendsRight:
+      Boolean(outerStroke) && outerStroke.maxX >= outerStrokeMaxXMin,
+
+    outerStrokeExtendsDown:
+      Boolean(outerStroke) && outerStroke.maxY >= outerStrokeMaxYMin,
+
+    outerStrokeHasCorner:
+      Boolean(outerStroke) &&
+      outerStroke.straightness <= outerStrokeMaxStraightness,
+
+    innerHorizontalIsHorizontalish:
+      Boolean(innerHorizontalStroke) && isHorizontalish(innerHorizontalStroke),
+
+    innerHorizontalHasWidth:
+      Boolean(innerHorizontalStroke) &&
+      innerHorizontalStroke.width >= innerHorizontalMinWidth,
+
+    innerHorizontalIsThin:
+      Boolean(innerHorizontalStroke) &&
+      innerHorizontalStroke.height <= innerHorizontalMaxHeight,
+
+    innerHorizontalYInRange:
+      Boolean(innerHorizontalStroke) &&
+      innerHorizontalStroke.centerY >= innerHorizontalCenterYMin &&
+      innerHorizontalStroke.centerY <= innerHorizontalCenterYMax,
+
+    innerHorizontalNotStronglyUpward:
+      Boolean(innerHorizontalStroke) &&
+      innerHorizontalStroke.deltaY >= innerHorizontalDeltaYMin,
+
+    innerVerticalIsVerticalish:
+      Boolean(innerVerticalStroke) && isVerticalish(innerVerticalStroke),
+
+    innerVerticalHasHeight:
+      Boolean(innerVerticalStroke) &&
+      innerVerticalStroke.height >= innerVerticalMinHeight,
+
+    innerVerticalIsThin:
+      Boolean(innerVerticalStroke) &&
+      innerVerticalStroke.width <= innerVerticalMaxWidth,
+
+    innerVerticalXInRange:
+      Boolean(innerVerticalStroke) &&
+      innerVerticalStroke.centerX >= innerVerticalCenterXMin &&
+      innerVerticalStroke.centerX <= innerVerticalCenterXMax,
+
+    bottomStrokeIsLower:
+      Boolean(bottomStroke) && bottomStroke.centerY >= bottomStrokeCenterYMin,
+
+    bottomStrokeIsHorizontalish:
+      Boolean(bottomStroke) && isHorizontalish(bottomStroke),
+
+    bottomStrokeHasWidth:
+      Boolean(bottomStroke) && bottomStroke.width >= bottomStrokeMinWidth,
+
+    bottomStrokeReachesBottom:
+      Boolean(bottomStroke) && bottomStroke.maxY >= bottomStrokeMaxYMin,
+
+    bottomStrokeNotStronglyUpward:
+      Boolean(bottomStroke) && bottomStroke.deltaY >= bottomStrokeDeltaYMin,
+
+    innerCrosses,
+
+    horizontalAboveBottom:
+      Boolean(innerHorizontalStroke) &&
+      Boolean(bottomStroke) &&
+      horizontalBottomGap >= minHorizontalBottomGap,
+
+    horizontalBelowOuterTop:
+      Boolean(innerHorizontalStroke) &&
+      Boolean(outerStroke) &&
+      horizontalOuterTopGap >= minHorizontalOuterTopGap,
+
+    innerHorizontalInsideBoxX:
+      Boolean(innerHorizontalStroke) &&
+      Boolean(leftStroke) &&
+      Boolean(outerStroke) &&
+      innerHorizontalStroke.maxX > leftStroke.centerX &&
+      innerHorizontalStroke.minX < outerStroke.maxX,
+
+    innerVerticalInsideBoxY:
+      Boolean(innerVerticalStroke) &&
+      Boolean(outerStroke) &&
+      Boolean(bottomStroke) &&
+      innerVerticalStroke.maxY > outerStroke.minY &&
+      innerVerticalStroke.minY < bottomStroke.centerY,
+
+    bottomBelowLeft:
+      Boolean(bottomStroke) &&
+      Boolean(leftStroke) &&
+      bottomStroke.centerY > leftStroke.centerY,
+
+    outerRightOfLeft:
+      Boolean(outerStroke) &&
+      Boolean(leftStroke) &&
+      outerStroke.maxX > leftStroke.centerX,
+
+    boxHasHorizontalCoverage: boxHorizontalCoverage >= minBoxHorizontalCoverage,
+
+    boxHasVerticalCoverage: boxVerticalCoverage >= minBoxVerticalCoverage,
+
+    straightnessMean: geometry.straightnessMean >= minStraightnessMean,
+
+    // Checks blandos de cierre aproximado.
+    leftTouchesTopHalf: Boolean(leftStroke) && leftStroke.minY <= 0.35,
+
+    leftTouchesBottomHalf: Boolean(leftStroke) && leftStroke.maxY >= 0.55,
+
+    bottomTouchesLeftHalf: Boolean(bottomStroke) && bottomStroke.minX <= 0.45,
+
+    bottomTouchesRightHalf: Boolean(bottomStroke) && bottomStroke.maxX >= 0.55,
+
+    innerHorizontalTouchesLeftHalf:
+      Boolean(innerHorizontalStroke) && innerHorizontalStroke.minX <= 0.5,
+
+    innerHorizontalTouchesRightHalf:
+      Boolean(innerHorizontalStroke) && innerHorizontalStroke.maxX >= 0.5,
+
+    innerVerticalTouchesTopHalf:
+      Boolean(innerVerticalStroke) && innerVerticalStroke.minY <= 0.5,
+
+    innerVerticalTouchesBottomHalf:
+      Boolean(innerVerticalStroke) && innerVerticalStroke.maxY >= 0.5,
+  };
+
+  const hardCheckNames = [
+    "strokeCount",
+    "referenceStrokeCount",
+
+    "bboxWidth",
+    "bboxHeight",
+    "aspectRatio",
+
+    "hasLeftStroke",
+    "hasOuterStroke",
+    "hasInnerHorizontalStroke",
+    "hasInnerVerticalStroke",
+    "hasBottomStroke",
+
+    "leftStrokeIsLeft",
+    "leftStrokeIsVerticalish",
+    "leftStrokeHasHeight",
+
+    "outerStrokeHasWidth",
+    "outerStrokeHasHeight",
+    "outerStrokeStartsNearTop",
+    "outerStrokeExtendsRight",
+    "outerStrokeExtendsDown",
+    "outerStrokeHasCorner",
+
+    "innerHorizontalIsHorizontalish",
+    "innerHorizontalHasWidth",
+    "innerHorizontalIsThin",
+    "innerHorizontalYInRange",
+    "innerHorizontalNotStronglyUpward",
+
+    "innerVerticalIsVerticalish",
+    "innerVerticalHasHeight",
+    "innerVerticalIsThin",
+    "innerVerticalXInRange",
+
+    "bottomStrokeIsLower",
+    "bottomStrokeIsHorizontalish",
+    "bottomStrokeHasWidth",
+    "bottomStrokeReachesBottom",
+    "bottomStrokeNotStronglyUpward",
+
+    "innerCrosses",
+    "horizontalAboveBottom",
+    "horizontalBelowOuterTop",
+    "innerHorizontalInsideBoxX",
+    "innerVerticalInsideBoxY",
+
+    "bottomBelowLeft",
+    "outerRightOfLeft",
+
+    "boxHasHorizontalCoverage",
+    "boxHasVerticalCoverage",
+  ];
+
+  const softCheckNames = [
+    "straightnessMean",
+    "leftTouchesTopHalf",
+    "leftTouchesBottomHalf",
+    "bottomTouchesLeftHalf",
+    "bottomTouchesRightHalf",
+    "innerHorizontalTouchesLeftHalf",
+    "innerHorizontalTouchesRightHalf",
+    "innerVerticalTouchesTopHalf",
+    "innerVerticalTouchesBottomHalf",
+  ];
+
+  const hardFailedChecks = hardCheckNames.filter(
+    (checkName) => checks[checkName] === false,
+  );
+
+  const softFailedChecks = softCheckNames.filter(
+    (checkName) => checks[checkName] === false,
+  );
+
+  const failedChecks = [...hardFailedChecks, ...softFailedChecks];
+
+  const totalChecks = Object.keys(checks).length || 1;
+  const passedChecks = Object.values(checks).filter(Boolean).length;
+  const descriptorMatchScore = passedChecks / totalChecks;
+
+  const isCorrect =
+    hardFailedChecks.length === 0 && softFailedChecks.length <= maxSoftFailures;
+
+  const hasHardFailure = hardFailedChecks.length > 0;
+
+  return {
+    isCorrect,
+    score: isCorrect ? 0.5 : hasHardFailure ? 10 : 0.75,
+    strategy: "descriptor_box_with_inner_cross",
+    pattern: descriptor.pattern,
+    kanji,
+
+    checks,
+    failedChecks,
+    hardFailedChecks,
+    softFailedChecks,
+    descriptorMatchScore,
+
+    descriptor,
+
+    details: {
+      leftStroke,
+      outerStroke,
+      innerHorizontalStroke,
+      innerVerticalStroke,
+      bottomStroke,
+      allStrokes: perStroke,
+      boxHorizontalCoverage,
+      boxVerticalCoverage,
+      horizontalBottomGap,
+      horizontalOuterTopGap,
+      innerCrosses,
+      roleAssignmentScore: bestRoleAssignmentScore,
+    },
+
+    thresholds: {
+      expectedStrokeCount,
+
+      minBboxWidth,
+      minBboxHeight,
+      aspectRatioMin,
+      aspectRatioMax,
+
+      minVerticalAngleAbs,
+      minHorizontalAngleMax,
+      minHeightVsWidthRatio,
+      minWidthVsHeightRatio,
+
+      leftStrokeCenterXMax,
+      leftStrokeMinXMax,
+      leftStrokeMinHeight,
+
+      outerStrokeMinWidth,
+      outerStrokeMinHeight,
+      outerStrokeMinYMax,
+      outerStrokeMaxXMin,
+      outerStrokeMaxYMin,
+      outerStrokeMaxStraightness,
+
+      innerHorizontalCenterYMin,
+      innerHorizontalCenterYMax,
+      innerHorizontalMinWidth,
+      innerHorizontalMaxHeight,
+      innerHorizontalDeltaYMin,
+
+      innerVerticalCenterXMin,
+      innerVerticalCenterXMax,
+      innerVerticalMinHeight,
+      innerVerticalMaxWidth,
+
+      bottomStrokeCenterYMin,
+      bottomStrokeMinWidth,
+      bottomStrokeMaxYMin,
+      bottomStrokeDeltaYMin,
+
+      minHorizontalBottomGap,
+      minHorizontalOuterTopGap,
       minBoxHorizontalCoverage,
       minBoxVerticalCoverage,
 
