@@ -396,6 +396,73 @@
         "minStraightnessMean": 0.5,
         "maxSoftFailures": 4
       }
+    },
+    "回": {
+      "enabled": true,
+      "pattern": "nested_box_pattern",
+      "expectedStrokeCount": 6,
+      "description": "Patrón de caja exterior con caja interior: estructura tipo 回 formada por una caja grande y una caja pequeña interna.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.55,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.8,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.6,
+        "minHeightVsWidthRatio": 1.25,
+        "minWidthVsHeightRatio": 1.25,
+
+        "outerLeftCenterXMax": 0.35,
+        "outerLeftMinXMax": 0.25,
+        "outerLeftMinHeight": 0.45,
+
+        "outerWrappingMinWidth": 0.35,
+        "outerWrappingMinHeight": 0.45,
+        "outerWrappingMinYMax": 0.35,
+        "outerWrappingMaxXMin": 0.44,
+        "outerWrappingMaxYMin": 0.48,
+        "outerWrappingMaxStraightness": 0.92,
+
+        "outerBottomCenterYMin": 0.55,
+        "outerBottomMinWidth": 0.25,
+        "outerBottomMaxYMin": 0.55,
+        "outerBottomDeltaYMin": -0.22,
+
+        "innerLeftCenterXMin": 0.14,
+        "innerLeftCenterXMax": 0.62,
+        "innerLeftCenterYMin": 0.22,
+        "innerLeftCenterYMax": 0.75,
+        "innerLeftMinHeight": 0.08,
+        "innerLeftMaxWidth": 0.28,
+
+        "innerWrappingCenterXMin": 0.35,
+        "innerWrappingCenterXMax": 0.85,
+        "innerWrappingCenterYMin": 0.2,
+        "innerWrappingCenterYMax": 0.75,
+        "innerWrappingMinWidth": 0.18,
+        "innerWrappingMinHeight": 0.12,
+        "innerWrappingMaxStraightness": 0.95,
+
+        "innerBottomCenterYMin": 0.3,
+        "innerBottomCenterYMax": 0.82,
+        "innerBottomMinWidth": 0.08,
+        "innerBottomMaxHeight": 0.28,
+        "innerBottomDeltaYMin": -0.22,
+
+        "minInnerBoxHorizontalCoverage": 0.18,
+        "minInnerBoxVerticalCoverage": 0.18,
+        "minOuterInnerLeftGap": 0.05,
+        "minOuterInnerTopGap": 0.05,
+        "minInnerOuterRightGap": 0.03,
+        "minInnerOuterBottomGap": 0.03,
+
+        "minBoxHorizontalCoverage": 0.44,
+        "minBoxVerticalCoverage": 0.55,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 5
+      }
     }
   }
 }
