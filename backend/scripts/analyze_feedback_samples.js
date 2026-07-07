@@ -431,11 +431,12 @@ function getPatternHint(kanji) {
     山: "three_vertical_zones",
     日: "box_with_inner_horizontal",
     目: "box_with_two_inner_horizontals",
+    田: "box_with_inner_cross",
+    回: "nested_box_pattern",
+    用: "open_box_with_inner_vertical_and_horizontals",
 
     // Patrones próximos/probables.
     四: "box_with_inner_strokes",
-    田: "box_with_inner_cross",
-    回: "nested_box_pattern",
     白: "box_with_top_mark_or_inner_horizontal",
 
     上: "vertical_with_horizontals",
