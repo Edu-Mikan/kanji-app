@@ -177,3 +177,35 @@ simple=0, descriptor=16
 Falso positivo conocido: 田 vs 用
 Se detecta una confusión conocida entre 田 y 用.
 En algunos casos, un dibujo similar a 用 puede pasar el descriptor de 田 porque ambos comparten una estructura visual parecida.
+
+---
+
+### Regression check global - 2026-07-07
+
+#### Kanjis incluidos
+
+- 口
+- 山
+- 日
+- 目
+- 田
+
+#### Resultado global
+
+Total samples: 82  
+Total kanjis: 5
+
+Manual correct: 48  
+Manual incorrect: 34
+
+False negatives: 0  
+False positives: 3
+
+Score median: 0.500  
+Score average: 4.091
+
+Validation strategies:
+
+```txt
+{"descriptor_box_with_inner_cross":16,"descriptor_box_pattern":17,"descriptor_three_vertical_zones":19,"descriptor_box_with_inner_horizontal":18,"descriptor_box_with_two_inner_horizontals":12}
+```
