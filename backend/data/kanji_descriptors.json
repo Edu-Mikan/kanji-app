@@ -517,6 +517,65 @@
         "minStraightnessMean": 0.5,
         "maxSoftFailures": 4
       }
+    },
+    "木": {
+      "enabled": true,
+      "pattern": "tree_cross_pattern",
+      "expectedStrokeCount": 4,
+      "description": "Patrón tipo árbol: trazo horizontal, trazo vertical central, diagonal izquierda y diagonal derecha.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.6,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.9,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.65,
+        "minDiagonalAngleAbs": 0.3,
+        "maxDiagonalAngleAbs": 1.35,
+
+        "genericDiagonalMinWidth": 0.08,
+        "genericDiagonalMinHeight": 0.1,
+
+        "minHeightVsWidthRatio": 1.2,
+        "minWidthVsHeightRatio": 1.2,
+
+        "horizontalCenterYMin": 0.07,
+        "horizontalCenterYMax": 0.52,
+        "horizontalMinWidth": 0.28,
+        "horizontalMaxHeight": 0.45,
+        "horizontalDeltaYMin": -0.45,
+
+        "verticalCenterXMin": 0.25,
+        "verticalCenterXMax": 0.72,
+        "verticalMinHeight": 0.5,
+        "verticalMaxWidth": 0.4,
+
+        "leftDiagonalCenterXMax": 0.55,
+        "leftDiagonalCenterYMin": 0.38,
+        "leftDiagonalMinWidth": 0.1,
+        "leftDiagonalMinHeight": 0.12,
+
+        "rightDiagonalCenterXMin": 0.45,
+        "rightDiagonalCenterYMin": 0.38,
+        "rightDiagonalMinWidth": 0.08,
+        "rightDiagonalMinHeight": 0.1,
+
+        "minDiagonalCenterGap": 0.12,
+        "minHorizontalVerticalCrossTolerance": 0.08,
+        "minDiagonalBelowHorizontalGap": 0.02,
+
+        "minBoxHorizontalCoverage": 0.45,
+        "minBoxVerticalCoverage": 0.6,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 4,
+
+        "leftDiagonalDeltaXMax": -0.02,
+        "leftDiagonalDeltaYMin": 0.08,
+        "rightDiagonalDeltaXMin": 0.02,
+        "rightDiagonalDeltaYMin": 0.08
+      }
     }
   }
 }

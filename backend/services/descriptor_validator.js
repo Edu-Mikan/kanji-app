@@ -59,6 +59,14 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     });
   }
 
+  if (descriptor.pattern === "tree_cross_pattern") {
+    return validateTreeCrossPattern({
+      kanji,
+      features,
+      descriptor,
+    });
+  }
+
   const geometry = features?.geometry;
 
   if (!geometry) {
@@ -4179,6 +4187,593 @@ function validateOpenBoxWithInnerVerticalAndHorizontals({
 
       minUpperLowerGap,
       minLowerOuterBottomGap,
+
+      minBoxHorizontalCoverage,
+      minBoxVerticalCoverage,
+
+      minStraightnessMean,
+      maxSoftFailures,
+    },
+  };
+}
+
+function validateTreeCrossPattern({ kanji, features, descriptor }) {
+  const geometry = features.geometry;
+
+  if (!geometry) {
+    return {
+      isCorrect: false,
+      score: 10,
+      strategy: "descriptor_tree_cross_pattern",
+      reason: "missing_geometry_features",
+      pattern: descriptor.pattern,
+    };
+  }
+
+  const perStroke = geometry.perStroke ?? [];
+  const rules = descriptor.rules ?? {};
+  const expectedStrokeCount = descriptor.expectedStrokeCount ?? 4;
+
+  if (perStroke.length !== expectedStrokeCount) {
+    const checks = {
+      strokeCount: features.strokeCountUser === expectedStrokeCount,
+      referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
+    };
+
+    const hardFailedChecks = Object.entries(checks)
+      .filter(([, value]) => value === false)
+      .map(([checkName]) => checkName);
+
+    return {
+      isCorrect: false,
+      score: 10,
+      strategy: "descriptor_tree_cross_pattern",
+      reason: "invalid_stroke_count",
+      pattern: descriptor.pattern,
+      checks,
+      failedChecks: hardFailedChecks,
+      hardFailedChecks,
+      softFailedChecks: [],
+      thresholds: {
+        expectedStrokeCount,
+      },
+    };
+  }
+
+  const minBboxWidth = rules.minBboxWidth ?? 0.45;
+  const minBboxHeight = rules.minBboxHeight ?? 0.6;
+  const aspectRatioMin = rules.aspectRatioMin ?? 0.45;
+  const aspectRatioMax = rules.aspectRatioMax ?? 1.9;
+
+  const minVerticalAngleAbs = rules.minVerticalAngleAbs ?? 0.85;
+  const minHorizontalAngleMax = rules.minHorizontalAngleMax ?? 0.65;
+  const minDiagonalAngleAbs = rules.minDiagonalAngleAbs ?? 0.35;
+  const maxDiagonalAngleAbs = rules.maxDiagonalAngleAbs ?? 1.35;
+
+  const minHeightVsWidthRatio = rules.minHeightVsWidthRatio ?? 1.2;
+  const minWidthVsHeightRatio = rules.minWidthVsHeightRatio ?? 1.2;
+
+  const horizontalCenterYMin = rules.horizontalCenterYMin ?? 0.12;
+  const horizontalCenterYMax = rules.horizontalCenterYMax ?? 0.52;
+  const horizontalMinWidth = rules.horizontalMinWidth ?? 0.35;
+  const horizontalMaxHeight = rules.horizontalMaxHeight ?? 0.3;
+  const horizontalDeltaYMin = rules.horizontalDeltaYMin ?? -0.22;
+
+  const verticalCenterXMin = rules.verticalCenterXMin ?? 0.28;
+  const verticalCenterXMax = rules.verticalCenterXMax ?? 0.72;
+  const verticalMinHeight = rules.verticalMinHeight ?? 0.55;
+  const verticalMaxWidth = rules.verticalMaxWidth ?? 0.35;
+
+  const leftDiagonalCenterXMax = rules.leftDiagonalCenterXMax ?? 0.55;
+  const leftDiagonalCenterYMin = rules.leftDiagonalCenterYMin ?? 0.38;
+  const leftDiagonalMinWidth = rules.leftDiagonalMinWidth ?? 0.1;
+  const leftDiagonalMinHeight = rules.leftDiagonalMinHeight ?? 0.16;
+  const leftDiagonalDeltaXMax = rules.leftDiagonalDeltaXMax ?? -0.02;
+  const leftDiagonalDeltaYMin = rules.leftDiagonalDeltaYMin ?? 0.08;
+
+  const rightDiagonalCenterXMin = rules.rightDiagonalCenterXMin ?? 0.45;
+  const rightDiagonalCenterYMin = rules.rightDiagonalCenterYMin ?? 0.38;
+  const rightDiagonalMinWidth = rules.rightDiagonalMinWidth ?? 0.12;
+  const rightDiagonalMinHeight = rules.rightDiagonalMinHeight ?? 0.12;
+  const rightDiagonalDeltaXMin = rules.rightDiagonalDeltaXMin ?? 0.02;
+  const rightDiagonalDeltaYMin = rules.rightDiagonalDeltaYMin ?? 0.08;
+
+  const minDiagonalCenterGap = rules.minDiagonalCenterGap ?? 0.12;
+  const minHorizontalVerticalCrossTolerance =
+    rules.minHorizontalVerticalCrossTolerance ?? 0.08;
+  const minDiagonalBelowHorizontalGap =
+    rules.minDiagonalBelowHorizontalGap ?? 0.02;
+
+  const minBoxHorizontalCoverage = rules.minBoxHorizontalCoverage ?? 0.45;
+  const minBoxVerticalCoverage = rules.minBoxVerticalCoverage ?? 0.6;
+
+  const minStraightnessMean = rules.minStraightnessMean ?? 0.5;
+  const maxSoftFailures = rules.maxSoftFailures ?? 4;
+
+  const isVerticalish = (stroke) => {
+    const heightDominates =
+      stroke.height >= stroke.width * minHeightVsWidthRatio;
+
+    const angleLooksVertical = stroke.angleAbs >= minVerticalAngleAbs;
+
+    return heightDominates || angleLooksVertical;
+  };
+
+  const isHorizontalish = (stroke) => {
+    const widthDominates =
+      stroke.width >= stroke.height * minWidthVsHeightRatio;
+
+    const angleLooksHorizontal = stroke.angleAbs <= minHorizontalAngleMax;
+
+    return widthDominates || angleLooksHorizontal;
+  };
+
+  const genericDiagonalMinWidth = rules.genericDiagonalMinWidth ?? 0.08;
+  const genericDiagonalMinHeight = rules.genericDiagonalMinHeight ?? 0.1;
+
+  const isDiagonalish = (stroke) => {
+    return (
+      stroke.angleAbs >= minDiagonalAngleAbs &&
+      stroke.angleAbs <= maxDiagonalAngleAbs &&
+      stroke.width >= genericDiagonalMinWidth &&
+      stroke.height >= genericDiagonalMinHeight
+    );
+  };
+  ``;
+
+  function rolePenalty(condition, penalty = 1) {
+    return condition ? 0 : penalty;
+  }
+
+  function scoreHorizontalCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerY - 0.28) * 2 +
+      rolePenalty(isHorizontalish(stroke), 2) +
+      rolePenalty(stroke.width >= horizontalMinWidth, 1.5) +
+      rolePenalty(stroke.height <= horizontalMaxHeight, 1) +
+      rolePenalty(stroke.centerY >= horizontalCenterYMin, 1) +
+      rolePenalty(stroke.centerY <= horizontalCenterYMax, 1) +
+      rolePenalty(stroke.deltaY >= horizontalDeltaYMin, 1)
+    );
+  }
+
+  function scoreVerticalCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerX - 0.5) * 2 +
+      rolePenalty(isVerticalish(stroke), 2) +
+      rolePenalty(stroke.height >= verticalMinHeight, 1.5) +
+      rolePenalty(stroke.width <= verticalMaxWidth, 1) +
+      rolePenalty(stroke.centerX >= verticalCenterXMin, 1) +
+      rolePenalty(stroke.centerX <= verticalCenterXMax, 1)
+    );
+  }
+
+  function scoreLeftDiagonalCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerX - 0.32) * 2 +
+      Math.abs(stroke.centerY - 0.65) +
+      rolePenalty(isDiagonalish(stroke), 2) +
+      rolePenalty(stroke.centerX <= leftDiagonalCenterXMax, 1) +
+      rolePenalty(stroke.centerY >= leftDiagonalCenterYMin, 1) +
+      rolePenalty(stroke.width >= leftDiagonalMinWidth, 1.5) +
+      rolePenalty(stroke.height >= leftDiagonalMinHeight, 1.5) +
+      rolePenalty(stroke.deltaX <= leftDiagonalDeltaXMax, 1.5) +
+      rolePenalty(stroke.deltaY >= leftDiagonalDeltaYMin, 1.5)
+    );
+  }
+
+  function scoreRightDiagonalCandidate(stroke) {
+    return (
+      Math.abs(stroke.centerX - 0.68) * 2 +
+      Math.abs(stroke.centerY - 0.65) +
+      rolePenalty(isDiagonalish(stroke), 2) +
+      rolePenalty(stroke.centerX >= rightDiagonalCenterXMin, 1) +
+      rolePenalty(stroke.centerY >= rightDiagonalCenterYMin, 1) +
+      rolePenalty(stroke.width >= rightDiagonalMinWidth, 1.5) +
+      rolePenalty(stroke.height >= rightDiagonalMinHeight, 1.5) +
+      rolePenalty(stroke.deltaX >= rightDiagonalDeltaXMin, 1.5) +
+      rolePenalty(stroke.deltaY >= rightDiagonalDeltaYMin, 1.5)
+    );
+  }
+
+  let bestRoleAssignment = null;
+  let bestRoleAssignmentScore = Infinity;
+
+  for (const horizontalCandidate of perStroke) {
+    for (const verticalCandidate of perStroke) {
+      if (verticalCandidate === horizontalCandidate) {
+        continue;
+      }
+
+      for (const leftDiagonalCandidate of perStroke) {
+        if (
+          leftDiagonalCandidate === horizontalCandidate ||
+          leftDiagonalCandidate === verticalCandidate
+        ) {
+          continue;
+        }
+
+        for (const rightDiagonalCandidate of perStroke) {
+          if (
+            rightDiagonalCandidate === horizontalCandidate ||
+            rightDiagonalCandidate === verticalCandidate ||
+            rightDiagonalCandidate === leftDiagonalCandidate
+          ) {
+            continue;
+          }
+
+          const diagonalsOrderPenalty =
+            leftDiagonalCandidate.centerX < rightDiagonalCandidate.centerX
+              ? 0
+              : 4;
+
+          const verticalCrossesHorizontalPenalty =
+            verticalCandidate.centerX >= horizontalCandidate.minX &&
+            verticalCandidate.centerX <= horizontalCandidate.maxX &&
+            horizontalCandidate.centerY >=
+              verticalCandidate.minY - minHorizontalVerticalCrossTolerance &&
+            horizontalCandidate.centerY <=
+              verticalCandidate.maxY + minHorizontalVerticalCrossTolerance
+              ? 0
+              : 4;
+
+          const diagonalsBelowHorizontalPenalty =
+            leftDiagonalCandidate.centerY >
+              horizontalCandidate.centerY + minDiagonalBelowHorizontalGap &&
+            rightDiagonalCandidate.centerY >
+              horizontalCandidate.centerY + minDiagonalBelowHorizontalGap
+              ? 0
+              : 3;
+
+          const score =
+            scoreHorizontalCandidate(horizontalCandidate) +
+            scoreVerticalCandidate(verticalCandidate) +
+            scoreLeftDiagonalCandidate(leftDiagonalCandidate) +
+            scoreRightDiagonalCandidate(rightDiagonalCandidate) +
+            diagonalsOrderPenalty +
+            verticalCrossesHorizontalPenalty +
+            diagonalsBelowHorizontalPenalty;
+
+          if (score < bestRoleAssignmentScore) {
+            bestRoleAssignmentScore = score;
+            bestRoleAssignment = {
+              horizontalStroke: horizontalCandidate,
+              verticalStroke: verticalCandidate,
+              leftDiagonalStroke: leftDiagonalCandidate,
+              rightDiagonalStroke: rightDiagonalCandidate,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  const horizontalStroke = bestRoleAssignment?.horizontalStroke ?? null;
+  const verticalStroke = bestRoleAssignment?.verticalStroke ?? null;
+  const leftDiagonalStroke = bestRoleAssignment?.leftDiagonalStroke ?? null;
+  const rightDiagonalStroke = bestRoleAssignment?.rightDiagonalStroke ?? null;
+
+  const boxMinX = Math.min(...perStroke.map((stroke) => stroke.minX));
+  const boxMaxX = Math.max(...perStroke.map((stroke) => stroke.maxX));
+  const boxMinY = Math.min(...perStroke.map((stroke) => stroke.minY));
+  const boxMaxY = Math.max(...perStroke.map((stroke) => stroke.maxY));
+
+  const boxHorizontalCoverage = boxMaxX - boxMinX;
+  const boxVerticalCoverage = boxMaxY - boxMinY;
+
+  const diagonalCenterGap =
+    leftDiagonalStroke && rightDiagonalStroke
+      ? rightDiagonalStroke.centerX - leftDiagonalStroke.centerX
+      : 0;
+
+  const horizontalVerticalCrosses =
+    Boolean(horizontalStroke) &&
+    Boolean(verticalStroke) &&
+    verticalStroke.centerX >= horizontalStroke.minX &&
+    verticalStroke.centerX <= horizontalStroke.maxX &&
+    horizontalStroke.centerY >=
+      verticalStroke.minY - minHorizontalVerticalCrossTolerance &&
+    horizontalStroke.centerY <=
+      verticalStroke.maxY + minHorizontalVerticalCrossTolerance;
+
+  const diagonalsBelowHorizontal =
+    Boolean(horizontalStroke) &&
+    Boolean(leftDiagonalStroke) &&
+    Boolean(rightDiagonalStroke) &&
+    leftDiagonalStroke.centerY >=
+      horizontalStroke.centerY + minDiagonalBelowHorizontalGap &&
+    rightDiagonalStroke.centerY >=
+      horizontalStroke.centerY + minDiagonalBelowHorizontalGap;
+
+  const checks = {
+    strokeCount: features.strokeCountUser === expectedStrokeCount,
+    referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
+
+    bboxWidth: geometry.bboxWidth >= minBboxWidth,
+    bboxHeight: geometry.bboxHeight >= minBboxHeight,
+    aspectRatio:
+      geometry.aspectRatio >= aspectRatioMin &&
+      geometry.aspectRatio <= aspectRatioMax,
+
+    hasHorizontalStroke: Boolean(horizontalStroke),
+    hasVerticalStroke: Boolean(verticalStroke),
+    hasLeftDiagonalStroke: Boolean(leftDiagonalStroke),
+    hasRightDiagonalStroke: Boolean(rightDiagonalStroke),
+
+    horizontalIsHorizontalish:
+      Boolean(horizontalStroke) && isHorizontalish(horizontalStroke),
+
+    horizontalHasWidth:
+      Boolean(horizontalStroke) && horizontalStroke.width >= horizontalMinWidth,
+
+    horizontalIsThin:
+      Boolean(horizontalStroke) &&
+      horizontalStroke.height <= horizontalMaxHeight,
+
+    horizontalYInRange:
+      Boolean(horizontalStroke) &&
+      horizontalStroke.centerY >= horizontalCenterYMin &&
+      horizontalStroke.centerY <= horizontalCenterYMax,
+
+    horizontalNotStronglyUpward:
+      Boolean(horizontalStroke) &&
+      horizontalStroke.deltaY >= horizontalDeltaYMin,
+
+    verticalIsVerticalish:
+      Boolean(verticalStroke) && isVerticalish(verticalStroke),
+
+    verticalHasHeight:
+      Boolean(verticalStroke) && verticalStroke.height >= verticalMinHeight,
+
+    verticalIsThin:
+      Boolean(verticalStroke) && verticalStroke.width <= verticalMaxWidth,
+
+    verticalXInRange:
+      Boolean(verticalStroke) &&
+      verticalStroke.centerX >= verticalCenterXMin &&
+      verticalStroke.centerX <= verticalCenterXMax,
+
+    horizontalVerticalCrosses,
+
+    leftDiagonalIsDiagonalish:
+      Boolean(leftDiagonalStroke) && isDiagonalish(leftDiagonalStroke),
+
+    leftDiagonalIsLeft:
+      Boolean(leftDiagonalStroke) &&
+      leftDiagonalStroke.centerX <= leftDiagonalCenterXMax,
+
+    leftDiagonalIsLower:
+      Boolean(leftDiagonalStroke) &&
+      leftDiagonalStroke.centerY >= leftDiagonalCenterYMin,
+
+    leftDiagonalHasWidth:
+      Boolean(leftDiagonalStroke) &&
+      leftDiagonalStroke.width >= leftDiagonalMinWidth,
+
+    leftDiagonalHasHeight:
+      Boolean(leftDiagonalStroke) &&
+      leftDiagonalStroke.height >= leftDiagonalMinHeight,
+
+    leftDiagonalDirection:
+      Boolean(leftDiagonalStroke) &&
+      leftDiagonalStroke.deltaX <= leftDiagonalDeltaXMax &&
+      leftDiagonalStroke.deltaY >= leftDiagonalDeltaYMin,
+
+    rightDiagonalIsDiagonalish:
+      Boolean(rightDiagonalStroke) && isDiagonalish(rightDiagonalStroke),
+
+    rightDiagonalIsRight:
+      Boolean(rightDiagonalStroke) &&
+      rightDiagonalStroke.centerX >= rightDiagonalCenterXMin,
+
+    rightDiagonalIsLower:
+      Boolean(rightDiagonalStroke) &&
+      rightDiagonalStroke.centerY >= rightDiagonalCenterYMin,
+
+    rightDiagonalHasWidth:
+      Boolean(rightDiagonalStroke) &&
+      rightDiagonalStroke.width >= rightDiagonalMinWidth,
+
+    rightDiagonalHasHeight:
+      Boolean(rightDiagonalStroke) &&
+      rightDiagonalStroke.height >= rightDiagonalMinHeight,
+
+    rightDiagonalDirection:
+      Boolean(rightDiagonalStroke) &&
+      rightDiagonalStroke.deltaX >= rightDiagonalDeltaXMin &&
+      rightDiagonalStroke.deltaY >= rightDiagonalDeltaYMin,
+
+    diagonalsSeparated: diagonalCenterGap >= minDiagonalCenterGap,
+
+    diagonalsBelowHorizontal,
+
+    verticalBetweenDiagonals:
+      Boolean(verticalStroke) &&
+      Boolean(leftDiagonalStroke) &&
+      Boolean(rightDiagonalStroke) &&
+      verticalStroke.centerX > leftDiagonalStroke.centerX &&
+      verticalStroke.centerX < rightDiagonalStroke.centerX,
+
+    boxHasHorizontalCoverage: boxHorizontalCoverage >= minBoxHorizontalCoverage,
+
+    boxHasVerticalCoverage: boxVerticalCoverage >= minBoxVerticalCoverage,
+
+    straightnessMean: geometry.straightnessMean >= minStraightnessMean,
+
+    // Checks blandos.
+    horizontalTouchesLeftHalf:
+      Boolean(horizontalStroke) && horizontalStroke.minX <= 0.5,
+
+    horizontalTouchesRightHalf:
+      Boolean(horizontalStroke) && horizontalStroke.maxX >= 0.5,
+
+    verticalTouchesTopHalf:
+      Boolean(verticalStroke) && verticalStroke.minY <= 0.45,
+
+    verticalTouchesBottomHalf:
+      Boolean(verticalStroke) && verticalStroke.maxY >= 0.65,
+
+    leftDiagonalTouchesLeftHalf:
+      Boolean(leftDiagonalStroke) && leftDiagonalStroke.minX <= 0.5,
+
+    rightDiagonalTouchesRightHalf:
+      Boolean(rightDiagonalStroke) && rightDiagonalStroke.maxX >= 0.5,
+  };
+
+  const hardCheckNames = [
+    "strokeCount",
+    "referenceStrokeCount",
+
+    "bboxWidth",
+    "bboxHeight",
+    "aspectRatio",
+
+    "hasHorizontalStroke",
+    "hasVerticalStroke",
+    "hasLeftDiagonalStroke",
+    "hasRightDiagonalStroke",
+
+    "horizontalIsHorizontalish",
+    "horizontalHasWidth",
+    "horizontalIsThin",
+    "horizontalYInRange",
+    "horizontalNotStronglyUpward",
+
+    "verticalIsVerticalish",
+    "verticalHasHeight",
+    "verticalIsThin",
+    "verticalXInRange",
+
+    "horizontalVerticalCrosses",
+
+    "leftDiagonalIsDiagonalish",
+    "leftDiagonalIsLeft",
+    "leftDiagonalIsLower",
+    "leftDiagonalHasWidth",
+    "leftDiagonalHasHeight",
+    "leftDiagonalDirection",
+
+    "rightDiagonalIsDiagonalish",
+    "rightDiagonalIsRight",
+    "rightDiagonalIsLower",
+    "rightDiagonalHasWidth",
+    "rightDiagonalHasHeight",
+    "rightDiagonalDirection",
+
+    "diagonalsSeparated",
+    "diagonalsBelowHorizontal",
+    "verticalBetweenDiagonals",
+
+    "boxHasHorizontalCoverage",
+    "boxHasVerticalCoverage",
+  ];
+
+  const softCheckNames = [
+    "straightnessMean",
+    "horizontalTouchesLeftHalf",
+    "horizontalTouchesRightHalf",
+    "verticalTouchesTopHalf",
+    "verticalTouchesBottomHalf",
+    "leftDiagonalTouchesLeftHalf",
+    "rightDiagonalTouchesRightHalf",
+  ];
+
+  const hardFailedChecks = hardCheckNames.filter(
+    (checkName) => checks[checkName] === false,
+  );
+
+  const softFailedChecks = softCheckNames.filter(
+    (checkName) => checks[checkName] === false,
+  );
+
+  const failedChecks = [...hardFailedChecks, ...softFailedChecks];
+
+  const totalChecks = Object.keys(checks).length || 1;
+  const passedChecks = Object.values(checks).filter(Boolean).length;
+  const descriptorMatchScore = passedChecks / totalChecks;
+
+  const isCorrect =
+    hardFailedChecks.length === 0 && softFailedChecks.length <= maxSoftFailures;
+
+  const hasHardFailure = hardFailedChecks.length > 0;
+
+  return {
+    isCorrect,
+    score: isCorrect ? 0.5 : hasHardFailure ? 10 : 0.75,
+    strategy: "descriptor_tree_cross_pattern",
+    pattern: descriptor.pattern,
+    kanji,
+
+    checks,
+    failedChecks,
+    hardFailedChecks,
+    softFailedChecks,
+    descriptorMatchScore,
+
+    descriptor,
+
+    details: {
+      horizontalStroke,
+      verticalStroke,
+      leftDiagonalStroke,
+      rightDiagonalStroke,
+      allStrokes: perStroke,
+      boxHorizontalCoverage,
+      boxVerticalCoverage,
+      diagonalCenterGap,
+      horizontalVerticalCrosses,
+      diagonalsBelowHorizontal,
+      roleAssignmentScore: bestRoleAssignmentScore,
+    },
+
+    thresholds: {
+      expectedStrokeCount,
+
+      minBboxWidth,
+      minBboxHeight,
+      aspectRatioMin,
+      aspectRatioMax,
+
+      minVerticalAngleAbs,
+      minHorizontalAngleMax,
+      minDiagonalAngleAbs,
+      maxDiagonalAngleAbs,
+
+      genericDiagonalMinWidth,
+      genericDiagonalMinHeight,
+
+      minHeightVsWidthRatio,
+      minWidthVsHeightRatio,
+
+      horizontalCenterYMin,
+      horizontalCenterYMax,
+      horizontalMinWidth,
+      horizontalMaxHeight,
+      horizontalDeltaYMin,
+
+      verticalCenterXMin,
+      verticalCenterXMax,
+      verticalMinHeight,
+      verticalMaxWidth,
+
+      leftDiagonalCenterXMax,
+      leftDiagonalCenterYMin,
+      leftDiagonalMinWidth,
+      leftDiagonalMinHeight,
+
+      leftDiagonalDeltaXMax,
+      leftDiagonalDeltaYMin,
+      rightDiagonalDeltaXMin,
+      rightDiagonalDeltaYMin,
+
+      rightDiagonalCenterXMin,
+      rightDiagonalCenterYMin,
+      rightDiagonalMinWidth,
+      rightDiagonalMinHeight,
+
+      minDiagonalCenterGap,
+      minHorizontalVerticalCrossTolerance,
+      minDiagonalBelowHorizontalGap,
 
       minBoxHorizontalCoverage,
       minBoxVerticalCoverage,

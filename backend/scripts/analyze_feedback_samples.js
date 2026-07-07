@@ -21,6 +21,9 @@ function parseArgs(argv) {
     kanjiFilter: null,
     outputJsonPath: null,
     help: false,
+    revalidate: false,
+    descriptorFilePath: null,
+    validatorFilePath: null,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -78,6 +81,23 @@ function parseArgs(argv) {
       i++;
       continue;
     }
+
+    if (arg === "--revalidate") {
+      args.revalidate = true;
+      continue;
+    }
+
+    if (arg === "--descriptor-file") {
+      args.descriptorFilePath = argv[i + 1];
+      i++;
+      continue;
+    }
+
+    if (arg === "--validator-file") {
+      args.validatorFilePath = argv[i + 1];
+      i++;
+      continue;
+    }
   }
 
   return args;
@@ -125,6 +145,18 @@ Options:
   --out-json <path>
       Save the full report as JSON.
 
+  --revalidate
+      Recalculate descriptor validation using the current descriptor_validator.js
+      and kanji_descriptors.json instead of using the stored score/checks.
+
+  --descriptor-file <path>
+      Path to kanji_descriptors.json.
+      Optional when --revalidate is used.
+
+  --validator-file <path>
+      Path to descriptor_validator.js.
+      Optional when --revalidate is used.
+
 Examples:
 
   node scripts/analyze_feedback_samples.js --mongo
@@ -134,6 +166,10 @@ Examples:
   node scripts/analyze_feedback_samples.js --mongo --kanji 山
 
   node scripts/analyze_feedback_samples.js --mongo --out-json ./feedback_report.json
+
+  node scripts/analyze_feedback_samples.js --file ./training_data.jsonl --kanji 木 --revalidate
+  
+  node scripts/analyze_feedback_samples.js --file ./training_data.jsonl --kanji 木 --revalidate --descriptor-file ./kanji_descriptors.json --validator-file ./descriptor_validator.js
 `);
 }
 
@@ -182,6 +218,188 @@ function loadSamplesFromFile(filePath) {
   }
 
   return parseSamplesFileContent(content, absolutePath);
+}
+
+function findFirstExistingPath(candidatePaths) {
+  for (const candidatePath of candidatePaths) {
+    if (!candidatePath) {
+      continue;
+    }
+
+    const absolutePath = path.resolve(candidatePath);
+
+    if (fs.existsSync(absolutePath)) {
+      return absolutePath;
+    }
+  }
+
+  return null;
+}
+
+function resolveDescriptorFilePath(explicitPath) {
+  if (explicitPath) {
+    const absolutePath = path.resolve(explicitPath);
+
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error(`Descriptor file not found: ${absolutePath}`);
+    }
+
+    return absolutePath;
+  }
+
+  const foundPath = findFirstExistingPath([
+    path.resolve(process.cwd(), "kanji_descriptors.json"),
+    path.resolve(process.cwd(), "data", "kanji_descriptors.json"),
+    path.resolve(process.cwd(), "services", "kanji_descriptors.json"),
+    path.resolve(__dirname, "..", "kanji_descriptors.json"),
+    path.resolve(__dirname, "..", "data", "kanji_descriptors.json"),
+    path.resolve(__dirname, "..", "services", "kanji_descriptors.json"),
+  ]);
+
+  if (!foundPath) {
+    throw new Error(
+      [
+        "Could not find kanji_descriptors.json automatically.",
+        "Use --descriptor-file ./path/to/kanji_descriptors.json",
+      ].join("\n"),
+    );
+  }
+
+  return foundPath;
+}
+
+function resolveValidatorFilePath(explicitPath) {
+  if (explicitPath) {
+    const absolutePath = path.resolve(explicitPath);
+
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error(`Validator file not found: ${absolutePath}`);
+    }
+
+    return absolutePath;
+  }
+
+  const foundPath = findFirstExistingPath([
+    path.resolve(process.cwd(), "descriptor_validator.js"),
+    path.resolve(process.cwd(), "services", "descriptor_validator.js"),
+    path.resolve(process.cwd(), "src", "descriptor_validator.js"),
+    path.resolve(__dirname, "..", "descriptor_validator.js"),
+    path.resolve(__dirname, "..", "services", "descriptor_validator.js"),
+    path.resolve(__dirname, "..", "src", "descriptor_validator.js"),
+  ]);
+
+  if (!foundPath) {
+    throw new Error(
+      [
+        "Could not find descriptor_validator.js automatically.",
+        "Use --validator-file ./path/to/descriptor_validator.js",
+      ].join("\n"),
+    );
+  }
+
+  return foundPath;
+}
+
+function loadDescriptors(descriptorFilePath) {
+  const content = fs.readFileSync(descriptorFilePath, "utf-8");
+  const parsed = JSON.parse(content);
+
+  return parsed.descriptors ?? parsed;
+}
+
+function loadDescriptorValidator(validatorFilePath) {
+  const validatorModule = require(validatorFilePath);
+
+  if (typeof validatorModule.validateByDescriptor !== "function") {
+    throw new Error(
+      `Validator file does not export validateByDescriptor: ${validatorFilePath}`,
+    );
+  }
+
+  return validatorModule.validateByDescriptor;
+}
+
+function revalidateSamples(samples, options) {
+  const descriptorFilePath = resolveDescriptorFilePath(
+    options.descriptorFilePath,
+  );
+
+  const validatorFilePath = resolveValidatorFilePath(options.validatorFilePath);
+
+  console.log(
+    `Revalidating samples with current validator: ${validatorFilePath}`,
+  );
+  console.log(`Using descriptors from: ${descriptorFilePath}`);
+
+  const descriptors = loadDescriptors(descriptorFilePath);
+  const validateByDescriptor = loadDescriptorValidator(validatorFilePath);
+
+  let revalidatedCount = 0;
+  let skippedCount = 0;
+
+  const revalidatedSamples = samples.map((sample) => {
+    const expectedKanji = getExpectedKanji(sample);
+    const descriptor = descriptors[expectedKanji];
+
+    if (!descriptor || descriptor.enabled === false) {
+      skippedCount++;
+      return sample;
+    }
+
+    if (!sample.features?.geometry) {
+      skippedCount++;
+      return sample;
+    }
+
+    const validationResult = validateByDescriptor({
+      kanji: expectedKanji,
+      features: sample.features,
+      descriptor,
+    });
+
+    if (!validationResult) {
+      skippedCount++;
+      return sample;
+    }
+
+    revalidatedCount++;
+
+    return {
+      ...sample,
+
+      // Mantiene la etiqueta manual del usuario.
+      isCorrect: sample.isCorrect,
+
+      // Recalcula el resultado algorítmico.
+      score: validationResult.score,
+      validationResult: validationResult.isCorrect,
+      validationStrategy: validationResult.strategy,
+
+      descriptorValidation: validationResult,
+
+      features: {
+        ...sample.features,
+        descriptorMatchScore: validationResult.descriptorMatchScore,
+        descriptorFailedChecks: validationResult.failedChecks ?? [],
+        descriptorHardFailedChecks: validationResult.hardFailedChecks ?? [],
+        descriptorPattern: validationResult.pattern,
+      },
+
+      revalidatedAt: new Date().toISOString(),
+      revalidatedWith: {
+        descriptorFilePath,
+        validatorFilePath,
+        pattern: validationResult.pattern,
+        strategy: validationResult.strategy,
+      },
+    };
+  });
+
+  console.log(
+    `Revalidated samples: ${revalidatedCount}. Skipped samples: ${skippedCount}.`,
+  );
+
+  return revalidatedSamples;
 }
 
 function parseSamplesFileContent(content, absolutePath) {
@@ -434,6 +652,7 @@ function getPatternHint(kanji) {
     田: "box_with_inner_cross",
     回: "nested_box_pattern",
     用: "open_box_with_inner_vertical_and_horizontals",
+    木: "tree_cross_pattern",
 
     // Patrones próximos/probables.
     四: "box_with_inner_strokes",
@@ -453,7 +672,6 @@ function getPatternHint(kanji) {
     小: "center_vertical_with_side_dots",
 
     十: "cross",
-    木: "tree_cross_pattern",
     本: "tree_with_bottom_mark",
     未: "tree_with_upper_horizontal_bias",
     末: "tree_with_lower_horizontal_bias",
@@ -709,6 +927,7 @@ function analyzeSamples(samples, options) {
       falseNegativeScoreThreshold: options.falseNegativeScoreThreshold,
       falsePositiveScoreThreshold: options.falsePositiveScoreThreshold,
       kanjiFilter: options.kanjiFilter,
+      revalidate: options.revalidate,
     },
     global: buildGlobalSummary(filteredSamples, options),
     kanjis: kanjiReports,
@@ -785,6 +1004,9 @@ function printReport(report) {
   console.log("KANJI FEEDBACK ANALYSIS");
   console.log("========================================");
   console.log(`Generated at: ${report.generatedAt}`);
+  if (report.options.revalidate) {
+    console.log("Revalidation: enabled");
+  }
   console.log(`Total samples: ${report.totalSamples}`);
   console.log(`Total kanjis: ${report.totalKanjis}`);
   console.log("");
@@ -923,6 +1145,10 @@ async function main() {
     samples = loadSamplesFromFile(args.filePath);
   } else {
     throw new Error("You must specify either --mongo or --file <path>.");
+  }
+
+  if (args.revalidate) {
+    samples = revalidateSamples(samples, args);
   }
 
   const report = analyzeSamples(samples, args);
