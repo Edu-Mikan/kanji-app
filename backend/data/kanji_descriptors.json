@@ -463,6 +463,60 @@
         "minStraightnessMean": 0.5,
         "maxSoftFailures": 5
       }
+    },
+    "用": {
+      "enabled": true,
+      "pattern": "open_box_with_inner_vertical_and_horizontals",
+      "expectedStrokeCount": 5,
+      "description": "Patrón de caja abierta/semiabierta con vertical interior y dos horizontales internas: trazo izquierdo, trazo envolvente superior/derecho, trazo vertical interior y dos horizontales internas.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.55,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.9,
+
+        "minVerticalAngleAbs": 0.8,
+        "minHorizontalAngleMax": 0.65,
+        "minHeightVsWidthRatio": 1.2,
+        "minWidthVsHeightRatio": 1.2,
+
+        "leftStrokeCenterXMax": 0.42,
+        "leftStrokeMinXMax": 0.3,
+        "leftStrokeMinHeight": 0.45,
+
+        "outerWrappingMinWidth": 0.35,
+        "outerWrappingMinHeight": 0.45,
+        "outerWrappingMinYMax": 0.35,
+        "outerWrappingMaxXMin": 0.5,
+        "outerWrappingMaxYMin": 0.55,
+        "outerWrappingMaxStraightness": 0.94,
+
+        "innerVerticalCenterXMin": 0.25,
+        "innerVerticalCenterXMax": 0.72,
+        "innerVerticalMinHeight": 0.35,
+        "innerVerticalMaxWidth": 0.32,
+
+        "upperInnerCenterYMin": 0.25,
+        "upperInnerCenterYMax": 0.58,
+        "upperInnerMinWidth": 0.18,
+        "upperInnerMaxHeight": 0.3,
+        "upperInnerDeltaYMin": -0.22,
+
+        "lowerInnerCenterYMin": 0.45,
+        "lowerInnerCenterYMax": 0.82,
+        "lowerInnerMinWidth": 0.18,
+        "lowerInnerMaxHeight": 0.3,
+        "lowerInnerDeltaYMin": -0.22,
+
+        "minUpperLowerGap": 0.06,
+        "minLowerOuterBottomGap": 0.06,
+
+        "minBoxHorizontalCoverage": 0.44,
+        "minBoxVerticalCoverage": 0.55,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 4
+      }
     }
   }
 }

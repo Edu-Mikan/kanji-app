@@ -241,3 +241,31 @@ Structural validation:
 ```txt
 simple=0, descriptor=31
 ```
+
+---
+
+### 用 - open_box_with_inner_vertical_and_horizontals
+
+Fecha: 2026-07-07
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 用
+- Pattern: open_box_with_inner_vertical_and_horizontals
+- Validator: validateOpenBoxWithInnerVerticalAndHorizontals
+
+#### Resultado de referencia
+
+Total samples: 24  
+Manual correct: 13  
+Manual incorrect: 11
+
+False negatives: 0  
+False positives: 1
+
+Correct with score 10: 0  
+Incorrect with score 10: 10
+
+Validation strategies: {"descriptor_open_box_with_inner_vertical_and_horizontals":24}
+
+Structural validation:
