@@ -337,3 +337,34 @@ Structural validation:
 ```txt
 simple=0, descriptor=27
 ```
+
+---
+
+### 未 / 末 - tree_with_two_horizontals
+
+Fecha: 2026-07-08
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 未
+- Descriptor: kanji_descriptors.json -> 末
+- Pattern: tree_with_two_horizontals
+- Validator: validateTreeWithTwoHorizontals
+
+#### Resultado de referencia - 未
+
+Total samples: 22  
+Manual correct: 14  
+Manual incorrect: 8
+
+False negatives: 0  
+False positives: 1
+
+Correct with score 10: 0  
+Incorrect with score 10: 7
+
+Falso positivo aceptado por ambigüedad 未/末:
+
+```txt
+5e110a9a-d0f8-49aa-9c08-b377ea6c870c
+```

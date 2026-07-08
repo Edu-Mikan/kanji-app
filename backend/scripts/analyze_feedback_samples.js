@@ -654,6 +654,8 @@ function getPatternHint(kanji) {
     用: "open_box_with_inner_vertical_and_horizontals",
     木: "tree_cross_pattern",
     本: "tree_with_bottom_mark",
+    未: "tree_with_two_horizontals",
+    末: "tree_with_two_horizontals",
 
     // Patrones próximos/probables.
     四: "box_with_inner_strokes",
@@ -673,8 +675,6 @@ function getPatternHint(kanji) {
     小: "center_vertical_with_side_dots",
 
     十: "cross",
-    未: "tree_with_upper_horizontal_bias",
-    末: "tree_with_lower_horizontal_bias",
 
     丁: "horizontal_with_vertical_tail",
     刀: "hook_or_blade_pattern",

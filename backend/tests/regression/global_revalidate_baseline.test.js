@@ -59,19 +59,21 @@ test("global descriptor baseline should remain stable after revalidation", () =>
   const report = JSON.parse(fs.readFileSync(outputPath, "utf-8"));
 
   assert.equal(report.options.revalidate, true);
-  assert.equal(report.totalSamples, 216);
-  assert.equal(report.totalKanjis, 9);
+  assert.equal(report.totalSamples, 260);
+  assert.equal(report.totalKanjis, 11);
 
-  assert.equal(report.global.correctCount, 143);
-  assert.equal(report.global.incorrectCount, 73);
+  assert.equal(report.global.correctCount, 173);
+  assert.equal(report.global.incorrectCount, 87);
 
   assert.equal(report.global.falseNegativeCount, 0);
 
-  // Actualmente aceptamos 4 falsos positivos conocidos:
+  // Actualmente aceptamos 6 falsos positivos conocidos:
   // - 日: 1
   // - 田: 2
   // - 用: 1
-  assert.equal(report.global.falsePositiveCount, 4);
+  // - 未: 1
+  // - 末: 1
+  assert.equal(report.global.falsePositiveCount, 6);
 
   const byKanji = Object.fromEntries(
     report.kanjis.map((kanjiReport) => [kanjiReport.kanji, kanjiReport]),
