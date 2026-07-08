@@ -576,6 +576,75 @@
         "rightDiagonalDeltaXMin": 0.02,
         "rightDiagonalDeltaYMin": 0.08
       }
+    },
+    "本": {
+      "enabled": true,
+      "pattern": "tree_with_bottom_mark",
+      "expectedStrokeCount": 5,
+      "description": "Patrón tipo 本: estructura de 木 con un trazo horizontal corto inferior adicional.",
+      "rules": {
+        "minBboxWidth": 0.45,
+        "minBboxHeight": 0.6,
+        "aspectRatioMin": 0.45,
+        "aspectRatioMax": 1.9,
+
+        "minVerticalAngleAbs": 0.85,
+        "minHorizontalAngleMax": 0.65,
+        "minDiagonalAngleAbs": 0.3,
+        "maxDiagonalAngleAbs": 1.35,
+        "genericDiagonalMinWidth": 0.08,
+        "genericDiagonalMinHeight": 0.1,
+
+        "minHeightVsWidthRatio": 1.2,
+        "minWidthVsHeightRatio": 1.2,
+
+        "horizontalCenterYMin": 0.07,
+        "horizontalCenterYMax": 0.52,
+        "horizontalMinWidth": 0.28,
+        "horizontalMaxHeight": 0.45,
+        "horizontalDeltaYMin": -0.45,
+
+        "verticalCenterXMin": 0.25,
+        "verticalCenterXMax": 0.72,
+        "verticalMinHeight": 0.5,
+        "verticalMaxWidth": 0.4,
+
+        "leftDiagonalCenterXMax": 0.55,
+        "leftDiagonalCenterYMin": 0.35,
+        "leftDiagonalMinWidth": 0.1,
+        "leftDiagonalMinHeight": 0.12,
+        "leftDiagonalDeltaXMax": -0.02,
+        "leftDiagonalDeltaYMin": 0.08,
+
+        "rightDiagonalCenterXMin": 0.45,
+        "rightDiagonalCenterYMin": 0.35,
+        "rightDiagonalMinWidth": 0.08,
+        "rightDiagonalMinHeight": 0.1,
+        "rightDiagonalDeltaXMin": 0.02,
+        "rightDiagonalDeltaYMin": 0.08,
+
+        "bottomMarkCenterXMin": 0.25,
+        "bottomMarkCenterXMax": 0.75,
+        "bottomMarkCenterYMin": 0.55,
+        "bottomMarkCenterYMax": 0.9,
+        "bottomMarkMinWidth": 0.08,
+        "bottomMarkMaxHeight": 0.32,
+        "bottomMarkDeltaYMin": -0.22,
+        "bottomMarkAllowDiagonalish": true,
+        "bottomMarkMaxAngleAbs": 1.05,
+
+        "minDiagonalCenterGap": 0.12,
+        "minHorizontalVerticalCrossTolerance": 0.08,
+        "minDiagonalBelowHorizontalGap": 0.02,
+        "minBottomMarkBelowHorizontalGap": 0.12,
+        "minBottomMarkNearVerticalTolerance": 0.28,
+
+        "minBoxHorizontalCoverage": 0.45,
+        "minBoxVerticalCoverage": 0.6,
+
+        "minStraightnessMean": 0.5,
+        "maxSoftFailures": 5
+      }
     }
   }
 }

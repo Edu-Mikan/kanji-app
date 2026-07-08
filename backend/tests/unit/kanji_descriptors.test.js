@@ -34,6 +34,7 @@ test("implemented descriptor patterns should exist for current kanjis", () => {
     回: "nested_box_pattern",
     用: "open_box_with_inner_vertical_and_horizontals",
     木: "tree_cross_pattern",
+    本: "tree_with_bottom_mark",
   };
 
   for (const [kanji, expectedPattern] of Object.entries(expectedPatterns)) {

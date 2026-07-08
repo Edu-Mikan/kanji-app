@@ -653,6 +653,7 @@ function getPatternHint(kanji) {
     回: "nested_box_pattern",
     用: "open_box_with_inner_vertical_and_horizontals",
     木: "tree_cross_pattern",
+    本: "tree_with_bottom_mark",
 
     // Patrones próximos/probables.
     四: "box_with_inner_strokes",
@@ -672,7 +673,6 @@ function getPatternHint(kanji) {
     小: "center_vertical_with_side_dots",
 
     十: "cross",
-    本: "tree_with_bottom_mark",
     未: "tree_with_upper_horizontal_bias",
     末: "tree_with_lower_horizontal_bias",
 
