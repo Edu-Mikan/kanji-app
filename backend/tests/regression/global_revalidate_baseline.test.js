@@ -117,6 +117,12 @@ test("global descriptor baseline should remain stable after revalidation", () =>
   assert.equal(byKanji["用"].falseNegativeCount, 0);
   assert.equal(byKanji["用"].falsePositiveCount, 1);
 
+  assert.equal(byKanji["未"].falseNegativeCount, 0);
+  assert.equal(byKanji["未"].falsePositiveCount, 1);
+
+  assert.equal(byKanji["末"].falseNegativeCount, 0);
+  assert.equal(byKanji["末"].falsePositiveCount, 1);
+
   fs.rmSync(tempDir, {
     recursive: true,
     force: true,
