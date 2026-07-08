@@ -59,11 +59,11 @@ test("global descriptor baseline should remain stable after revalidation", () =>
   const report = JSON.parse(fs.readFileSync(outputPath, "utf-8"));
 
   assert.equal(report.options.revalidate, true);
-  assert.equal(report.totalSamples, 189);
-  assert.equal(report.totalKanjis, 8);
+  assert.equal(report.totalSamples, 216);
+  assert.equal(report.totalKanjis, 9);
 
-  assert.equal(report.global.correctCount, 126);
-  assert.equal(report.global.incorrectCount, 63);
+  assert.equal(report.global.correctCount, 143);
+  assert.equal(report.global.incorrectCount, 73);
 
   assert.equal(report.global.falseNegativeCount, 0);
 
@@ -85,6 +85,7 @@ test("global descriptor baseline should remain stable after revalidation", () =>
   assert.ok(byKanji["回"], "Missing report for 回");
   assert.ok(byKanji["用"], "Missing report for 用");
   assert.ok(byKanji["木"], "Missing report for 木");
+  assert.ok(byKanji["本"], "Missing report for 本");
 
   assert.equal(byKanji["口"].falseNegativeCount, 0);
   assert.equal(byKanji["口"].falsePositiveCount, 0);
@@ -100,6 +101,9 @@ test("global descriptor baseline should remain stable after revalidation", () =>
 
   assert.equal(byKanji["木"].falseNegativeCount, 0);
   assert.equal(byKanji["木"].falsePositiveCount, 0);
+
+  assert.equal(byKanji["本"].falseNegativeCount, 0);
+  assert.equal(byKanji["本"].falsePositiveCount, 0);
 
   // Falsos positivos conocidos y aceptados.
   assert.equal(byKanji["日"].falseNegativeCount, 0);

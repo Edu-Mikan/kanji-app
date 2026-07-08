@@ -303,3 +303,37 @@ Structural validation:
 ```txt
 simple=0, descriptor=52
 ```
+
+---
+
+### 本 - tree_with_bottom_mark
+
+Fecha: 2026-07-08
+
+#### Código relacionado
+
+- Descriptor: kanji_descriptors.json -> 本
+- Pattern: tree_with_bottom_mark
+- Validator: validateTreeWithBottomMark
+
+#### Resultado de referencia
+
+Resultado obtenido mediante revalidación con el validador actual.
+
+Total samples: 27  
+Manual correct: 17  
+Manual incorrect: 10
+
+False negatives: 0  
+False positives: 0
+
+Correct with score 10: 0  
+Incorrect with score 10: 10
+
+Validation strategies: {"descriptor_tree_with_bottom_mark":27}
+
+Structural validation:
+
+```txt
+simple=0, descriptor=27
+```
