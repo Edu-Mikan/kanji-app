@@ -5,6 +5,58 @@ const path = require("path");
 const os = require("os");
 const { spawnSync } = require("child_process");
 
+const ACCEPTED_FALSE_POSITIVES_BY_KANJI = {
+  日: 1,
+  田: 2,
+  用: 1,
+  未: 1,
+  末: 1,
+};
+
+function loadJsonl(filePath) {
+  return fs
+    .readFileSync(filePath, "utf-8")
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+}
+
+function getExpectedKanji(sample) {
+  return sample.expectedKanji ?? sample.kanji;
+}
+
+function buildFixtureSummary(fixturePath) {
+  const samples = loadJsonl(fixturePath);
+
+  const kanjis = [
+    ...new Set(samples.map((sample) => getExpectedKanji(sample))),
+  ].sort();
+
+  const correctCount = samples.filter(
+    (sample) => sample.isCorrect === true,
+  ).length;
+
+  const incorrectCount = samples.filter(
+    (sample) => sample.isCorrect === false,
+  ).length;
+
+  return {
+    totalSamples: samples.length,
+    totalKanjis: kanjis.length,
+    kanjis,
+    correctCount,
+    incorrectCount,
+  };
+}
+
+function sumAcceptedFalsePositives() {
+  return Object.values(ACCEPTED_FALSE_POSITIVES_BY_KANJI).reduce(
+    (total, value) => total + value,
+    0,
+  );
+}
+
 test("global descriptor baseline should remain stable after revalidation", () => {
   const backendRoot = path.resolve(__dirname, "../..");
 
@@ -15,116 +67,102 @@ test("global descriptor baseline should remain stable after revalidation", () =>
 
   assert.ok(fs.existsSync(fixturePath), `Missing fixture file: ${fixturePath}`);
 
+  const fixtureSummary = buildFixtureSummary(fixturePath);
+
   const tempDir = fs.mkdtempSync(
     path.join(os.tmpdir(), "kanji-revalidate-test-"),
   );
 
-  const outputPath = path.join(tempDir, "global_revalidate_report.json");
+  try {
+    const outputPath = path.join(tempDir, "global_revalidate_report.json");
 
-  const result = spawnSync(
-    "node",
-    [
-      "scripts/analyze_feedback_samples.js",
-      "--file",
-      fixturePath,
-      "--revalidate",
-      "--out-json",
-      outputPath,
-    ],
-    {
-      cwd: backendRoot,
-      encoding: "utf-8",
-    },
-  );
+    const result = spawnSync(
+      "node",
+      [
+        "scripts/analyze_feedback_samples.js",
+        "--file",
+        fixturePath,
+        "--revalidate",
+        "--out-json",
+        outputPath,
+      ],
+      {
+        cwd: backendRoot,
+        encoding: "utf-8",
+      },
+    );
 
-  assert.equal(
-    result.status,
-    0,
-    [
-      "Expected analyze_feedback_samples.js to exit successfully.",
-      "",
-      "STDOUT:",
-      result.stdout,
-      "",
-      "STDERR:",
-      result.stderr,
-    ].join("\n"),
-  );
+    assert.equal(
+      result.status,
+      0,
+      [
+        "Expected analyze_feedback_samples.js to exit successfully.",
+        "",
+        "STDOUT:",
+        result.stdout,
+        "",
+        "STDERR:",
+        result.stderr,
+      ].join("\n"),
+    );
 
-  assert.ok(
-    fs.existsSync(outputPath),
-    `Expected JSON report to be created at ${outputPath}`,
-  );
+    assert.ok(
+      fs.existsSync(outputPath),
+      `Expected JSON report to be created at ${outputPath}`,
+    );
 
-  const report = JSON.parse(fs.readFileSync(outputPath, "utf-8"));
+    const report = JSON.parse(fs.readFileSync(outputPath, "utf-8"));
 
-  assert.equal(report.options.revalidate, true);
-  assert.equal(report.totalSamples, 260);
-  assert.equal(report.totalKanjis, 11);
+    assert.equal(report.options.revalidate, true);
 
-  assert.equal(report.global.correctCount, 173);
-  assert.equal(report.global.incorrectCount, 87);
+    // Estos valores se derivan de la fixture versionada.
+    assert.equal(report.totalSamples, fixtureSummary.totalSamples);
+    assert.equal(report.totalKanjis, fixtureSummary.totalKanjis);
+    assert.equal(report.global.correctCount, fixtureSummary.correctCount);
+    assert.equal(report.global.incorrectCount, fixtureSummary.incorrectCount);
 
-  assert.equal(report.global.falseNegativeCount, 0);
+    // Regla global de calidad: no aceptamos falsos negativos.
+    assert.equal(report.global.falseNegativeCount, 0);
 
-  // Actualmente aceptamos 6 falsos positivos conocidos:
-  // - 日: 1
-  // - 田: 2
-  // - 用: 1
-  // - 未: 1
-  // - 末: 1
-  assert.equal(report.global.falsePositiveCount, 6);
+    // Falsos positivos aceptados explícitamente.
+    assert.equal(report.global.falsePositiveCount, sumAcceptedFalsePositives());
 
-  const byKanji = Object.fromEntries(
-    report.kanjis.map((kanjiReport) => [kanjiReport.kanji, kanjiReport]),
-  );
+    const byKanji = Object.fromEntries(
+      report.kanjis.map((kanjiReport) => [kanjiReport.kanji, kanjiReport]),
+    );
 
-  assert.ok(byKanji["口"], "Missing report for 口");
-  assert.ok(byKanji["山"], "Missing report for 山");
-  assert.ok(byKanji["日"], "Missing report for 日");
-  assert.ok(byKanji["目"], "Missing report for 目");
-  assert.ok(byKanji["田"], "Missing report for 田");
-  assert.ok(byKanji["回"], "Missing report for 回");
-  assert.ok(byKanji["用"], "Missing report for 用");
-  assert.ok(byKanji["木"], "Missing report for 木");
-  assert.ok(byKanji["本"], "Missing report for 本");
+    const reportedKanjis = Object.keys(byKanji).sort();
 
-  assert.equal(byKanji["口"].falseNegativeCount, 0);
-  assert.equal(byKanji["口"].falsePositiveCount, 0);
+    assert.deepEqual(
+      reportedKanjis,
+      fixtureSummary.kanjis,
+      "Reported kanjis should match fixture kanjis",
+    );
 
-  assert.equal(byKanji["山"].falseNegativeCount, 0);
-  assert.equal(byKanji["山"].falsePositiveCount, 0);
+    for (const kanji of fixtureSummary.kanjis) {
+      const kanjiReport = byKanji[kanji];
 
-  assert.equal(byKanji["目"].falseNegativeCount, 0);
-  assert.equal(byKanji["目"].falsePositiveCount, 0);
+      assert.ok(kanjiReport, `Missing report for ${kanji}`);
 
-  assert.equal(byKanji["回"].falseNegativeCount, 0);
-  assert.equal(byKanji["回"].falsePositiveCount, 0);
+      assert.equal(
+        kanjiReport.falseNegativeCount,
+        0,
+        `${kanji} should have no false negatives`,
+      );
 
-  assert.equal(byKanji["木"].falseNegativeCount, 0);
-  assert.equal(byKanji["木"].falsePositiveCount, 0);
+      const acceptedFalsePositiveCount =
+        ACCEPTED_FALSE_POSITIVES_BY_KANJI[kanji] ?? 0;
 
-  assert.equal(byKanji["本"].falseNegativeCount, 0);
-  assert.equal(byKanji["本"].falsePositiveCount, 0);
-
-  // Falsos positivos conocidos y aceptados.
-  assert.equal(byKanji["日"].falseNegativeCount, 0);
-  assert.equal(byKanji["日"].falsePositiveCount, 1);
-
-  assert.equal(byKanji["田"].falseNegativeCount, 0);
-  assert.equal(byKanji["田"].falsePositiveCount, 2);
-
-  assert.equal(byKanji["用"].falseNegativeCount, 0);
-  assert.equal(byKanji["用"].falsePositiveCount, 1);
-
-  assert.equal(byKanji["未"].falseNegativeCount, 0);
-  assert.equal(byKanji["未"].falsePositiveCount, 1);
-
-  assert.equal(byKanji["末"].falseNegativeCount, 0);
-  assert.equal(byKanji["末"].falsePositiveCount, 1);
-
-  fs.rmSync(tempDir, {
-    recursive: true,
-    force: true,
-  });
+      assert.equal(
+        kanjiReport.falsePositiveCount,
+        acceptedFalsePositiveCount,
+        `${kanji} has unexpected false positives`,
+      );
+    }
+  } finally {
+    fs.rmSync(tempDir, {
+      recursive: true,
+      force: true,
+    });
+  }
 });
