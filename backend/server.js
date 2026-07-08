@@ -3,6 +3,8 @@ const cors = require("cors");
 const fs = require("fs");
 const crypto = require("crypto");
 const { MongoClient } = require("mongodb");
+const packageJson = require("./package.json");
+const serverStartedAt = new Date().toISOString();
 
 const {
   normalizeStrokes,
@@ -644,6 +646,21 @@ app.post("/feedback", async (req, res) => {
     console.error("Error saving feedback:", err);
     res.status(500).json({ error: "Error saving feedback" });
   }
+});
+
+app.get("/api/version", (req, res) => {
+  const gitCommit = process.env.RENDER_GIT_COMMIT ?? "local";
+  const gitBranch = process.env.RENDER_GIT_BRANCH ?? "local";
+
+  res.json({
+    app: "kanji_backend",
+    version: packageJson.version,
+    environment: process.env.RENDER === "true" ? "render" : "local",
+    gitCommit,
+    gitCommitShort: gitCommit === "local" ? "local" : gitCommit.slice(0, 7),
+    gitBranch,
+    serverStartedAt,
+  });
 });
 
 app.listen(PORT, () => {
