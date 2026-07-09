@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:kanji_app/config/app_config.dart';
+import 'package:kanji_app/models/backend_version_info.dart';
 
 class ValidationResult {
   final double score;
@@ -163,6 +164,22 @@ class ValidationService {
       }
     } catch (e) {
       // ignoramos errores voluntariamente
+    }
+  }
+
+  Future<BackendVersionInfo?> getBackendVersion() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/version'));
+
+      if (response.statusCode != 200) {
+        return null;
+      }
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+      return BackendVersionInfo.fromJson(json);
+    } catch (_) {
+      return null;
     }
   }
 }
