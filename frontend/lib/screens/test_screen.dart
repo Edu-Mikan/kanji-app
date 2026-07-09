@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+
 import '../services/validation_service.dart';
 import '../widgets/drawing_canvas.dart';
 
 class TestScreen extends StatefulWidget {
   final List<String> kanjiList;
   final int initialIndex;
+
   const TestScreen({
     super.key,
     required this.kanjiList,
@@ -20,24 +22,34 @@ class _TestScreenState extends State<TestScreen> {
 
   late final ValidationService _validationService;
   late int currentIndex;
+
   String? lastFeedbackMessage;
+
+  List<dynamic> strokes = [];
+
+  bool _isSaving = false;
 
   String get currentKanji {
     if (widget.kanjiList.isEmpty) return "";
     return widget.kanjiList[currentIndex];
   }
 
-  // Aquí integrarás tu canvas real
-  List<dynamic> strokes = [];
-
   bool get canGoPrevious => currentIndex > 0;
-
   bool get canGoNext => currentIndex < widget.kanjiList.length - 1;
 
-  Future<void> sendResult(bool isCorrectUser) async {
-    final strokes = canvasKey.currentState?.convertirStrokes();
+  @override
+  void initState() {
+    super.initState();
+    _validationService = ValidationService();
+    currentIndex = widget.initialIndex;
+  }
 
-    if (strokes == null || strokes.isEmpty) {
+  Future<void> sendResult(bool isCorrectUser) async {
+    if (_isSaving) return;
+
+    final canvasStrokes = canvasKey.currentState?.convertirStrokes();
+
+    if (canvasStrokes == null || canvasStrokes.isEmpty) {
       debugPrint("No hay trazos");
 
       setState(() {
@@ -47,51 +59,62 @@ class _TestScreenState extends State<TestScreen> {
       return;
     }
 
-    final typedStrokes = List<Map<String, dynamic>>.from(strokes);
-
-    // ✅ 1. usar ValidationService (recognize)
-    final result = await _validationService.validarKanji(
-      kanji: currentKanji,
-      strokes: typedStrokes,
-    );
-
-    if (result == null) {
-      debugPrint("Error al validar");
-
-      setState(() {
-        lastFeedbackMessage = "Error al validar";
-      });
-
-      return;
-    }
-
-    // ✅ 2. enviar feedback (con tu decisión manual)
-    await _validationService.sendFeedback(
-      kanji: currentKanji,
-      score: result.score,
-      isCorrect: isCorrectUser,
-      features: result.features,
-      strokes: typedStrokes,
-      source: "test_screen",
-      validationStrategy: result.validationStrategy,
-      validationResult: result.validationResult,
-      simpleValidation: result.simpleValidation,
-
-      // Nuevos campos
-      recognitionId: result.recognitionId,
-      schemaVersion: result.schemaVersion,
-      feedbackType: "manual_debug",
-    );
-
-    debugPrint("Guardado: ${result.score} - correcto: $isCorrectUser");
-
-    // ✅ 3. Mostrar resultado y limpiar canvas, pero SIN pasar al siguiente kanji
     setState(() {
-      lastFeedbackMessage =
-          "Guardado · ${isCorrectUser ? "Correcto" : "Incorrecto"} · score: ${result.score.toStringAsFixed(3)}";
+      _isSaving = true;
     });
 
-    canvasKey.currentState?.clear();
+    try {
+      final typedStrokes = List<Map<String, dynamic>>.from(canvasStrokes);
+
+      final result = await _validationService.validarKanji(
+        kanji: currentKanji,
+        strokes: typedStrokes,
+      );
+
+      if (!mounted) return;
+
+      if (result == null) {
+        debugPrint("Error al validar");
+
+        setState(() {
+          lastFeedbackMessage = "Error al validar";
+        });
+
+        return;
+      }
+
+      await _validationService.sendFeedback(
+        kanji: currentKanji,
+        score: result.score,
+        isCorrect: isCorrectUser,
+        features: result.features,
+        strokes: typedStrokes,
+        source: "test_screen",
+        validationStrategy: result.validationStrategy,
+        validationResult: result.validationResult,
+        simpleValidation: result.simpleValidation,
+        recognitionId: result.recognitionId,
+        schemaVersion: result.schemaVersion,
+        feedbackType: "manual_debug",
+      );
+
+      if (!mounted) return;
+
+      debugPrint("Guardado: ${result.score} - correcto: $isCorrectUser");
+
+      setState(() {
+        lastFeedbackMessage =
+            "Guardado · ${isCorrectUser ? "Correcto" : "Incorrecto"} · score: ${result.score.toStringAsFixed(3)}";
+      });
+
+      canvasKey.currentState?.clear();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   void clearCanvasOnly() {
@@ -108,7 +131,6 @@ class _TestScreenState extends State<TestScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Último kanji')));
-
       return;
     }
 
@@ -126,7 +148,6 @@ class _TestScreenState extends State<TestScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Primer kanji')));
-
       return;
     }
 
@@ -139,13 +160,188 @@ class _TestScreenState extends State<TestScreen> {
     canvasKey.currentState?.clear();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _validationService = ValidationService();
-    //cargarKanjis();
+  double _getContentMaxWidth(double screenWidth) {
+    if (screenWidth >= 900) {
+      return 560;
+    }
 
-    currentIndex = widget.initialIndex;
+    return screenWidth;
+  }
+
+  double _getCanvasSize({
+    required double screenWidth,
+    required double screenHeight,
+  }) {
+    final shortestSide = screenWidth < screenHeight
+        ? screenWidth
+        : screenHeight;
+
+    if (screenWidth >= 900) {
+      return 320;
+    }
+
+    if (screenHeight < 700) {
+      return (shortestSide * 0.62).clamp(220.0, 280.0).toDouble();
+    }
+
+    return (screenWidth * 0.78).clamp(250.0, 320.0).toDouble();
+  }
+
+  double _getKanjiFontSize(double screenHeight) {
+    if (screenHeight < 700) {
+      return 56;
+    }
+
+    return 72;
+  }
+
+  Widget _buildCounter() {
+    return Text(
+      '${currentIndex + 1} / ${widget.kanjiList.length}',
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _buildKanji(double screenHeight) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        currentKanji,
+        style: TextStyle(
+          fontSize: _getKanjiFontSize(screenHeight),
+          fontWeight: FontWeight.bold,
+          fontFamily: 'NotoSansJP',
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCanvas(double canvasSize) {
+    return Center(
+      child: Container(
+        width: canvasSize,
+        height: canvasSize,
+        decoration: BoxDecoration(
+          color: Colors.grey[200],
+          border: Border.all(color: Colors.black54, width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: DrawingCanvas(key: canvasKey, onDraw: () {}),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedback() {
+    if (lastFeedbackMessage == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Text(
+        lastFeedbackMessage!,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  ButtonStyle _buttonStyle(Color color, {bool compact = false}) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: color,
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 16 : 22,
+        vertical: compact ? 11 : 13,
+      ),
+      textStyle: TextStyle(
+        fontSize: compact ? 15 : 17,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(double screenWidth) {
+    final isDesktop = screenWidth >= 900;
+    final compact = screenWidth < 390;
+
+    final correctButton = ElevatedButton(
+      style: _buttonStyle(Colors.green, compact: compact),
+      onPressed: _isSaving
+          ? null
+          : () async {
+              await sendResult(true);
+            },
+      child: const Text("Correcto"),
+    );
+
+    final incorrectButton = ElevatedButton(
+      style: _buttonStyle(Colors.red, compact: compact),
+      onPressed: _isSaving
+          ? null
+          : () async {
+              await sendResult(false);
+            },
+      child: const Text("Incorrecto"),
+    );
+
+    final clearButton = ElevatedButton(
+      style: _buttonStyle(Colors.grey, compact: compact),
+      onPressed: _isSaving ? null : clearCanvasOnly,
+      child: const Text("Borrar"),
+    );
+
+    final previousButton = ElevatedButton(
+      style: _buttonStyle(Colors.blue, compact: compact),
+      onPressed: !_isSaving && canGoPrevious ? previousKanji : null,
+      child: const Text("Anterior"),
+    );
+
+    final nextButton = ElevatedButton(
+      style: _buttonStyle(Colors.blue, compact: compact),
+      onPressed: !_isSaving && canGoNext ? nextKanji : null,
+      child: const Text("Siguiente"),
+    );
+
+    if (isDesktop) {
+      return Column(
+        children: [
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 10,
+            children: [correctButton, incorrectButton, clearButton],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 10,
+            children: [previousButton, nextButton],
+          ),
+        ],
+      );
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 10,
+      runSpacing: 10,
+      children: [
+        correctButton,
+        incorrectButton,
+        clearButton,
+        previousButton,
+        nextButton,
+      ],
+    );
   }
 
   @override
@@ -157,153 +353,50 @@ class _TestScreenState extends State<TestScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Entrenamiento IA"),
-        backgroundColor: Colors.orange, // visual de modo debug
+        backgroundColor: Colors.orange,
       ),
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Text(
-            '${currentIndex + 1} / ${widget.kanjiList.length}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
+            final contentMaxWidth = _getContentMaxWidth(screenWidth);
+            final canvasSize = _getCanvasSize(
+              screenWidth: screenWidth,
+              screenHeight: screenHeight,
+            );
 
-          const SizedBox(height: 40),
+            final isShortScreen = screenHeight < 700;
 
-          // KANJI
-          Text(currentKanji, style: const TextStyle(fontSize: 80)),
-
-          const SizedBox(height: 20),
-
-          // CANVAS (aquí metes el tuyo)
-          Container(
-            width: 300,
-            height: 300,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              border: Border.all(color: Colors.black54, width: 2),
-              borderRadius: BorderRadius.circular(
-                12,
-              ), // 👈 opcional pero queda mejor
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: DrawingCanvas(key: canvasKey, onDraw: () {}),
-            ),
-          ),
-
-          //const SizedBox(height: 30),
-          const SizedBox(height: 16),
-
-          if (lastFeedbackMessage != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                lastFeedbackMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(16, isShortScreen ? 10 : 16, 16, 24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildCounter(),
+                      SizedBox(height: isShortScreen ? 10 : 18),
+                      Center(child: _buildKanji(screenHeight)),
+                      SizedBox(height: isShortScreen ? 10 : 16),
+                      _buildCanvas(canvasSize),
+                      SizedBox(height: isShortScreen ? 10 : 14),
+                      _buildFeedback(),
+                      SizedBox(height: isShortScreen ? 14 : 18),
+                      _buildActionButtons(screenWidth),
+                      if (_isSaving) ...[
+                        const SizedBox(height: 16),
+                        const Center(child: CircularProgressIndicator()),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-
-          const SizedBox(height: 20),
-
-          // BOTONES
-          Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                    ),
-                    onPressed: () async {
-                      await sendResult(true);
-                    },
-                    child: const Text(
-                      "Correcto",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                    ),
-                    onPressed: () async {
-                      await sendResult(false);
-                    },
-                    child: const Text(
-                      "Incorrecto",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                    ),
-                    onPressed: clearCanvasOnly,
-                    child: const Text("Borrar", style: TextStyle(fontSize: 18)),
-                  ),
-                  const SizedBox(width: 16),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                    ),
-
-                    onPressed: canGoPrevious ? previousKanji : null,
-
-                    child: const Text(
-                      "Anterior",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
-                    ),
-
-                    onPressed: canGoNext ? nextKanji : null,
-
-                    child: const Text(
-                      "Siguiente",
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }
