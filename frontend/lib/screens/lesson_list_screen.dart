@@ -1,7 +1,9 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:kanji_app/main.dart';
+
 import '../services/progress_service.dart';
 
 class LessonListScreen extends StatefulWidget {
@@ -17,8 +19,8 @@ class _LessonListScreenState extends State<LessonListScreen> {
   final ProgressService _progress = ProgressService();
 
   Map<String, dynamic> progreso = {};
-
   List<int> lecciones = [];
+
   bool cargando = true;
   bool hayDatos = true;
 
@@ -27,34 +29,33 @@ class _LessonListScreenState extends State<LessonListScreen> {
   @override
   void initState() {
     super.initState();
-    cargarLecciones();
     _cargarProgreso();
+    cargarLecciones();
   }
 
-  // ✅ CARGAR PROGRESO
   void _cargarProgreso() {
     progreso = _progress.obtenerTodo();
   }
 
-  // ✅ CARGAR LECCIONES DINÁMICAMENTE
   Future<void> cargarLecciones() async {
     try {
       final ruta = 'assets/data/lecciones_${widget.nivel}.json';
       final jsonString = await rootBundle.loadString(ruta);
-
       final data = jsonDecode(jsonString);
 
-      // ✅ total de frases en el fichero
       final totalFrases = data.length;
-
-      // ✅ calcular nº de lecciones
       final totalLecciones = (totalFrases / frasesPorLeccion).ceil();
+
+      if (!mounted) return;
 
       setState(() {
         lecciones = List.generate(totalLecciones, (i) => i + 1);
         cargando = false;
+        hayDatos = true;
       });
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
+
       setState(() {
         hayDatos = false;
         cargando = false;
@@ -63,11 +64,52 @@ class _LessonListScreenState extends State<LessonListScreen> {
   }
 
   String _formatearFecha(String iso) {
-    final date = DateTime.parse(iso);
+    try {
+      final date = DateTime.parse(iso);
 
-    return "${date.day.toString().padLeft(2, '0')}/"
-        "${date.month.toString().padLeft(2, '0')}/"
-        "${date.year}";
+      return "${date.day.toString().padLeft(2, '0')}/"
+          "${date.month.toString().padLeft(2, '0')}/"
+          "${date.year}";
+    } catch (_) {
+      return iso;
+    }
+  }
+
+  bool _isDesktopWidth(double screenWidth) {
+    return screenWidth >= 900;
+  }
+
+  double _getContentMaxWidth(double screenWidth) {
+    if (_isDesktopWidth(screenWidth)) {
+      return 760;
+    }
+
+    return screenWidth;
+  }
+
+  EdgeInsets _getListPadding(double screenWidth) {
+    if (_isDesktopWidth(screenWidth)) {
+      return const EdgeInsets.fromLTRB(24, 24, 24, 32);
+    }
+
+    // Mismo estilo que training_category_screen.dart
+    return const EdgeInsets.all(16);
+  }
+
+  Future<void> _abrirLeccion(int numeroLeccion) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            CanvasScreen(nivel: widget.nivel, numeroLeccion: numeroLeccion),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _cargarProgreso();
+    });
   }
 
   @override
@@ -84,66 +126,100 @@ class _LessonListScreenState extends State<LessonListScreen> {
     }
 
     if (!hayDatos) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(
-            'No hay lecciones disponibles para ${widget.nivel}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 18),
-          ),
-        ),
+      return _buildCenteredMessage(
+        'No hay lecciones disponibles para ${widget.nivel}',
       );
     }
 
-    return ListView.builder(
-      itemCount: lecciones.length,
-      itemBuilder: (context, index) {
-        final numeroLeccion = lecciones[index];
+    if (lecciones.isEmpty) {
+      return _buildCenteredMessage(
+        'No se encontraron lecciones para ${widget.nivel}',
+      );
+    }
 
-        final key = "progreso_${widget.nivel}_$numeroLeccion";
-        final data = progreso[key];
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          final contentMaxWidth = _getContentMaxWidth(screenWidth);
+          final listPadding = _getListPadding(screenWidth);
+          final isDesktop = _isDesktopWidth(screenWidth);
 
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: ListTile(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CanvasScreen(
-                    nivel: widget.nivel,
-                    numeroLeccion: numeroLeccion,
-                  ),
+          return ListView.builder(
+            padding: listPadding,
+            itemCount: lecciones.length,
+            itemBuilder: (context, index) {
+              final numeroLeccion = lecciones[index];
+
+              if (!isDesktop) {
+                return _buildLessonCard(numeroLeccion);
+              }
+
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                  child: _buildLessonCard(numeroLeccion),
                 ),
               );
-
-              // ✅ refrescar al volver
-              setState(() {
-                _cargarProgreso();
-              });
             },
-
-            // ✅ ICONO
-            leading: _buildIcon(data),
-
-            // ✅ TÍTULO
-            title: Text(
-              'Lección $numeroLeccion',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-
-            // ✅ SUBTEXTO (resultado + fecha)
-            subtitle: _buildSubtitle(data),
-
-            trailing: const Icon(Icons.chevron_right),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
-  // ✅ ICONO DINÁMICO
+  Widget _buildCenteredMessage(String message) {
+    return SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = constraints.maxWidth;
+          final contentMaxWidth = _getContentMaxWidth(screenWidth);
+          final isDesktop = _isDesktopWidth(screenWidth);
+
+          final messageWidget = Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 18),
+            ),
+          );
+
+          if (!isDesktop) {
+            return Center(child: messageWidget);
+          }
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: contentMaxWidth),
+              child: messageWidget,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildLessonCard(int numeroLeccion) {
+    final key = "progreso_${widget.nivel}_$numeroLeccion";
+    final data = progreso[key];
+
+    // Mismo estilo base que training_category_screen.dart
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: _buildIcon(data),
+        title: Text(
+          'Lección $numeroLeccion',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: _buildSubtitle(data),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _abrirLeccion(numeroLeccion),
+      ),
+    );
+  }
+
   Widget _buildIcon(dynamic data) {
     if (data == null) {
       return const Icon(Icons.radio_button_unchecked);
@@ -159,10 +235,9 @@ class _LessonListScreenState extends State<LessonListScreen> {
     return const Icon(Icons.check_circle, color: Colors.green);
   }
 
-  // ✅ SUBTEXTO
   Widget _buildSubtitle(dynamic data) {
     if (data == null) {
-      return const Text("No completado");
+      return const Text('No completado');
     }
 
     final aciertos = data['aciertos'];
@@ -173,10 +248,9 @@ class _LessonListScreenState extends State<LessonListScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (aciertos != null && total != null)
-          Text("$aciertos / $total kanjis")
+          Text('$aciertos / $total kanjis')
         else
-          const Text("Completado"),
-
+          const Text('Completado'),
         if (fecha != null)
           Text(
             _formatearFecha(fecha),
