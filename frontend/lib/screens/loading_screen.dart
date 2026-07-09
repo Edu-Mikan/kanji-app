@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kanji_app/services/validation_service.dart';
 import 'level_screen.dart';
+import 'package:kanji_app/models/backend_version_info.dart';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -13,6 +14,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
   late final ValidationService _validationService;
   double _progress = 0.0;
   bool _isLoadingFinished = false;
+  BackendVersionInfo? _backendVersion;
 
   @override
   void initState() {
@@ -25,6 +27,20 @@ class _LoadingScreenState extends State<LoadingScreen> {
     try {
       await _validationService.ping();
     } catch (_) {}
+  }
+
+  Future<void> _loadBackendVersion() async {
+    try {
+      final versionInfo = await _validationService.getBackendVersion();
+
+      if (!mounted) return;
+
+      setState(() {
+        _backendVersion = versionInfo;
+      });
+    } catch (_) {
+      // No bloqueamos la carga si falla la versión.
+    }
   }
 
   Future<void> _fakeMinimumLoad() async {
@@ -49,24 +65,14 @@ class _LoadingScreenState extends State<LoadingScreen> {
     }
   }
 
-  /*   Future<void> _initApp() async {
-    // 🔥 lanzamos en paralelo (muy importante)
-    await Future.wait([
-      _warmUpBackend(),
-      _fakeMinimumLoad(), // mejora UX
-    ]);
-
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const LevelScreen()),
-    );
-  } */
   Future<void> _initApp() async {
     _simulateProgress();
 
-    await Future.wait([_warmUpBackend(), _fakeMinimumLoad()]);
+    await Future.wait([
+      _warmUpBackend(),
+      _loadBackendVersion(),
+      _fakeMinimumLoad(),
+    ]);
 
     _isLoadingFinished = true;
 
@@ -81,6 +87,35 @@ class _LoadingScreenState extends State<LoadingScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LevelScreen()),
+    );
+  }
+
+  Widget _buildBackendVersion() {
+    final version = _backendVersion;
+
+    if (version == null) {
+      return Text(
+        'Backend: comprobando versión...',
+        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+      );
+    }
+
+    return Column(
+      children: [
+        Text(
+          version.displayText,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          version.detailText,
+          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+        ),
+      ],
     );
   }
 
@@ -109,8 +144,11 @@ class _LoadingScreenState extends State<LoadingScreen> {
                 minHeight: 8,
               ),
             ),
-            SizedBox(height: 12),
+
+            const SizedBox(height: 12),
             Text("${(_progress * 100).toInt()}%"),
+            const SizedBox(height: 20),
+            _buildBackendVersion(),
           ],
         ),
       ),
