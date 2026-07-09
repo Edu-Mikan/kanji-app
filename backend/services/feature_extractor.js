@@ -121,38 +121,6 @@ function normalizeAngleAbs(angle) {
 }
 
 // ================= GEOMETRY FEATURES =================
-/* function extractGeometryFeatures(userNormalized, userResampled) {
-  const box = getStrokesBoundingBox(userNormalized);
-
-  const bboxWidth = box.width;
-  const bboxHeight = box.height;
-
-  const aspectRatio = bboxWidth / (bboxHeight + 1e-6);
-
-  const straightnessValues = userResampled.map(strokeStraightness);
-
-  const coarseAngles = userResampled.map((stroke) =>
-    normalizeAngleAbs(getStrokeAngle(stroke)),
-  );
-
-  return {
-    bboxWidth,
-    bboxHeight,
-    aspectRatio,
-
-    straightnessMean:
-      straightnessValues.reduce((a, b) => a + b, 0) /
-      (straightnessValues.length || 1),
-
-    straightnessMin:
-      straightnessValues.length > 0 ? Math.min(...straightnessValues) : 0,
-
-    coarseAngleAbsMean:
-      coarseAngles.reduce((a, b) => a + b, 0) / (coarseAngles.length || 1),
-
-    coarseAngleAbsMax: coarseAngles.length > 0 ? Math.max(...coarseAngles) : 0,
-  };
-} */
 function extractGeometryFeatures(userNormalized, userResampled) {
   const box = getStrokesBoundingBox(userNormalized);
 
@@ -165,6 +133,9 @@ function extractGeometryFeatures(userNormalized, userResampled) {
   const coarseAngles = userResampled.map((stroke) =>
     normalizeAngleAbs(getStrokeAngle(stroke)),
   );
+  const strokeLengths = userResampled.map((stroke) => strokeLength(stroke));
+
+  const totalLength = strokeLengths.reduce((sum, len) => sum + len, 0) || 1;
 
   const perStroke = userNormalized.map((normalizedStroke, index) => {
     const resampledStroke = userResampled[index] ?? normalizedStroke;
@@ -186,6 +157,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
     const deltaX = startX != null && endX != null ? endX - startX : null;
     const deltaY = startY != null && endY != null ? endY - startY : null;
 
+    const relativeLength = (strokeLengths[index] ?? 0) / totalLength;
+
     return {
       index,
       minX: strokeBox.minX,
@@ -198,7 +171,10 @@ function extractGeometryFeatures(userNormalized, userResampled) {
       centerY: (strokeBox.minY + strokeBox.maxY) / 2,
       angleAbs: normalizeAngleAbs(getStrokeAngle(resampledStroke)),
       straightness: strokeStraightness(resampledStroke),
+
       length: strokeLength(resampledStroke),
+      relativeLength,
+
       startX,
       startY,
       endX,
