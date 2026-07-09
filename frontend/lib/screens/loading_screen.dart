@@ -23,7 +23,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
 
   double _progress = 0.0;
   bool _isLoadingFinished = false;
-  bool _useIndeterminateProgress = false;
+  bool _isWakeUpMode = false;
   bool _hasLoadingError = false;
 
   String _loadingMessage = 'Conectando con el servidor...';
@@ -40,8 +40,8 @@ class _LoadingScreenState extends State<LoadingScreen> {
   Future<void> _initApp() async {
     _resetLoadingState();
 
-    _simulateProgress();
-    _switchToLongWaitModeIfNeeded();
+    unawaited(_simulateProgress());
+    unawaited(_switchToLongWaitModeIfNeeded());
 
     final backendReady = await _waitForBackendReady();
 
@@ -51,23 +51,23 @@ class _LoadingScreenState extends State<LoadingScreen> {
       setState(() {
         _isLoadingFinished = true;
         _hasLoadingError = true;
-        _useIndeterminateProgress = false;
+        _isWakeUpMode = false;
         _progress = 1.0;
         _loadingMessage =
-            'No se pudo conectar con el servidor. Comprueba la conexión o inténtalo de nuevo.';
+            'No se pudo conectar con el servidor.\nComprueba la conexión o inténtalo de nuevo.';
       });
+
       return;
     }
 
-    _isLoadingFinished = true;
-
     setState(() {
+      _isLoadingFinished = true;
       _progress = 1.0;
-      _useIndeterminateProgress = false;
+      _isWakeUpMode = false;
       _loadingMessage = 'Servidor listo';
     });
 
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 250));
 
     if (!mounted) return;
 
@@ -81,7 +81,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     setState(() {
       _progress = 0.0;
       _isLoadingFinished = false;
-      _useIndeterminateProgress = false;
+      _isWakeUpMode = false;
       _hasLoadingError = false;
       _loadingMessage = 'Conectando con el servidor...';
       _backendVersion = null;
@@ -89,22 +89,30 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   Future<void> _simulateProgress() async {
+    const progressCap = 0.72;
+
     while (true) {
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 120));
 
-      if (!mounted || _isLoadingFinished) return;
+      if (!mounted || _isLoadingFinished) {
+        return;
+      }
 
-      if (_useIndeterminateProgress) {
+      if (_isWakeUpMode || _hasLoadingError) {
         continue;
       }
 
-      if (_progress >= 0.85) {
+      if (_progress >= progressCap) {
         continue;
       }
 
       setState(() {
-        final remaining = 0.85 - _progress;
-        _progress += remaining * 0.08;
+        final remaining = progressCap - _progress;
+        _progress += remaining * 0.045;
+
+        if (_progress > progressCap) {
+          _progress = progressCap;
+        }
       });
     }
   }
@@ -112,18 +120,22 @@ class _LoadingScreenState extends State<LoadingScreen> {
   Future<void> _switchToLongWaitModeIfNeeded() async {
     await Future.delayed(_longWaitThreshold);
 
-    if (!mounted || _isLoadingFinished) return;
+    if (!mounted || _isLoadingFinished) {
+      return;
+    }
 
     setState(() {
-      _useIndeterminateProgress = true;
+      _isWakeUpMode = true;
       _loadingMessage =
-          'Despertando el servidor... Esto puede tardar unos segundos.';
+          'Despertando servidor...\nRender puede tardar unos segundos la primera vez.';
     });
   }
 
   Future<bool> _waitForBackendReady() async {
     for (int attempt = 1; attempt <= _maxBackendAttempts; attempt++) {
-      if (!mounted) return false;
+      if (!mounted) {
+        return false;
+      }
 
       _setLoadingMessageForAttempt(attempt);
 
@@ -148,19 +160,22 @@ class _LoadingScreenState extends State<LoadingScreen> {
   }
 
   void _setLoadingMessageForAttempt(int attempt) {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
 
     if (attempt == 1) {
       setState(() {
         _loadingMessage = 'Conectando con el servidor...';
       });
+
       return;
     }
 
     setState(() {
-      _useIndeterminateProgress = true;
+      _isWakeUpMode = true;
       _loadingMessage =
-          'Despertando el servidor... intento $attempt de $_maxBackendAttempts';
+          'Despertando servidor...\nIntento $attempt de $_maxBackendAttempts';
     });
   }
 
@@ -174,7 +189,9 @@ class _LoadingScreenState extends State<LoadingScreen> {
         return false;
       }
 
-      if (!mounted) return false;
+      if (!mounted) {
+        return false;
+      }
 
       setState(() {
         _backendVersion = versionInfo;
@@ -206,6 +223,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
       return Text(
         'Backend: comprobando versión...',
         style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        textAlign: TextAlign.center,
       );
     }
 
@@ -218,30 +236,51 @@ class _LoadingScreenState extends State<LoadingScreen> {
             color: Colors.grey.shade700,
             fontWeight: FontWeight.w500,
           ),
+          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 2),
         Text(
           version.detailText,
           style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildProgressText() {
+  Widget _buildLoadingIndicator() {
     if (_hasLoadingError) {
-      return const SizedBox.shrink();
+      return Icon(Icons.error_outline, color: Colors.red.shade400, size: 36);
     }
 
-    if (_useIndeterminateProgress) {
-      return Text(
-        'Esperando respuesta del backend...',
-        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-        textAlign: TextAlign.center,
+    if (_isWakeUpMode) {
+      return Column(
+        children: [
+          const SizedBox(
+            width: 36,
+            height: 36,
+            child: CircularProgressIndicator(strokeWidth: 3),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Esperando respuesta del backend...',
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            textAlign: TextAlign.center,
+          ),
+        ],
       );
     }
 
-    return Text('${(_progress * 100).toInt()}%');
+    return Column(
+      children: [
+        SizedBox(
+          width: 220,
+          child: LinearProgressIndicator(value: _progress, minHeight: 8),
+        ),
+        const SizedBox(height: 12),
+        Text('${(_progress * 100).toInt()}%'),
+      ],
+    );
   }
 
   Widget _buildRetryButton() {
@@ -283,15 +322,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
-              SizedBox(
-                width: 220,
-                child: LinearProgressIndicator(
-                  value: _useIndeterminateProgress ? null : _progress,
-                  minHeight: 8,
-                ),
-              ),
-              const SizedBox(height: 12),
-              _buildProgressText(),
+              _buildLoadingIndicator(),
               const SizedBox(height: 20),
               _buildBackendVersion(),
               _buildRetryButton(),
