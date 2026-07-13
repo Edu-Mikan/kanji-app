@@ -462,51 +462,208 @@
       }
     },
     "日": {
+      "kanji": "日",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 4,
       "pattern": "box_with_inner_horizontal",
-      "expectedStrokeCount": 4,
-      "description": "Patrón de caja con trazo horizontal interior: trazo izquierdo vertical, trazo exterior superior/derecho, trazo medio horizontal y trazo inferior horizontal.",
-      "rules": {
-        "minBboxWidth": 0.45,
-        "minBboxHeight": 0.55,
-        "aspectRatioMin": 0.45,
-        "aspectRatioMax": 1.8,
-
-        "minVerticalAngleAbs": 0.85,
-        "minHorizontalAngleMax": 0.55,
-        "minHeightVsWidthRatio": 1.4,
-        "minWidthVsHeightRatio": 1.4,
-
-        "leftStrokeCenterXMax": 0.42,
-        "leftStrokeMinXMax": 0.3,
-        "leftStrokeMinHeight": 0.45,
-
-        "outerStrokeMinWidth": 0.35,
-        "outerStrokeMinHeight": 0.45,
-        "outerStrokeMinYMax": 0.35,
-        "outerStrokeMaxXMin": 0.5,
-        "outerStrokeMaxYMin": 0.55,
-        "outerStrokeMaxStraightness": 0.9,
-
-        "middleStrokeCenterYMin": 0.28,
-        "middleStrokeCenterYMax": 0.72,
-        "middleStrokeMinWidth": 0.22,
-        "middleStrokeMaxHeight": 0.25,
-        "middleStrokeDeltaYMin": -0.15,
-
-        "bottomStrokeCenterYMin": 0.62,
-        "bottomStrokeMinWidth": 0.3,
-        "bottomStrokeMaxYMin": 0.65,
-        "bottomStrokeDeltaYMin": -0.15,
-
-        "minMiddleBottomGap": 0.08,
-        "minMiddleOuterTopGap": 0.08,
-
-        "minBoxHorizontalCoverage": 0.5,
-        "minBoxVerticalCoverage": 0.55,
-
-        "minStraightnessMean": 0.5,
-        "maxSoftFailures": 3
+      "confidence": "medium",
+      "description": "Patrón declarativo de caja con horizontal interior: envolvente superior/derecho, vertical izquierdo, horizontal medio y horizontal inferior.",
+      "strokes": [
+        {
+          "id": "outerStroke",
+          "type": "wrapping_stroke",
+          "expected": {
+            "width": {
+              "min": 0.35
+            },
+            "height": {
+              "min": 0.45
+            },
+            "minY": {
+              "max": 0.35
+            },
+            "maxX": {
+              "min": 0.5
+            },
+            "maxY": {
+              "min": 0.55
+            },
+            "straightness": {
+              "max": 0.9
+            }
+          },
+          "weights": {
+            "width": 1.5,
+            "height": 1.5,
+            "minY": 1,
+            "maxX": 1.5,
+            "maxY": 1,
+            "straightness": 2.5
+          }
+        },
+        {
+          "id": "leftStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.85
+            },
+            "height": {
+              "min": 0.45
+            },
+            "centerX": {
+              "max": 0.42
+            },
+            "minX": {
+              "max": 0.3
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "centerX": 2,
+            "minX": 1.5
+          }
+        },
+        {
+          "id": "middleStroke",
+          "type": "inner_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.55
+            },
+            "width": {
+              "min": 0.2
+            },
+            "height": {
+              "max": 0.25
+            },
+            "centerY": {
+              "min": 0.28,
+              "max": 0.75
+            },
+            "deltaY": {
+              "min": -0.15
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "bottomStroke",
+          "type": "horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.55
+            },
+            "width": {
+              "min": 0.3
+            },
+            "centerY": {
+              "min": 0.62
+            },
+            "maxY": {
+              "min": 0.65
+            },
+            "deltaY": {
+              "min": -0.15
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "centerY": 2,
+            "maxY": 1.5,
+            "deltaY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "leftStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "above",
+          "from": "middleStroke",
+          "to": "bottomStroke",
+          "minCenterYGap": 0.08
+        },
+        {
+          "type": "above",
+          "from": "leftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "outerStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "middleStroke",
+          "to": "leftStroke"
+        },
+        {
+          "type": "connects",
+          "from": "middleStroke",
+          "to": "outerStroke"
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.55
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 1.8
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "outerStroke.matches",
+        "leftStroke.matches",
+        "bottomStroke.matches",
+        "middleStroke.matches",
+        "leftOf.leftStroke.outerStroke",
+        "above.middleStroke.bottomStroke",
+        "above.leftStroke.bottomStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 日. Las conexiones se observan como checks blandos siguiendo la política permisiva de 口."
       }
     },
     "目": {

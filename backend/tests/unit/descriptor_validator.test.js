@@ -21,13 +21,11 @@ const {
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
-
 const crossDescriptor = descriptorData.descriptors["十"];
-
 const eightDescriptor = descriptorData.descriptors["八"];
-
 const mountainDescriptor = descriptorData.descriptors["山"];
 const boxDescriptor = descriptorData.descriptors["口"];
+const sunDescriptor = descriptorData.descriptors["日"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -1368,4 +1366,240 @@ test("口 geometric connections should initially be soft checks", () => {
       `${checkName} should initially remain soft`,
     );
   }
+});
+
+function createSunFeatures({
+  middleCenterY = 0.48,
+  bottomCenterY = 0.82,
+  intersections = [],
+  touches = [],
+} = {}) {
+  return {
+    strokeCountUser: 4,
+    strokeCountRef: 4,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.8,
+      aspectRatio: 1,
+      straightnessMean: 0.85,
+      straightnessMin: 0.65,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: 0.72,
+          centerX: 0.12,
+          centerY: 0.46,
+          minX: 0.1,
+          maxX: 0.15,
+          minY: 0.1,
+          maxY: 0.82,
+          straightness: 0.98,
+          deltaX: 0.02,
+          deltaY: 0.72,
+        },
+        {
+          index: 1,
+          angleAbs: 0.72,
+          width: 0.75,
+          height: 0.72,
+          centerX: 0.5,
+          centerY: 0.46,
+          minX: 0.12,
+          maxX: 0.87,
+          minY: 0.1,
+          maxY: 0.82,
+          straightness: 0.65,
+          deltaX: 0.75,
+          deltaY: 0.72,
+        },
+        {
+          index: 2,
+          angleAbs: 0.03,
+          width: 0.65,
+          height: 0.04,
+          centerX: 0.48,
+          centerY: bottomCenterY,
+          minX: 0.15,
+          maxX: 0.8,
+          minY: bottomCenterY - 0.02,
+          maxY: bottomCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.65,
+          deltaY: 0.01,
+        },
+        {
+          index: 3,
+          angleAbs: 0.02,
+          width: 0.58,
+          height: 0.04,
+          centerX: 0.48,
+          centerY: middleCenterY,
+          minX: 0.16,
+          maxX: 0.74,
+          minY: middleCenterY - 0.02,
+          maxY: middleCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.58,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("日 descriptor should use declarative box roles", () => {
+  assert.ok(sunDescriptor);
+
+  assert.equal(sunDescriptor.pattern, "box_with_inner_horizontal");
+
+  assert.equal(sunDescriptor.strokeCount, 4);
+
+  assert.deepEqual(
+    sunDescriptor.strokes.map((stroke) => stroke.id),
+    ["outerStroke", "leftStroke", "middleStroke", "bottomStroke"],
+  );
+
+  assert.equal(sunDescriptor.rules, undefined);
+
+  assert.equal(sunDescriptor.expectedStrokeCount, undefined);
+});
+
+test("日 should pass with a middle horizontal above the bottom stroke", () => {
+  const features = createSunFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "日",
+    features,
+    descriptor: sunDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.outerStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.bottomStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.middleStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.checks["above.middleStroke.bottomStroke"], true);
+});
+
+test("日 should fail when the middle and bottom strokes are too close", () => {
+  const features = createSunFeatures({
+    middleCenterY: 0.76,
+    bottomCenterY: 0.82,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "日",
+    features,
+    descriptor: sunDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["above.middleStroke.bottomStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.middleStroke.bottomStroke"),
+  );
+
+  assert.equal(result.score, 10);
+});
+
+test("日 should fail when the middle stroke is too short", () => {
+  const features = createSunFeatures();
+
+  features.geometry.perStroke[3] = {
+    ...features.geometry.perStroke[3],
+    width: 0.12,
+    minX: 0.42,
+    maxX: 0.54,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "日",
+    features,
+    descriptor: sunDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["middleStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("middleStroke.matches"));
+});
+
+test("日 horizontal connections should initially remain permissive", () => {
+  const softStructuralCheckNames = [
+    "connects.leftStroke.outerStroke",
+    "connects.leftStroke.bottomStroke",
+    "connects.outerStroke.bottomStroke",
+    "connects.middleStroke.leftStroke",
+    "connects.middleStroke.outerStroke",
+    "overlapsX.middleStroke.leftStroke",
+    "overlapsX.middleStroke.outerStroke",
+  ];
+
+  for (const checkName of softStructuralCheckNames) {
+    assert.equal(
+      sunDescriptor.hardChecks.includes(checkName),
+      false,
+      `${checkName} should not be a hard check`,
+    );
+  }
+});
+
+test("日 should distinguish a low middle stroke from the bottom stroke", () => {
+  const features = createSunFeatures({
+    middleCenterY: 0.73,
+    bottomCenterY: 0.93,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "日",
+    features,
+    descriptor: sunDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.roleMatches.middleStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.bottomStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.checks["above.middleStroke.bottomStroke"], true);
+});
+
+test("日 should accept a slightly short but recognizable middle stroke", () => {
+  const features = createSunFeatures();
+
+  features.geometry.perStroke[3] = {
+    ...features.geometry.perStroke[3],
+    width: 0.21,
+    minX: 0.3,
+    maxX: 0.51,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "日",
+    features,
+    descriptor: sunDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks["middleStroke.matches"], true);
 });
