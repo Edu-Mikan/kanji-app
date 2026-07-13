@@ -5,6 +5,9 @@ const {
   computeDirectionChanges,
   getSegmentIntersection,
   detectStrokeIntersections,
+  closestPointOnSegment,
+  getStrokeTouch,
+  detectStrokeTouches,
 } = require("../../services/feature_extractor");
 
 test("straight stroke should have no direction changes", () => {
@@ -113,3 +116,88 @@ test("parallel strokes should contain no intersections", () => {
 
   assert.equal(intersections.length, 0);
 });
+
+test("closestPointOnSegment should calculate the nearest point", () => {
+  const result = closestPointOnSegment(
+    { x: 0.5, y: 0.1 },
+    { x: 0, y: 0 },
+    { x: 1, y: 0 },
+  );
+
+  assert.ok(Math.abs(result.point.x - 0.5) < 1e-9);
+  assert.ok(Math.abs(result.point.y) < 1e-9);
+  assert.ok(Math.abs(result.distance - 0.1) < 1e-9);
+});
+
+test("near stroke endpoints should produce one touch", () => {
+  const strokeA = {
+    x: [0, 0.5],
+    y: [0, 0],
+  };
+
+  const strokeB = {
+    x: [0.53, 0.53],
+    y: [0.02, 0.5],
+  };
+
+  const touch = getStrokeTouch(strokeA, strokeB, 0.07);
+
+  assert.ok(touch);
+  assert.ok(touch.distance <= 0.07);
+});
+
+test("distant strokes should not produce a touch", () => {
+  const strokeA = {
+    x: [0, 0.5],
+    y: [0, 0],
+  };
+
+  const strokeB = {
+    x: [0.8, 0.8],
+    y: [0.3, 1],
+  };
+
+  const touch = getStrokeTouch(strokeA, strokeB, 0.07);
+
+  assert.equal(touch, null);
+});
+
+test("intersecting strokes should not also be reported as touches", () => {
+  const strokes = [
+    {
+      x: [0, 1],
+      y: [0.5, 0.5],
+    },
+    {
+      x: [0.5, 0.5],
+      y: [0, 1],
+    },
+  ];
+
+  const intersections = detectStrokeIntersections(strokes);
+
+  const touches = detectStrokeTouches(strokes, intersections, 0.07);
+
+  assert.equal(intersections.length, 1);
+  assert.equal(touches.length, 0);
+});
+
+test("each pair of strokes should produce at most one touch", () => {
+  const strokes = [
+    {
+      x: [0, 0.5],
+      y: [0, 0],
+    },
+    {
+      x: [0.53, 0.53],
+      y: [0.02, 0.5],
+    },
+  ];
+
+  const touches = detectStrokeTouches(strokes, [], 0.07);
+
+  assert.equal(touches.length, 1);
+  assert.equal(touches[0].strokeA, 0);
+  assert.equal(touches[0].strokeB, 1);
+});
+``;

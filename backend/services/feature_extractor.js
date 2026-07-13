@@ -175,6 +175,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
   const intersections = detectStrokeIntersections(userResampled);
 
+  const touches = detectStrokeTouches(userResampled, intersections);
+
   const perStroke = userNormalized.map((normalizedStroke, index) => {
     const resampledStroke = userResampled[index] ?? normalizedStroke;
     const strokeBox = strokeBoundingBox(normalizedStroke);
@@ -216,6 +218,18 @@ function extractGeometryFeatures(userNormalized, userResampled) {
       ),
     ];
 
+    const strokeTouches = touches.filter(
+      (touch) => touch.strokeA === index || touch.strokeB === index,
+    );
+
+    const touchesWith = [
+      ...new Set(
+        strokeTouches.map((touch) =>
+          touch.strokeA === index ? touch.strokeB : touch.strokeA,
+        ),
+      ),
+    ];
+
     return {
       index,
       minX: strokeBox.minX,
@@ -239,6 +253,9 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
       intersectionCount: strokeIntersections.length,
       intersectsWith,
+
+      touchCount: strokeTouches.length,
+      touchesWith,
 
       startX,
       startY,
@@ -280,6 +297,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
     coarseAngleAbsMax: coarseAngles.length > 0 ? Math.max(...coarseAngles) : 0,
     intersectionCount: intersections.length,
     intersections,
+    touchCount: touches.length,
+    touches,
     perStroke,
   };
 }
@@ -366,6 +385,230 @@ function pointsAreNear(a, b, tolerance = 0.01) {
   const dy = a.y - b.y;
 
   return Math.sqrt(dx * dx + dy * dy) <= tolerance;
+}
+
+function pointDistance(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function closestPointOnSegment(point, segmentStart, segmentEnd) {
+  const dx = segmentEnd.x - segmentStart.x;
+  const dy = segmentEnd.y - segmentStart.y;
+
+  const lengthSquared = dx * dx + dy * dy;
+
+  if (lengthSquared === 0) {
+    return {
+      point: {
+        x: segmentStart.x,
+        y: segmentStart.y,
+      },
+      distance: pointDistance(point, segmentStart),
+      t: 0,
+    };
+  }
+
+  const projection =
+    ((point.x - segmentStart.x) * dx + (point.y - segmentStart.y) * dy) /
+    lengthSquared;
+
+  const t = Math.max(0, Math.min(1, projection));
+
+  const closestPoint = {
+    x: segmentStart.x + t * dx,
+    y: segmentStart.y + t * dy,
+  };
+
+  return {
+    point: closestPoint,
+    distance: pointDistance(point, closestPoint),
+    t,
+  };
+}
+
+function getPointToStrokeDistance(point, stroke) {
+  if (
+    !point ||
+    !stroke ||
+    !Array.isArray(stroke.x) ||
+    !Array.isArray(stroke.y)
+  ) {
+    return null;
+  }
+
+  const pointCount = Math.min(stroke.x.length, stroke.y.length);
+
+  if (pointCount === 0) {
+    return null;
+  }
+
+  if (pointCount === 1) {
+    const onlyPoint = getStrokePoint(stroke, 0);
+
+    return {
+      distance: pointDistance(point, onlyPoint),
+      point: onlyPoint,
+      segmentIndex: null,
+      segmentT: 0,
+    };
+  }
+
+  let bestResult = null;
+
+  for (let segmentIndex = 0; segmentIndex < pointCount - 1; segmentIndex++) {
+    const segmentStart = getStrokePoint(stroke, segmentIndex);
+    const segmentEnd = getStrokePoint(stroke, segmentIndex + 1);
+
+    const result = closestPointOnSegment(point, segmentStart, segmentEnd);
+
+    if (!bestResult || result.distance < bestResult.distance) {
+      bestResult = {
+        distance: result.distance,
+        point: result.point,
+        segmentIndex,
+        segmentT: result.t,
+      };
+    }
+  }
+
+  return bestResult;
+}
+
+function getStrokeEndpoints(stroke) {
+  if (!stroke || !Array.isArray(stroke.x) || !Array.isArray(stroke.y)) {
+    return null;
+  }
+
+  const pointCount = Math.min(stroke.x.length, stroke.y.length);
+
+  if (pointCount === 0) {
+    return null;
+  }
+
+  return {
+    start: getStrokePoint(stroke, 0),
+    end: getStrokePoint(stroke, pointCount - 1),
+  };
+}
+
+function getStrokeTouch(strokeA, strokeB, tolerance = 0.07) {
+  const endpointsA = getStrokeEndpoints(strokeA);
+  const endpointsB = getStrokeEndpoints(strokeB);
+
+  if (!endpointsA || !endpointsB) {
+    return null;
+  }
+
+  const candidates = [];
+
+  const startAToB = getPointToStrokeDistance(endpointsA.start, strokeB);
+
+  if (startAToB) {
+    candidates.push({
+      ...startAToB,
+      source: "startA",
+      endpoint: endpointsA.start,
+    });
+  }
+
+  const endAToB = getPointToStrokeDistance(endpointsA.end, strokeB);
+
+  if (endAToB) {
+    candidates.push({
+      ...endAToB,
+      source: "endA",
+      endpoint: endpointsA.end,
+    });
+  }
+
+  const startBToA = getPointToStrokeDistance(endpointsB.start, strokeA);
+
+  if (startBToA) {
+    candidates.push({
+      ...startBToA,
+      source: "startB",
+      endpoint: endpointsB.start,
+    });
+  }
+
+  const endBToA = getPointToStrokeDistance(endpointsB.end, strokeA);
+
+  if (endBToA) {
+    candidates.push({
+      ...endBToA,
+      source: "endB",
+      endpoint: endpointsB.end,
+    });
+  }
+
+  candidates.sort((a, b) => a.distance - b.distance);
+
+  const bestCandidate = candidates[0];
+
+  if (!bestCandidate || bestCandidate.distance > tolerance) {
+    return null;
+  }
+
+  return {
+    distance: bestCandidate.distance,
+    x: (bestCandidate.endpoint.x + bestCandidate.point.x) / 2,
+    y: (bestCandidate.endpoint.y + bestCandidate.point.y) / 2,
+    source: bestCandidate.source,
+    segmentIndex: bestCandidate.segmentIndex,
+    segmentT: bestCandidate.segmentT,
+  };
+}
+
+function detectStrokeTouches(strokes, intersections = [], tolerance = 0.07) {
+  if (!Array.isArray(strokes) || strokes.length < 2) {
+    return [];
+  }
+
+  const touches = [];
+
+  for (let strokeAIndex = 0; strokeAIndex < strokes.length; strokeAIndex++) {
+    for (
+      let strokeBIndex = strokeAIndex + 1;
+      strokeBIndex < strokes.length;
+      strokeBIndex++
+    ) {
+      const alreadyIntersects = intersections.some(
+        (intersection) =>
+          intersection.strokeA === strokeAIndex &&
+          intersection.strokeB === strokeBIndex,
+      );
+
+      if (alreadyIntersects) {
+        continue;
+      }
+
+      const touch = getStrokeTouch(
+        strokes[strokeAIndex],
+        strokes[strokeBIndex],
+        tolerance,
+      );
+
+      if (!touch) {
+        continue;
+      }
+
+      touches.push({
+        strokeA: strokeAIndex,
+        strokeB: strokeBIndex,
+        distance: touch.distance,
+        x: touch.x,
+        y: touch.y,
+        source: touch.source,
+        segmentIndex: touch.segmentIndex,
+        segmentT: touch.segmentT,
+      });
+    }
+  }
+
+  return touches;
 }
 
 function detectStrokeIntersections(strokes) {
@@ -468,4 +711,8 @@ module.exports = {
   computeDirectionChanges,
   getSegmentIntersection,
   detectStrokeIntersections,
+  closestPointOnSegment,
+  getPointToStrokeDistance,
+  getStrokeTouch,
+  detectStrokeTouches,
 };
