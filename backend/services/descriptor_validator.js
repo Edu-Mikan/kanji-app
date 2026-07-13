@@ -487,9 +487,6 @@ function validateRelation(relation, roleMatches, geometry = {}) {
         from && to && from.centerY >= to.centerY - (relation.tolerance ?? 0),
       );
 
-    case "crosses":
-      return strokesCross(from, to);
-
     case "overlapsX":
       return Boolean(
         from && to && from.minX <= to.maxX && from.maxX >= to.minX,
@@ -561,19 +558,6 @@ function validateAboveRelation(from, to, relation) {
   }
 
   return from.centerY < to.centerY;
-}
-
-function strokesCross(a, b) {
-  if (!a || !b) {
-    return false;
-  }
-
-  return (
-    b.centerX >= a.minX &&
-    b.centerX <= a.maxX &&
-    a.centerY >= b.minY &&
-    a.centerY <= b.maxY
-  );
 }
 
 function validateDirectionRelation(stroke, relation) {
@@ -6402,8 +6386,6 @@ module.exports = {
   validateRelation,
   buildRelationCheckName,
   validateDirectionRelation,
-  // validateAboveRelation,
-  // strokesCross,
   isExpectedRange,
   getExpectedRangeWeight,
   isValidExpectedRangeWeight,

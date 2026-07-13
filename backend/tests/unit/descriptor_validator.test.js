@@ -876,3 +876,15 @@ test("八 should fail when its diagonal strokes approximately touch", () => {
     result.hardFailedChecks.includes("disconnected.leftStroke.rightStroke"),
   );
 });
+
+test("no descriptor should use the legacy crosses relation", () => {
+  const descriptors = Object.values(descriptorData.descriptors);
+
+  const descriptorsUsingLegacyCrosses = descriptors.filter((descriptor) =>
+    (descriptor.relations ?? []).some(
+      (relation) => relation.type === "crosses",
+    ),
+  );
+
+  assert.deepEqual(descriptorsUsingLegacyCrosses, []);
+});
