@@ -197,6 +197,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
     const curvature = strokeCurvature(resampledStroke);
 
+    const directionChanges = computeDirectionChanges(resampledStroke);
+
     return {
       index,
       minX: strokeBox.minX,
@@ -215,6 +217,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
       curvatureMean: curvature.mean,
       curvatureMax: curvature.max,
+
+      directionChanges,
 
       startX,
       startY,
@@ -258,6 +262,43 @@ function extractGeometryFeatures(userNormalized, userResampled) {
   };
 }
 
+function computeDirectionChanges(stroke, threshold = 0.45) {
+  if (!stroke || !Array.isArray(stroke.x) || !Array.isArray(stroke.y)) {
+    return 0;
+  }
+
+  const pointCount = Math.min(stroke.x.length, stroke.y.length);
+
+  if (pointCount < 3) {
+    return 0;
+  }
+
+  let changes = 0;
+
+  for (let i = 1; i < pointCount - 1; i++) {
+    const dx1 = stroke.x[i] - stroke.x[i - 1];
+    const dy1 = stroke.y[i] - stroke.y[i - 1];
+
+    const dx2 = stroke.x[i + 1] - stroke.x[i];
+    const dy2 = stroke.y[i + 1] - stroke.y[i];
+
+    const angle1 = Math.atan2(dy1, dx1);
+    const angle2 = Math.atan2(dy2, dx2);
+
+    let delta = Math.abs(angle2 - angle1);
+
+    if (delta > Math.PI) {
+      delta = 2 * Math.PI - delta;
+    }
+
+    if (delta >= threshold) {
+      changes++;
+    }
+  }
+
+  return changes;
+}
+
 // ================= ALL FEATURES =================
 function extractAllFeatures({
   userResampled,
@@ -278,4 +319,8 @@ module.exports = {
   extractBaseFeatures,
   extractGeometryFeatures,
   extractAllFeatures,
+  strokeCurvature,
+  strokeStraightness,
+  getStrokesBoundingBox,
+  computeDirectionChanges,
 };
