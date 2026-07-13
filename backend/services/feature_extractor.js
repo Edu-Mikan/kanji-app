@@ -105,6 +105,42 @@ function strokeStraightness(stroke) {
   return directDistance / pathLength;
 }
 
+function strokeCurvature(stroke) {
+  if (!stroke || !stroke.x || stroke.x.length < 3) {
+    return {
+      mean: 0,
+      max: 0,
+    };
+  }
+
+  const curvatures = [];
+
+  for (let i = 1; i < stroke.x.length - 1; i++) {
+    const dx1 = stroke.x[i] - stroke.x[i - 1];
+    const dy1 = stroke.y[i] - stroke.y[i - 1];
+
+    const dx2 = stroke.x[i + 1] - stroke.x[i];
+    const dy2 = stroke.y[i + 1] - stroke.y[i];
+
+    const angle1 = Math.atan2(dy1, dx1);
+    const angle2 = Math.atan2(dy2, dx2);
+
+    let diff = Math.abs(angle2 - angle1);
+
+    if (diff > Math.PI) {
+      diff = 2 * Math.PI - diff;
+    }
+
+    curvatures.push(diff);
+  }
+
+  return {
+    mean: curvatures.reduce((a, b) => a + b, 0) / (curvatures.length || 1),
+
+    max: curvatures.length > 0 ? Math.max(...curvatures) : 0,
+  };
+}
+
 // ================= ANGLE NORMALIZATION =================
 function normalizeAngleAbs(angle) {
   let a = Math.abs(angle);
@@ -159,6 +195,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
     const relativeLength = (strokeLengths[index] ?? 0) / totalLength;
 
+    const curvature = strokeCurvature(resampledStroke);
+
     return {
       index,
       minX: strokeBox.minX,
@@ -174,6 +212,9 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
       length: strokeLength(resampledStroke),
       relativeLength,
+
+      curvatureMean: curvature.mean,
+      curvatureMax: curvature.max,
 
       startX,
       startY,
