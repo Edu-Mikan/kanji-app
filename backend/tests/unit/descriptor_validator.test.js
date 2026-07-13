@@ -15,7 +15,13 @@ const {
   validateIntersectsRelation,
   validateTouchesRelation,
   validateConnectsRelation,
+
+  validateByDescriptor,
 } = require("../../services/descriptor_validator");
+
+const descriptorData = require("../../data/kanji_descriptors.json");
+
+const crossDescriptor = descriptorData.descriptors["十"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -489,4 +495,169 @@ test("geometric relations should fail when a role has no matched stroke", () => 
   );
 
   assert.equal(result, false);
+});
+
+function createCrossFeatures({ intersections = [], touches = [] } = {}) {
+  return {
+    strokeCountUser: 2,
+    strokeCountRef: 2,
+    geometry: {
+      bboxWidth: 1,
+      bboxHeight: 1,
+      aspectRatio: 1,
+      straightnessMean: 1,
+      straightnessMin: 1,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0,
+          width: 1,
+          height: 0.04,
+          centerX: 0.5,
+          centerY: 0.5,
+          minX: 0,
+          maxX: 1,
+          minY: 0.48,
+          maxY: 0.52,
+          straightness: 1,
+        },
+        {
+          index: 1,
+          angleAbs: Math.PI / 2,
+          width: 0.04,
+          height: 1,
+          centerX: 0.5,
+          centerY: 0.5,
+          minX: 0.48,
+          maxX: 0.52,
+          minY: 0,
+          maxY: 1,
+          straightness: 1,
+        },
+      ],
+    },
+  };
+}
+
+test("十 descriptor should use an exact intersects relation", () => {
+  assert.ok(crossDescriptor);
+
+  assert.deepEqual(crossDescriptor.relations, [
+    {
+      type: "intersects",
+      from: "horizontal",
+      to: "vertical",
+    },
+  ]);
+
+  assert.ok(
+    crossDescriptor.hardChecks.includes("intersects.horizontal.vertical"),
+  );
+
+  assert.equal(
+    crossDescriptor.hardChecks.includes("crosses.horizontal.vertical"),
+    false,
+  );
+});
+
+test("十 should pass when horizontal and vertical strokes intersect", () => {
+  const features = createCrossFeatures({
+    intersections: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "十",
+    features,
+    descriptor: crossDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks["intersects.horizontal.vertical"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.horizontal.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.vertical.matchedStrokeIndex, 1);
+});
+
+test("十 should fail when horizontal and vertical strokes do not intersect", () => {
+  const features = createCrossFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "十",
+    features,
+    descriptor: crossDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["intersects.horizontal.vertical"], false);
+
+  assert.ok(result.failedChecks.includes("intersects.horizontal.vertical"));
+
+  assert.ok(result.hardFailedChecks.includes("intersects.horizontal.vertical"));
+
+  assert.equal(result.score, 10);
+});
+
+test("十 should not accept an approximate touch as an exact intersection", () => {
+  const features = createCrossFeatures({
+    touches: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        distance: 0.03,
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "十",
+    features,
+    descriptor: crossDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["intersects.horizontal.vertical"], false);
+
+  assert.ok(result.hardFailedChecks.includes("intersects.horizontal.vertical"));
+});
+
+test("十 exact intersection should work regardless of stored stroke order", () => {
+  const features = createCrossFeatures({
+    intersections: [
+      {
+        strokeA: 1,
+        strokeB: 0,
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "十",
+    features,
+    descriptor: crossDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks["intersects.horizontal.vertical"], true);
 });

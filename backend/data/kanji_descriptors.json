@@ -158,7 +158,7 @@
 
       "relations": [
         {
-          "type": "crosses",
+          "type": "intersects",
           "from": "horizontal",
           "to": "vertical"
         }
@@ -168,7 +168,7 @@
         "strokeCount",
         "horizontal.matches",
         "vertical.matches",
-        "crosses.horizontal.vertical"
+        "intersects.horizontal.vertical"
       ]
     },
     "山": {
