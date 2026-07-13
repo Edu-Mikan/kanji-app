@@ -27,7 +27,6 @@ Validation strategies:
 
 - Descriptor: kanji_descriptors.json -> 山
 - Pattern: three_vertical_zones
-- Validator: validateThreeVerticalZones
 
 ##### Resultado de referencia
 
