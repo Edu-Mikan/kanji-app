@@ -304,43 +304,161 @@
       }
     },
     "口": {
+      "kanji": "口",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 3,
       "pattern": "box_pattern",
-      "expectedStrokeCount": 3,
-      "description": "Patrón de caja simple: trazo izquierdo vertical, trazo exterior superior/derecho y trazo inferior horizontal.",
-      "rules": {
-        "minBboxWidth": 0.45,
-        "minBboxHeight": 0.45,
-        "aspectRatioMin": 0.45,
-        "aspectRatioMax": 1.8,
-
-        "minVerticalAngleAbs": 0.85,
-        "minHorizontalAngleMax": 0.55,
-        "minHeightVsWidthRatio": 1.4,
-        "minWidthVsHeightRatio": 1.4,
-
-        "leftStrokeCenterXMax": 0.42,
-        "leftStrokeMinXMax": 0.3,
-        "leftStrokeMinHeight": 0.35,
-
-        "bottomStrokeCenterYMin": 0.5,
-        "bottomStrokeMinWidth": 0.25,
-        "bottomStrokeMaxYMin": 0.5,
-
-        "outerStrokeMinWidth": 0.35,
-        "outerStrokeMinHeight": 0.35,
-        "outerStrokeMinYMax": 0.35,
-        "outerStrokeMaxXMin": 0.58,
-        "outerStrokeMaxYMin": 0.45,
-
-        "minBoxHorizontalCoverage": 0.55,
-        "minBoxVerticalCoverage": 0.45,
-
-        "minStraightnessMean": 0.5,
-        "maxSoftFailures": 3,
-
-        "bottomStrokeDeltaYMin": -0.22,
-        "outerStrokeMaxStraightness": 0.88
+      "confidence": "medium",
+      "description": "Patrón declarativo de caja simple: trazo izquierdo vertical, trazo exterior superior/derecho y trazo inferior horizontal.",
+      "strokes": [
+        {
+          "id": "outerStroke",
+          "type": "wrapping_stroke",
+          "expected": {
+            "width": {
+              "min": 0.35
+            },
+            "height": {
+              "min": 0.35
+            },
+            "minY": {
+              "max": 0.35
+            },
+            "maxX": {
+              "min": 0.58
+            },
+            "maxY": {
+              "min": 0.45
+            },
+            "straightness": {
+              "max": 0.88
+            }
+          },
+          "weights": {
+            "width": 1.5,
+            "height": 1.5,
+            "minY": 1,
+            "maxX": 1.5,
+            "maxY": 1,
+            "straightness": 2.5
+          }
+        },
+        {
+          "id": "leftStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.85
+            },
+            "height": {
+              "min": 0.35
+            },
+            "centerX": {
+              "max": 0.42
+            },
+            "minX": {
+              "max": 0.3
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "centerX": 2,
+            "minX": 1.5
+          }
+        },
+        {
+          "id": "bottomStroke",
+          "type": "horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.55
+            },
+            "width": {
+              "min": 0.25
+            },
+            "centerY": {
+              "min": 0.5
+            },
+            "maxY": {
+              "min": 0.5
+            },
+            "deltaY": {
+              "min": -0.22
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "centerY": 2,
+            "maxY": 1.5,
+            "deltaY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "leftStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "above",
+          "from": "leftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "outerStroke",
+          "to": "bottomStroke"
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.45
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 1.8
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "outerStroke.matches",
+        "leftStroke.matches",
+        "bottomStroke.matches",
+        "leftOf.leftStroke.outerStroke",
+        "above.leftStroke.bottomStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial del patrón box_pattern. La conexión superior entre leftStroke y outerStroke se observa inicialmente como check blando."
       }
     },
     "日": {

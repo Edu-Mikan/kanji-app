@@ -27,6 +27,7 @@ const crossDescriptor = descriptorData.descriptors["十"];
 const eightDescriptor = descriptorData.descriptors["八"];
 
 const mountainDescriptor = descriptorData.descriptors["山"];
+const boxDescriptor = descriptorData.descriptors["口"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -1078,4 +1079,293 @@ test("山 should fail when the center vertical is outside its expected zone", ()
   assert.equal(result.checks["centerVerticalStroke.matches"], false);
 
   assert.ok(result.hardFailedChecks.includes("centerVerticalStroke.matches"));
+});
+
+function createBoxFeatures({
+  intersections = [
+    {
+      strokeA: 0,
+      strokeB: 1,
+      x: 0.12,
+      y: 0.12,
+    },
+    {
+      strokeA: 0,
+      strokeB: 2,
+      x: 0.12,
+      y: 0.82,
+    },
+    {
+      strokeA: 1,
+      strokeB: 2,
+      x: 0.85,
+      y: 0.82,
+    },
+  ],
+  touches = [],
+} = {}) {
+  return {
+    strokeCountUser: 3,
+    strokeCountRef: 3,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.75,
+      aspectRatio: 0.8 / 0.75,
+      straightnessMean: 0.8,
+      straightnessMin: 0.65,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: Math.PI / 2,
+          width: 0.04,
+          height: 0.7,
+          centerX: 0.12,
+          centerY: 0.47,
+          minX: 0.1,
+          maxX: 0.14,
+          minY: 0.12,
+          maxY: 0.82,
+          straightness: 0.98,
+          cornerCount: 0,
+          directionChanges: 0,
+          deltaX: 0,
+          deltaY: 0.7,
+        },
+        {
+          index: 1,
+          angleAbs: 0.7,
+          width: 0.73,
+          height: 0.7,
+          centerX: 0.485,
+          centerY: 0.47,
+          minX: 0.12,
+          maxX: 0.85,
+          minY: 0.12,
+          maxY: 0.82,
+          straightness: 0.65,
+          cornerCount: 1,
+          directionChanges: 1,
+          deltaX: 0.73,
+          deltaY: 0.7,
+        },
+        {
+          index: 2,
+          angleAbs: 0.02,
+          width: 0.73,
+          height: 0.04,
+          centerX: 0.485,
+          centerY: 0.82,
+          minX: 0.12,
+          maxX: 0.85,
+          minY: 0.8,
+          maxY: 0.84,
+          straightness: 0.98,
+          cornerCount: 0,
+          directionChanges: 0,
+          deltaX: 0.73,
+          deltaY: 0.02,
+        },
+      ],
+    },
+  };
+}
+
+test("口 descriptor should use declarative box roles", () => {
+  assert.ok(boxDescriptor);
+
+  assert.equal(boxDescriptor.pattern, "box_pattern");
+
+  assert.equal(boxDescriptor.strokeCount, 3);
+
+  assert.equal(Array.isArray(boxDescriptor.strokes), true);
+
+  assert.deepEqual(
+    boxDescriptor.strokes.map((stroke) => stroke.id),
+    ["outerStroke", "leftStroke", "bottomStroke"],
+  );
+
+  assert.equal(boxDescriptor.rules, undefined);
+
+  assert.equal(boxDescriptor.expectedStrokeCount, undefined);
+});
+
+test("口 should pass with three connected box strokes", () => {
+  const features = createBoxFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "口",
+    features,
+    descriptor: boxDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.outerStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.bottomStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.checks["connects.leftStroke.bottomStroke"], true);
+
+  assert.equal(result.checks["connects.outerStroke.bottomStroke"], true);
+});
+
+test("口 should report a missing left-bottom connection without making it a hard failure", () => {
+  const features = createBoxFeatures({
+    intersections: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        x: 0.12,
+        y: 0.12,
+      },
+      {
+        strokeA: 1,
+        strokeB: 2,
+        x: 0.85,
+        y: 0.82,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "口",
+    features,
+    descriptor: boxDescriptor,
+  });
+
+  assert.equal(result.checks["connects.leftStroke.bottomStroke"], false);
+
+  assert.ok(result.failedChecks.includes("connects.leftStroke.bottomStroke"));
+
+  assert.equal(
+    result.hardFailedChecks.includes("connects.leftStroke.bottomStroke"),
+    false,
+  );
+
+  assert.equal(result.isCorrect, true);
+  assert.equal(result.score, 0.5);
+});
+
+test("口 should report a missing outer-bottom connection without making it a hard failure", () => {
+  const features = createBoxFeatures({
+    intersections: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        x: 0.12,
+        y: 0.12,
+      },
+      {
+        strokeA: 0,
+        strokeB: 2,
+        x: 0.12,
+        y: 0.82,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "口",
+    features,
+    descriptor: boxDescriptor,
+  });
+
+  assert.equal(result.checks["connects.outerStroke.bottomStroke"], false);
+
+  assert.ok(result.failedChecks.includes("connects.outerStroke.bottomStroke"));
+
+  assert.equal(
+    result.hardFailedChecks.includes("connects.outerStroke.bottomStroke"),
+    false,
+  );
+
+  assert.equal(result.isCorrect, true);
+  assert.equal(result.score, 0.5);
+});
+
+test("口 should accept a bottom closure represented by a touch", () => {
+  const features = createBoxFeatures({
+    intersections: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        x: 0.12,
+        y: 0.12,
+      },
+      {
+        strokeA: 0,
+        strokeB: 2,
+        x: 0.12,
+        y: 0.82,
+      },
+    ],
+    touches: [
+      {
+        strokeA: 1,
+        strokeB: 2,
+        distance: 0.03,
+        x: 0.85,
+        y: 0.82,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "口",
+    features,
+    descriptor: boxDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks["connects.outerStroke.bottomStroke"], true);
+});
+
+test("口 should fail when the outer stroke is too straight", () => {
+  const features = createBoxFeatures();
+
+  features.geometry.perStroke[1] = {
+    ...features.geometry.perStroke[1],
+    straightness: 0.98,
+    cornerCount: 0,
+    directionChanges: 0,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "口",
+    features,
+    descriptor: boxDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["outerStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("outerStroke.matches"));
+});
+
+test("口 geometric connections should initially be soft checks", () => {
+  const connectionCheckNames = [
+    "connects.leftStroke.outerStroke",
+    "connects.leftStroke.bottomStroke",
+    "connects.outerStroke.bottomStroke",
+  ];
+
+  for (const checkName of connectionCheckNames) {
+    assert.equal(
+      boxDescriptor.hardChecks.includes(checkName),
+      false,
+      `${checkName} should initially remain soft`,
+    );
+  }
 });
