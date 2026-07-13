@@ -81,6 +81,11 @@
           "min": 0.35
         },
         {
+          "type": "disconnected",
+          "from": "leftStroke",
+          "to": "rightStroke"
+        },
+        {
           "type": "heightRatio",
           "from": "rightStroke",
           "to": "leftStroke",
@@ -120,7 +125,8 @@
         "heightRatio.rightStroke.leftStroke",
         "bboxHeight",
         "direction.leftStroke",
-        "direction.rightStroke"
+        "direction.rightStroke",
+        "disconnected.leftStroke.rightStroke"
       ],
       "scoring": {
         "validScore": 0.5,

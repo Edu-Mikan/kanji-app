@@ -429,6 +429,18 @@ function validateConnectsRelation(fromStrokeIndex, toStrokeIndex, geometry) {
   );
 }
 
+function validateDisconnectedRelation(
+  fromStrokeIndex,
+  toStrokeIndex,
+  geometry,
+) {
+  if (!Number.isInteger(fromStrokeIndex) || !Number.isInteger(toStrokeIndex)) {
+    return false;
+  }
+
+  return !validateConnectsRelation(fromStrokeIndex, toStrokeIndex, geometry);
+}
+
 function buildRelationCheckName(relation) {
   if (relation.stroke) {
     return `${relation.type}.${relation.stroke}`;
@@ -525,6 +537,13 @@ function validateRelation(relation, roleMatches, geometry = {}) {
 
     case "connects":
       return validateConnectsRelation(fromStrokeIndex, toStrokeIndex, geometry);
+
+    case "disconnected":
+      return validateDisconnectedRelation(
+        fromStrokeIndex,
+        toStrokeIndex,
+        geometry,
+      );
 
     default:
       console.warn(`Unknown descriptor relation type: ${relation.type}`);
@@ -6394,4 +6413,5 @@ module.exports = {
   validateIntersectsRelation,
   validateTouchesRelation,
   validateConnectsRelation,
+  validateDisconnectedRelation,
 };

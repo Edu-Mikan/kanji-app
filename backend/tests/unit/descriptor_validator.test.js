@@ -17,11 +17,14 @@ const {
   validateConnectsRelation,
 
   validateByDescriptor,
+  validateDisconnectedRelation,
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
 
 const crossDescriptor = descriptorData.descriptors["十"];
+
+const eightDescriptor = descriptorData.descriptors["八"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -660,4 +663,216 @@ test("十 exact intersection should work regardless of stored stroke order", () 
   assert.equal(result.isCorrect, true);
 
   assert.equal(result.checks["intersects.horizontal.vertical"], true);
+});
+
+test("disconnected relation should pass for unrelated strokes", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "disconnected",
+      from: "horizontal",
+      to: "diagonal",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, true);
+});
+
+test("disconnected relation should fail for intersecting strokes", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "disconnected",
+      from: "horizontal",
+      to: "vertical",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
+});
+
+test("disconnected relation should fail for touching strokes", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "disconnected",
+      from: "vertical",
+      to: "diagonal",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
+});
+
+test("disconnected relation should fail when a role is missing", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "disconnected",
+      from: "horizontal",
+      to: "missingRole",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
+});
+
+function createEightFeatures({ intersections = [], touches = [] } = {}) {
+  return {
+    strokeCountUser: 2,
+    strokeCountRef: 2,
+    geometry: {
+      bboxWidth: 1,
+      bboxHeight: 0.75,
+      aspectRatio: 1.33,
+      straightnessMean: 0.95,
+      straightnessMin: 0.95,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 1.1,
+          width: 0.15,
+          height: 0.55,
+          centerX: 0.2,
+          centerY: 0.52,
+          minX: 0.1,
+          maxX: 0.25,
+          minY: 0.15,
+          maxY: 0.7,
+          straightness: 0.95,
+          deltaX: -0.12,
+          deltaY: 0.5,
+        },
+        {
+          index: 1,
+          angleAbs: 1.0,
+          width: 0.3,
+          height: 0.6,
+          centerX: 0.75,
+          centerY: 0.5,
+          minX: 0.55,
+          maxX: 0.85,
+          minY: 0.1,
+          maxY: 0.7,
+          straightness: 0.95,
+          deltaX: 0.28,
+          deltaY: 0.55,
+        },
+      ],
+    },
+  };
+}
+
+test("八 descriptor should require disconnected strokes", () => {
+  assert.ok(eightDescriptor);
+
+  assert.ok(
+    eightDescriptor.relations.some(
+      (relation) =>
+        relation.type === "disconnected" &&
+        relation.from === "leftStroke" &&
+        relation.to === "rightStroke",
+    ),
+  );
+
+  assert.ok(
+    eightDescriptor.hardChecks.includes("disconnected.leftStroke.rightStroke"),
+  );
+});
+
+test("八 should pass when both diagonal strokes are disconnected", () => {
+  const features = createEightFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "八",
+    features,
+    descriptor: eightDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks["disconnected.leftStroke.rightStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.leftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.rightStroke.matchedStrokeIndex, 1);
+});
+
+test("八 should fail when its diagonal strokes intersect", () => {
+  const features = createEightFeatures({
+    intersections: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "八",
+    features,
+    descriptor: eightDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["disconnected.leftStroke.rightStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("disconnected.leftStroke.rightStroke"),
+  );
+
+  assert.equal(result.score, 10);
+});
+
+test("八 should fail when its diagonal strokes approximately touch", () => {
+  const features = createEightFeatures({
+    touches: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        distance: 0.03,
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+  });
+
+  const result = validateByDescriptor({
+    kanji: "八",
+    features,
+    descriptor: eightDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["disconnected.leftStroke.rightStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("disconnected.leftStroke.rightStroke"),
+  );
 });
