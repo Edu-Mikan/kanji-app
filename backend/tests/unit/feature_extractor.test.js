@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  extractGeometryFeatures,
   computeDirectionChanges,
   computeCornerCount,
   getSegmentIntersection,
@@ -250,4 +251,71 @@ test("short stroke should have no corners", () => {
   };
 
   assert.equal(computeCornerCount(stroke), 0);
+});
+
+test("cornerCount should not exceed directionChanges", () => {
+  const stroke = {
+    x: [0, 0.2, 0.4, 0.6, 0.8, 1],
+    y: [0, 0.5, 0, 0.5, 0, 0.5],
+  };
+
+  const directionChanges = computeDirectionChanges(stroke);
+
+  const cornerCount = computeCornerCount(stroke);
+
+  assert.ok(cornerCount <= directionChanges);
+});
+
+test("per-stroke intersection counts should equal twice the global count", () => {
+  const features = extractGeometryFeatures(
+    [
+      {
+        x: [0, 0.5, 1],
+        y: [0.5, 0.5, 0.5],
+      },
+      {
+        x: [0.5, 0.5, 0.5],
+        y: [0, 0.5, 1],
+      },
+    ],
+    [
+      {
+        x: [0, 0.5, 1],
+        y: [0.5, 0.5, 0.5],
+      },
+      {
+        x: [0.5, 0.5, 0.5],
+        y: [0, 0.5, 1],
+      },
+    ],
+  );
+
+  const perStrokeTotal = features.perStroke.reduce(
+    (sum, stroke) => sum + stroke.intersectionCount,
+    0,
+  );
+
+  assert.equal(perStrokeTotal, features.intersectionCount * 2);
+});
+
+test("per-stroke touch counts should equal twice the global count", () => {
+  const strokes = [
+    {
+      x: [0, 0.5],
+      y: [0, 0],
+    },
+    {
+      x: [0.53, 0.53],
+      y: [0.02, 0.5],
+    },
+  ];
+
+  const features = extractGeometryFeatures(strokes, strokes);
+
+  const perStrokeTotal = features.perStroke.reduce(
+    (sum, stroke) => sum + stroke.touchCount,
+    0,
+  );
+
+  assert.equal(perStrokeTotal, features.touchCount * 2);
 });
