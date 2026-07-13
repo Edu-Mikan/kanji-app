@@ -203,6 +203,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
     const directionChanges = computeDirectionChanges(resampledStroke);
 
+    const cornerCount = computeCornerCount(resampledStroke);
+
     const strokeIntersections = intersections.filter(
       (intersection) =>
         intersection.strokeA === index || intersection.strokeB === index,
@@ -250,6 +252,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
       curvatureMax: curvature.max,
 
       directionChanges,
+
+      cornerCount,
 
       intersectionCount: strokeIntersections.length,
       intersectsWith,
@@ -317,27 +321,140 @@ function computeDirectionChanges(stroke, threshold = 0.45) {
   let changes = 0;
 
   for (let i = 1; i < pointCount - 1; i++) {
-    const dx1 = stroke.x[i] - stroke.x[i - 1];
-    const dy1 = stroke.y[i] - stroke.y[i - 1];
+    const angleDifference = getAngleDifferenceAtPoint(stroke, i);
 
-    const dx2 = stroke.x[i + 1] - stroke.x[i];
-    const dy2 = stroke.y[i + 1] - stroke.y[i];
-
-    const angle1 = Math.atan2(dy1, dx1);
-    const angle2 = Math.atan2(dy2, dx2);
-
-    let delta = Math.abs(angle2 - angle1);
-
-    if (delta > Math.PI) {
-      delta = 2 * Math.PI - delta;
-    }
-
-    if (delta >= threshold) {
+    if (angleDifference >= threshold) {
       changes++;
     }
   }
 
   return changes;
+}
+
+function computeCornerCount(stroke, threshold = 0.45) {
+  if (!stroke || !Array.isArray(stroke.x) || !Array.isArray(stroke.y)) {
+    return 0;
+  }
+
+  const pointCount = Math.min(stroke.x.length, stroke.y.length);
+
+  if (pointCount < 3) {
+    return 0;
+  }
+
+  const significantChanges = [];
+
+  for (let i = 1; i < pointCount - 1; i++) {
+    const signedDifference = getSignedAngleDifferenceAtPoint(stroke, i);
+
+    if (Math.abs(signedDifference) >= threshold) {
+      significantChanges.push({
+        index: i,
+        sign: Math.sign(signedDifference),
+      });
+    }
+  }
+
+  if (significantChanges.length === 0) {
+    return 0;
+  }
+
+  let cornerCount = 1;
+  let previousChange = significantChanges[0];
+
+  for (let i = 1; i < significantChanges.length; i++) {
+    const currentChange = significantChanges[i];
+
+    const isConsecutive = currentChange.index === previousChange.index + 1;
+
+    const hasSameTurnDirection = currentChange.sign === previousChange.sign;
+
+    const belongsToSameCorner = isConsecutive && hasSameTurnDirection;
+
+    if (!belongsToSameCorner) {
+      cornerCount++;
+    }
+
+    previousChange = currentChange;
+  }
+
+  return cornerCount;
+}
+
+function getAngleDifferenceAtPoint(stroke, index) {
+  if (!stroke || !Array.isArray(stroke.x) || !Array.isArray(stroke.y)) {
+    return 0;
+  }
+
+  const pointCount = Math.min(stroke.x.length, stroke.y.length);
+
+  if (index <= 0 || index >= pointCount - 1) {
+    return 0;
+  }
+
+  const dx1 = stroke.x[index] - stroke.x[index - 1];
+  const dy1 = stroke.y[index] - stroke.y[index - 1];
+
+  const dx2 = stroke.x[index + 1] - stroke.x[index];
+  const dy2 = stroke.y[index + 1] - stroke.y[index];
+
+  const length1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+  const length2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+  if (length1 === 0 || length2 === 0) {
+    return 0;
+  }
+
+  const angle1 = Math.atan2(dy1, dx1);
+  const angle2 = Math.atan2(dy2, dx2);
+
+  let difference = Math.abs(angle2 - angle1);
+
+  if (difference > Math.PI) {
+    difference = 2 * Math.PI - difference;
+  }
+
+  return difference;
+}
+
+function getSignedAngleDifferenceAtPoint(stroke, index) {
+  if (!stroke || !Array.isArray(stroke.x) || !Array.isArray(stroke.y)) {
+    return 0;
+  }
+
+  const pointCount = Math.min(stroke.x.length, stroke.y.length);
+
+  if (index <= 0 || index >= pointCount - 1) {
+    return 0;
+  }
+
+  const dx1 = stroke.x[index] - stroke.x[index - 1];
+  const dy1 = stroke.y[index] - stroke.y[index - 1];
+
+  const dx2 = stroke.x[index + 1] - stroke.x[index];
+  const dy2 = stroke.y[index + 1] - stroke.y[index];
+
+  const length1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+  const length2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+  if (length1 === 0 || length2 === 0) {
+    return 0;
+  }
+
+  const angle1 = Math.atan2(dy1, dx1);
+  const angle2 = Math.atan2(dy2, dx2);
+
+  let difference = angle2 - angle1;
+
+  while (difference > Math.PI) {
+    difference -= 2 * Math.PI;
+  }
+
+  while (difference < -Math.PI) {
+    difference += 2 * Math.PI;
+  }
+
+  return difference;
 }
 
 function getStrokePoint(stroke, index) {
@@ -715,4 +832,7 @@ module.exports = {
   getPointToStrokeDistance,
   getStrokeTouch,
   detectStrokeTouches,
+  getAngleDifferenceAtPoint,
+  computeCornerCount,
+  getSignedAngleDifferenceAtPoint,
 };

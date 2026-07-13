@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 
 const {
   computeDirectionChanges,
+  computeCornerCount,
   getSegmentIntersection,
   detectStrokeIntersections,
   closestPointOnSegment,
@@ -200,4 +201,53 @@ test("each pair of strokes should produce at most one touch", () => {
   assert.equal(touches[0].strokeA, 0);
   assert.equal(touches[0].strokeB, 1);
 });
-``;
+
+test("straight stroke should have no corners", () => {
+  const stroke = {
+    x: [0, 0.25, 0.5, 0.75, 1],
+    y: [0, 0, 0, 0, 0],
+  };
+
+  assert.equal(computeCornerCount(stroke), 0);
+});
+
+test("L-shaped stroke should have one corner", () => {
+  const stroke = {
+    x: [0, 0.25, 0.5, 0.5, 0.5],
+    y: [0, 0, 0, 0.25, 0.5],
+  };
+
+  assert.equal(computeCornerCount(stroke), 1);
+});
+
+test("two-corner stroke should report two corners", () => {
+  const stroke = {
+    x: [0, 0.5, 1, 1, 1, 0.5, 0],
+    y: [0, 0, 0, 0.5, 1, 1, 1],
+  };
+
+  assert.equal(computeCornerCount(stroke), 2);
+});
+
+test("zig-zag stroke should have multiple corners", () => {
+  const stroke = {
+    x: [0, 0.2, 0.4, 0.6, 0.8, 1],
+    y: [0, 0.5, 0, 0.5, 0, 0.5],
+  };
+
+  const cornerCount = computeCornerCount(stroke);
+
+  assert.ok(
+    cornerCount >= 3,
+    `Expected multiple corners, received ${cornerCount}`,
+  );
+});
+
+test("short stroke should have no corners", () => {
+  const stroke = {
+    x: [0, 1],
+    y: [0, 1],
+  };
+
+  assert.equal(computeCornerCount(stroke), 0);
+});
