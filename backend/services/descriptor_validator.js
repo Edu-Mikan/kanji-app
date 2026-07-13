@@ -206,17 +206,56 @@ function matchStrokesToDescriptorRoles({ perStroke, descriptor }) {
   return roleMatches;
 }
 
+const DEFAULT_EXPECTED_RANGE_WEIGHTS = {
+  angleAbs: 2.0,
+  width: 1.0,
+  height: 1.0,
+  centerX: 1.0,
+  centerY: 1.0,
+  straightness: 1.5,
+};
+
+function isExpectedRange(range) {
+  if (!range || typeof range !== "object" || Array.isArray(range)) {
+    return false;
+  }
+
+  const hasMin = range.min != null;
+  const hasMax = range.max != null;
+
+  if (!hasMin && !hasMax) {
+    return false;
+  }
+
+  if (hasMin && typeof range.min !== "number") {
+    return false;
+  }
+
+  if (hasMax && typeof range.max !== "number") {
+    return false;
+  }
+
+  return true;
+}
+
+function getExpectedRangeWeight(featureName) {
+  return DEFAULT_EXPECTED_RANGE_WEIGHTS[featureName] ?? 1;
+}
+
 function scoreStrokeAgainstRole(stroke, role) {
   const expected = role.expected ?? {};
-
   let score = 0;
 
-  score += rangePenalty(stroke.angleAbs, expected.angleAbs, 2.0);
-  score += rangePenalty(stroke.width, expected.width, 1.0);
-  score += rangePenalty(stroke.height, expected.height, 1.0);
-  score += rangePenalty(stroke.centerX, expected.centerX, 1.0);
-  score += rangePenalty(stroke.centerY, expected.centerY, 1.0);
-  score += rangePenalty(stroke.straightness, expected.straightness, 1.5);
+  for (const [featureName, expectedRange] of Object.entries(expected)) {
+    if (!isExpectedRange(expectedRange)) {
+      continue;
+    }
+
+    const featureValue = stroke?.[featureName];
+    const weight = getExpectedRangeWeight(featureName);
+
+    score += rangePenalty(featureValue, expectedRange, weight);
+  }
 
   return score;
 }
@@ -268,14 +307,19 @@ function validateRoleMatches({
 }
 
 function strokeMatchesExpected(stroke, expected) {
-  return (
-    valueInRange(stroke.angleAbs, expected.angleAbs) &&
-    valueInRange(stroke.width, expected.width) &&
-    valueInRange(stroke.height, expected.height) &&
-    valueInRange(stroke.centerX, expected.centerX) &&
-    valueInRange(stroke.centerY, expected.centerY) &&
-    valueInRange(stroke.straightness, expected.straightness)
-  );
+  for (const [featureName, expectedRange] of Object.entries(expected ?? {})) {
+    if (!isExpectedRange(expectedRange)) {
+      continue;
+    }
+
+    const featureValue = stroke?.[featureName];
+
+    if (!valueInRange(featureValue, expectedRange)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function valueInRange(value, range) {
@@ -6242,4 +6286,6 @@ module.exports = {
   validateDirectionRelation,
   // validateAboveRelation,
   // strokesCross,
+  isExpectedRange,
+  getExpectedRangeWeight,
 };
