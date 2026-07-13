@@ -5,6 +5,7 @@ const {
   scoreStrokeAgainstRole,
   strokeMatchesExpected,
   isExpectedRange,
+  isValidExpectedRangeWeight,
   getExpectedRangeWeight,
 } = require("../../services/descriptor_validator");
 
@@ -149,4 +150,115 @@ test("scoreStrokeAgainstRole should preserve existing feature weights", () => {
     Math.abs(score - expectedScore) < 1e-9,
     `Expected ${expectedScore}, received ${score}`,
   );
+});
+
+test("isValidExpectedRangeWeight should accept finite non-negative numbers", () => {
+  assert.equal(isValidExpectedRangeWeight(0), true);
+
+  assert.equal(isValidExpectedRangeWeight(0.5), true);
+
+  assert.equal(isValidExpectedRangeWeight(2), true);
+});
+
+test("isValidExpectedRangeWeight should reject invalid values", () => {
+  assert.equal(isValidExpectedRangeWeight(-1), false);
+
+  assert.equal(isValidExpectedRangeWeight("2"), false);
+
+  assert.equal(isValidExpectedRangeWeight(null), false);
+
+  assert.equal(isValidExpectedRangeWeight(NaN), false);
+
+  assert.equal(isValidExpectedRangeWeight(Infinity), false);
+});
+
+test("configured expected range weight should override the default", () => {
+  const weight = getExpectedRangeWeight("angleAbs", {
+    angleAbs: 4,
+  });
+
+  assert.equal(weight, 4);
+});
+
+test("configured weight should work for new numeric features", () => {
+  const weight = getExpectedRangeWeight("cornerCount", {
+    cornerCount: 2.5,
+  });
+
+  assert.equal(weight, 2.5);
+});
+
+test("invalid configured weight should fall back to the default", () => {
+  assert.equal(
+    getExpectedRangeWeight("angleAbs", {
+      angleAbs: -3,
+    }),
+    2,
+  );
+
+  assert.equal(
+    getExpectedRangeWeight("cornerCount", {
+      cornerCount: "4",
+    }),
+    1,
+  );
+});
+
+test("scoreStrokeAgainstRole should apply configured feature weights", () => {
+  const stroke = {
+    cornerCount: 3,
+  };
+
+  const role = {
+    expected: {
+      cornerCount: {
+        min: 1,
+        max: 1,
+      },
+    },
+    weights: {
+      cornerCount: 2.5,
+    },
+  };
+
+  const score = scoreStrokeAgainstRole(stroke, role);
+
+  assert.equal(score, 5);
+});
+
+test("zero configured weight should remove the scoring penalty", () => {
+  const stroke = {
+    cornerCount: 5,
+  };
+
+  const role = {
+    expected: {
+      cornerCount: {
+        min: 1,
+        max: 1,
+      },
+    },
+    weights: {
+      cornerCount: 0,
+    },
+  };
+
+  const score = scoreStrokeAgainstRole(stroke, role);
+
+  assert.equal(score, 0);
+});
+
+test("configured weights should not change range validation", () => {
+  const stroke = {
+    cornerCount: 3,
+  };
+
+  const expected = {
+    cornerCount: {
+      min: 1,
+      max: 1,
+    },
+  };
+
+  assert.equal(strokeMatchesExpected(stroke, expected), false);
 });

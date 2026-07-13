@@ -238,12 +238,24 @@ function isExpectedRange(range) {
   return true;
 }
 
-function getExpectedRangeWeight(featureName) {
+function getExpectedRangeWeight(featureName, configuredWeights = {}) {
+  const configuredWeight = configuredWeights?.[featureName];
+
+  if (isValidExpectedRangeWeight(configuredWeight)) {
+    return configuredWeight;
+  }
+
   return DEFAULT_EXPECTED_RANGE_WEIGHTS[featureName] ?? 1;
 }
 
+function isValidExpectedRangeWeight(weight) {
+  return typeof weight === "number" && Number.isFinite(weight) && weight >= 0;
+}
+
 function scoreStrokeAgainstRole(stroke, role) {
-  const expected = role.expected ?? {};
+  const expected = role?.expected ?? {};
+  const configuredWeights = role?.weights ?? {};
+
   let score = 0;
 
   for (const [featureName, expectedRange] of Object.entries(expected)) {
@@ -252,7 +264,8 @@ function scoreStrokeAgainstRole(stroke, role) {
     }
 
     const featureValue = stroke?.[featureName];
-    const weight = getExpectedRangeWeight(featureName);
+
+    const weight = getExpectedRangeWeight(featureName, configuredWeights);
 
     score += rangePenalty(featureValue, expectedRange, weight);
   }
@@ -6288,4 +6301,5 @@ module.exports = {
   // strokesCross,
   isExpectedRange,
   getExpectedRangeWeight,
+  isValidExpectedRangeWeight,
 };
