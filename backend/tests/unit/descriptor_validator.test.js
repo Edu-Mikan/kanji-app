@@ -7,6 +7,14 @@ const {
   isExpectedRange,
   isValidExpectedRangeWeight,
   getExpectedRangeWeight,
+
+  validateRelation,
+  getMatchedStrokeIndex,
+  strokePairMatches,
+  geometryContainsStrokePair,
+  validateIntersectsRelation,
+  validateTouchesRelation,
+  validateConnectsRelation,
 } = require("../../services/descriptor_validator");
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
@@ -261,4 +269,224 @@ test("configured weights should not change range validation", () => {
   };
 
   assert.equal(strokeMatchesExpected(stroke, expected), false);
+});
+
+function createRoleMatches() {
+  return {
+    horizontal: {
+      stroke: {
+        index: 0,
+      },
+    },
+    vertical: {
+      stroke: {
+        index: 1,
+      },
+    },
+    diagonal: {
+      stroke: {
+        index: 2,
+      },
+    },
+  };
+}
+
+function createGeometry() {
+  return {
+    intersections: [
+      {
+        strokeA: 0,
+        strokeB: 1,
+        x: 0.5,
+        y: 0.5,
+      },
+    ],
+    touches: [
+      {
+        strokeA: 1,
+        strokeB: 2,
+        distance: 0.03,
+        x: 0.52,
+        y: 0.62,
+      },
+    ],
+  };
+}
+
+test("getMatchedStrokeIndex should return the matched stroke index", () => {
+  const roleMatches = createRoleMatches();
+
+  assert.equal(getMatchedStrokeIndex(roleMatches, "horizontal"), 0);
+
+  assert.equal(getMatchedStrokeIndex(roleMatches, "vertical"), 1);
+});
+
+test("getMatchedStrokeIndex should return null for missing roles", () => {
+  const roleMatches = createRoleMatches();
+
+  assert.equal(getMatchedStrokeIndex(roleMatches, "missingRole"), null);
+});
+
+test("strokePairMatches should ignore stroke order", () => {
+  const item = {
+    strokeA: 0,
+    strokeB: 1,
+  };
+
+  assert.equal(strokePairMatches(item, 0, 1), true);
+
+  assert.equal(strokePairMatches(item, 1, 0), true);
+
+  assert.equal(strokePairMatches(item, 0, 2), false);
+});
+
+test("intersects relation should pass for an exact intersection", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "intersects",
+      from: "horizontal",
+      to: "vertical",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, true);
+});
+
+test("intersects relation should fail without an exact intersection", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "intersects",
+      from: "vertical",
+      to: "diagonal",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
+});
+
+test("touches relation should pass for an approximate touch", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "touches",
+      from: "vertical",
+      to: "diagonal",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, true);
+});
+
+test("touches relation should not pass for an exact-only intersection", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "touches",
+      from: "horizontal",
+      to: "vertical",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
+});
+
+test("connects relation should pass for an exact intersection", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "connects",
+      from: "horizontal",
+      to: "vertical",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, true);
+});
+
+test("connects relation should pass for an approximate touch", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "connects",
+      from: "vertical",
+      to: "diagonal",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, true);
+});
+
+test("connects relation should fail for unrelated strokes", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "connects",
+      from: "horizontal",
+      to: "diagonal",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
+});
+
+test("geometric relations should fail safely when geometry is missing", () => {
+  const roleMatches = createRoleMatches();
+
+  const result = validateRelation(
+    {
+      type: "intersects",
+      from: "horizontal",
+      to: "vertical",
+    },
+    roleMatches,
+  );
+
+  assert.equal(result, false);
+});
+
+test("geometric relations should fail when a role has no matched stroke", () => {
+  const roleMatches = createRoleMatches();
+  const geometry = createGeometry();
+
+  const result = validateRelation(
+    {
+      type: "connects",
+      from: "horizontal",
+      to: "missingRole",
+    },
+    roleMatches,
+    geometry,
+  );
+
+  assert.equal(result, false);
 });

@@ -146,6 +146,7 @@ function validateByDescriptor({ kanji, features, descriptor }) {
   validateRelations({
     descriptor,
     roleMatches,
+    geometry,
     checks,
     failedChecks,
   });
@@ -351,10 +352,16 @@ function valueInRange(value, range) {
   return true;
 }
 
-function validateRelations({ descriptor, roleMatches, checks, failedChecks }) {
+function validateRelations({
+  descriptor,
+  roleMatches,
+  geometry,
+  checks,
+  failedChecks,
+}) {
   for (const relation of descriptor.relations ?? []) {
     const checkName = buildRelationCheckName(relation);
-    const ok = validateRelation(relation, roleMatches);
+    const ok = validateRelation(relation, roleMatches, geometry);
 
     checks[checkName] = ok;
 
@@ -362,6 +369,64 @@ function validateRelations({ descriptor, roleMatches, checks, failedChecks }) {
       failedChecks.push(checkName);
     }
   }
+}
+
+function getMatchedStrokeIndex(roleMatches, roleId) {
+  const index = roleMatches?.[roleId]?.stroke?.index;
+
+  return Number.isInteger(index) ? index : null;
+}
+
+function strokePairMatches(item, firstStrokeIndex, secondStrokeIndex) {
+  if (
+    !item ||
+    !Number.isInteger(firstStrokeIndex) ||
+    !Number.isInteger(secondStrokeIndex)
+  ) {
+    return false;
+  }
+
+  return (
+    (item.strokeA === firstStrokeIndex && item.strokeB === secondStrokeIndex) ||
+    (item.strokeA === secondStrokeIndex && item.strokeB === firstStrokeIndex)
+  );
+}
+
+function geometryContainsStrokePair(
+  items,
+  firstStrokeIndex,
+  secondStrokeIndex,
+) {
+  if (!Array.isArray(items)) {
+    return false;
+  }
+
+  return items.some((item) =>
+    strokePairMatches(item, firstStrokeIndex, secondStrokeIndex),
+  );
+}
+
+function validateIntersectsRelation(fromStrokeIndex, toStrokeIndex, geometry) {
+  return geometryContainsStrokePair(
+    geometry?.intersections,
+    fromStrokeIndex,
+    toStrokeIndex,
+  );
+}
+
+function validateTouchesRelation(fromStrokeIndex, toStrokeIndex, geometry) {
+  return geometryContainsStrokePair(
+    geometry?.touches,
+    fromStrokeIndex,
+    toStrokeIndex,
+  );
+}
+
+function validateConnectsRelation(fromStrokeIndex, toStrokeIndex, geometry) {
+  return (
+    validateIntersectsRelation(fromStrokeIndex, toStrokeIndex, geometry) ||
+    validateTouchesRelation(fromStrokeIndex, toStrokeIndex, geometry)
+  );
 }
 
 function buildRelationCheckName(relation) {
@@ -372,10 +437,18 @@ function buildRelationCheckName(relation) {
   return `${relation.type}.${relation.from}.${relation.to}`;
 }
 
-function validateRelation(relation, roleMatches) {
+function validateRelation(relation, roleMatches, geometry = {}) {
   const from = relation.from ? roleMatches[relation.from]?.stroke : null;
   const to = relation.to ? roleMatches[relation.to]?.stroke : null;
   const stroke = relation.stroke ? roleMatches[relation.stroke]?.stroke : null;
+
+  const fromStrokeIndex = relation.from
+    ? getMatchedStrokeIndex(roleMatches, relation.from)
+    : null;
+
+  const toStrokeIndex = relation.to
+    ? getMatchedStrokeIndex(roleMatches, relation.to)
+    : null;
 
   switch (relation.type) {
     case "leftOf":
@@ -439,6 +512,19 @@ function validateRelation(relation, roleMatches) {
 
     case "direction":
       return validateDirectionRelation(stroke, relation);
+
+    case "intersects":
+      return validateIntersectsRelation(
+        fromStrokeIndex,
+        toStrokeIndex,
+        geometry,
+      );
+
+    case "touches":
+      return validateTouchesRelation(fromStrokeIndex, toStrokeIndex, geometry);
+
+    case "connects":
+      return validateConnectsRelation(fromStrokeIndex, toStrokeIndex, geometry);
 
     default:
       console.warn(`Unknown descriptor relation type: ${relation.type}`);
@@ -6302,4 +6388,10 @@ module.exports = {
   isExpectedRange,
   getExpectedRangeWeight,
   isValidExpectedRangeWeight,
+  getMatchedStrokeIndex,
+  strokePairMatches,
+  geometryContainsStrokePair,
+  validateIntersectsRelation,
+  validateTouchesRelation,
+  validateConnectsRelation,
 };
