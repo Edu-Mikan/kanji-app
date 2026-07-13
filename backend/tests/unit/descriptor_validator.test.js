@@ -26,6 +26,8 @@ const crossDescriptor = descriptorData.descriptors["十"];
 
 const eightDescriptor = descriptorData.descriptors["八"];
 
+const mountainDescriptor = descriptorData.descriptors["山"];
+
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
     isExpectedRange({
@@ -887,4 +889,193 @@ test("no descriptor should use the legacy crosses relation", () => {
   );
 
   assert.deepEqual(descriptorsUsingLegacyCrosses, []);
+});
+
+function createMountainFeatures({
+  centerX = 0.4,
+  rightX = 0.75,
+  wideCenterY = 0.7,
+} = {}) {
+  return {
+    strokeCountUser: 3,
+    strokeCountRef: 3,
+    geometry: {
+      bboxWidth: 0.85,
+      bboxHeight: 0.8,
+      aspectRatio: 1.0625,
+      straightnessMean: 0.9,
+      straightnessMin: 0.85,
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0.2,
+          width: 0.8,
+          height: 0.35,
+          centerX: 0.45,
+          centerY: wideCenterY,
+          minX: 0.05,
+          maxX: 0.85,
+          minY: 0.5,
+          maxY: 0.85,
+          straightness: 0.85,
+          deltaX: 0.8,
+          deltaY: 0.3,
+        },
+        {
+          index: 1,
+          angleAbs: 1.5,
+          width: 0.05,
+          height: 0.7,
+          centerX,
+          centerY: 0.42,
+          minX: centerX - 0.025,
+          maxX: centerX + 0.025,
+          minY: 0.05,
+          maxY: 0.75,
+          straightness: 0.95,
+          deltaX: 0,
+          deltaY: 0.7,
+        },
+        {
+          index: 2,
+          angleAbs: 1.45,
+          width: 0.06,
+          height: 0.4,
+          centerX: rightX,
+          centerY: 0.5,
+          minX: rightX - 0.03,
+          maxX: rightX + 0.03,
+          minY: 0.25,
+          maxY: 0.65,
+          straightness: 0.95,
+          deltaX: 0,
+          deltaY: 0.4,
+        },
+      ],
+    },
+  };
+}
+
+test("山 descriptor should use declarative stroke roles", () => {
+  assert.ok(mountainDescriptor);
+
+  assert.equal(mountainDescriptor.pattern, "three_vertical_zones");
+
+  assert.equal(mountainDescriptor.strokeCount, 3);
+
+  assert.equal(Array.isArray(mountainDescriptor.strokes), true);
+
+  assert.deepEqual(
+    mountainDescriptor.strokes.map((stroke) => stroke.id),
+    ["wideBaseStroke", "centerVerticalStroke", "rightVerticalStroke"],
+  );
+
+  assert.equal(mountainDescriptor.rules, undefined);
+
+  assert.equal(mountainDescriptor.expectedStrokeCount, undefined);
+});
+
+test("山 should pass with a wide base and two separated vertical strokes", () => {
+  const features = createMountainFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "山",
+    features,
+    descriptor: mountainDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.wideBaseStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.centerVerticalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.rightVerticalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(
+    result.checks["leftOf.centerVerticalStroke.rightVerticalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["centerXGap.centerVerticalStroke.rightVerticalStroke"],
+    true,
+  );
+});
+
+test("山 should fail when the two vertical strokes are too close", () => {
+  const features = createMountainFeatures({
+    centerX: 0.4,
+    rightX: 0.52,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "山",
+    features,
+    descriptor: mountainDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(
+    result.checks["centerXGap.centerVerticalStroke.rightVerticalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "centerXGap.centerVerticalStroke.rightVerticalStroke",
+    ),
+  );
+
+  assert.equal(result.score, 10);
+});
+
+test("山 should fail without a sufficiently wide base stroke", () => {
+  const features = createMountainFeatures();
+
+  features.geometry.perStroke[0] = {
+    ...features.geometry.perStroke[0],
+    width: 0.2,
+    minX: 0.3,
+    maxX: 0.5,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "山",
+    features,
+    descriptor: mountainDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["wideBaseStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("wideBaseStroke.matches"));
+});
+
+test("山 should fail when the center vertical is outside its expected zone", () => {
+  const features = createMountainFeatures({
+    centerX: 0.15,
+    rightX: 0.75,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "山",
+    features,
+    descriptor: mountainDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["centerVerticalStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("centerVerticalStroke.matches"));
 });

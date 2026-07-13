@@ -3,14 +3,6 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     return null;
   }
 
-  if (descriptor.pattern === "three_vertical_zones") {
-    return validateThreeVerticalZones({
-      kanji,
-      features,
-      descriptor,
-    });
-  }
-
   if (descriptor.pattern === "box_pattern") {
     return validateBoxPattern({
       kanji,

@@ -178,33 +178,129 @@
       ]
     },
     "山": {
+      "kanji": "山",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 3,
       "pattern": "three_vertical_zones",
-      "expectedStrokeCount": 3,
-      "description": "Patrón inicial para 山: trazo central vertical, trazo derecho vertical y trazo ancho inferior/lateral que cubre la base.",
-      "rules": {
-        "minBboxWidth": 0.35,
-        "minBboxHeight": 0.55,
-
-        "minVerticalAngleAbs": 0.65,
-        "minHeightVsWidthRatio": 1.05,
-
-        "minCenterVerticalHeight": 0.5,
-        "minRightVerticalHeight": 0.22,
-
-        "centerVerticalCenterXMin": 0.25,
-        "centerVerticalCenterXMax": 0.58,
-
-        "rightStrokeCenterXMin": 0.55,
-        "minRightCenterGap": 0.18,
-
-        "minWideStrokeWidth": 0.45,
-        "wideStrokeMinXMax": 0.15,
-        "wideStrokeMaxXMin": 0.5,
-        "wideStrokeCenterYMin": 0.45,
-
-        "minStraightnessMean": 0.55,
-        "maxSoftFailures": 3
+      "confidence": "medium",
+      "description": "Patrón declarativo para 山: vertical central, vertical derecha y trazo ancho inferior/lateral.",
+      "strokes": [
+        {
+          "id": "wideBaseStroke",
+          "type": "wide_lower_stroke",
+          "expected": {
+            "width": {
+              "min": 0.45
+            },
+            "minX": {
+              "max": 0.15
+            },
+            "maxX": {
+              "min": 0.5
+            },
+            "centerY": {
+              "min": 0.45
+            }
+          },
+          "weights": {
+            "width": 2,
+            "minX": 1.5,
+            "maxX": 1.5,
+            "centerY": 1
+          }
+        },
+        {
+          "id": "centerVerticalStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.65
+            },
+            "height": {
+              "min": 0.5
+            },
+            "centerX": {
+              "min": 0.25,
+              "max": 0.58
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "centerX": 2
+          }
+        },
+        {
+          "id": "rightVerticalStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.65
+            },
+            "height": {
+              "min": 0.22
+            },
+            "centerX": {
+              "min": 0.55
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "centerX": 2
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "centerVerticalStroke",
+          "to": "rightVerticalStroke"
+        },
+        {
+          "type": "centerXGap",
+          "from": "centerVerticalStroke",
+          "to": "rightVerticalStroke",
+          "min": 0.18
+        },
+        {
+          "type": "centerYNotMuchHigher",
+          "from": "wideBaseStroke",
+          "to": "centerVerticalStroke",
+          "tolerance": 0
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.35
+        },
+        "bboxHeight": {
+          "min": 0.55
+        },
+        "straightnessMean": {
+          "min": 0.55
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "wideBaseStroke.matches",
+        "centerVerticalStroke.matches",
+        "rightVerticalStroke.matches",
+        "leftOf.centerVerticalStroke.rightVerticalStroke",
+        "centerXGap.centerVerticalStroke.rightVerticalStroke",
+        "bboxWidth",
+        "bboxHeight"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial del patrón three_vertical_zones."
       }
     },
     "口": {
