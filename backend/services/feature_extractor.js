@@ -173,6 +173,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
   const totalLength = strokeLengths.reduce((sum, len) => sum + len, 0) || 1;
 
+  const intersections = detectStrokeIntersections(userResampled);
+
   const perStroke = userNormalized.map((normalizedStroke, index) => {
     const resampledStroke = userResampled[index] ?? normalizedStroke;
     const strokeBox = strokeBoundingBox(normalizedStroke);
@@ -199,6 +201,21 @@ function extractGeometryFeatures(userNormalized, userResampled) {
 
     const directionChanges = computeDirectionChanges(resampledStroke);
 
+    const strokeIntersections = intersections.filter(
+      (intersection) =>
+        intersection.strokeA === index || intersection.strokeB === index,
+    );
+
+    const intersectsWith = [
+      ...new Set(
+        strokeIntersections.map((intersection) =>
+          intersection.strokeA === index
+            ? intersection.strokeB
+            : intersection.strokeA,
+        ),
+      ),
+    ];
+
     return {
       index,
       minX: strokeBox.minX,
@@ -219,6 +236,9 @@ function extractGeometryFeatures(userNormalized, userResampled) {
       curvatureMax: curvature.max,
 
       directionChanges,
+
+      intersectionCount: strokeIntersections.length,
+      intersectsWith,
 
       startX,
       startY,
@@ -258,6 +278,8 @@ function extractGeometryFeatures(userNormalized, userResampled) {
     coarseAngleAbsMean:
       coarseAngles.reduce((a, b) => a + b, 0) / (coarseAngles.length || 1),
     coarseAngleAbsMax: coarseAngles.length > 0 ? Math.max(...coarseAngles) : 0,
+    intersectionCount: intersections.length,
+    intersections,
     perStroke,
   };
 }
@@ -299,6 +321,129 @@ function computeDirectionChanges(stroke, threshold = 0.45) {
   return changes;
 }
 
+function getStrokePoint(stroke, index) {
+  return {
+    x: stroke.x[index],
+    y: stroke.y[index],
+  };
+}
+
+function crossProduct(ax, ay, bx, by) {
+  return ax * by - ay * bx;
+}
+
+function getSegmentIntersection(p1, p2, q1, q2, epsilon = 1e-9) {
+  const rx = p2.x - p1.x;
+  const ry = p2.y - p1.y;
+
+  const sx = q2.x - q1.x;
+  const sy = q2.y - q1.y;
+
+  const denominator = crossProduct(rx, ry, sx, sy);
+
+  const qpx = q1.x - p1.x;
+  const qpy = q1.y - p1.y;
+
+  if (Math.abs(denominator) <= epsilon) {
+    return null;
+  }
+
+  const t = crossProduct(qpx, qpy, sx, sy) / denominator;
+  const u = crossProduct(qpx, qpy, rx, ry) / denominator;
+
+  if (t < -epsilon || t > 1 + epsilon || u < -epsilon || u > 1 + epsilon) {
+    return null;
+  }
+
+  return {
+    x: p1.x + t * rx,
+    y: p1.y + t * ry,
+  };
+}
+
+function pointsAreNear(a, b, tolerance = 0.01) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+
+  return Math.sqrt(dx * dx + dy * dy) <= tolerance;
+}
+
+function detectStrokeIntersections(strokes) {
+  if (!Array.isArray(strokes) || strokes.length < 2) {
+    return [];
+  }
+
+  const intersections = [];
+
+  for (let strokeAIndex = 0; strokeAIndex < strokes.length; strokeAIndex++) {
+    const strokeA = strokes[strokeAIndex];
+
+    if (!strokeA || !Array.isArray(strokeA.x) || !Array.isArray(strokeA.y)) {
+      continue;
+    }
+
+    const pointCountA = Math.min(strokeA.x.length, strokeA.y.length);
+
+    for (
+      let strokeBIndex = strokeAIndex + 1;
+      strokeBIndex < strokes.length;
+      strokeBIndex++
+    ) {
+      const strokeB = strokes[strokeBIndex];
+
+      if (!strokeB || !Array.isArray(strokeB.x) || !Array.isArray(strokeB.y)) {
+        continue;
+      }
+
+      const pointCountB = Math.min(strokeB.x.length, strokeB.y.length);
+
+      for (
+        let segmentAIndex = 0;
+        segmentAIndex < pointCountA - 1;
+        segmentAIndex++
+      ) {
+        const p1 = getStrokePoint(strokeA, segmentAIndex);
+        const p2 = getStrokePoint(strokeA, segmentAIndex + 1);
+
+        for (
+          let segmentBIndex = 0;
+          segmentBIndex < pointCountB - 1;
+          segmentBIndex++
+        ) {
+          const q1 = getStrokePoint(strokeB, segmentBIndex);
+          const q2 = getStrokePoint(strokeB, segmentBIndex + 1);
+
+          const point = getSegmentIntersection(p1, p2, q1, q2);
+
+          if (!point) {
+            continue;
+          }
+
+          const alreadyExists = intersections.some(
+            (intersection) =>
+              intersection.strokeA === strokeAIndex &&
+              intersection.strokeB === strokeBIndex &&
+              pointsAreNear(intersection, point),
+          );
+
+          if (!alreadyExists) {
+            intersections.push({
+              strokeA: strokeAIndex,
+              strokeB: strokeBIndex,
+              x: point.x,
+              y: point.y,
+              segmentA: segmentAIndex,
+              segmentB: segmentBIndex,
+            });
+          }
+        }
+      }
+    }
+  }
+
+  return intersections;
+}
+
 // ================= ALL FEATURES =================
 function extractAllFeatures({
   userResampled,
@@ -320,7 +465,7 @@ module.exports = {
   extractGeometryFeatures,
   extractAllFeatures,
   strokeCurvature,
-  strokeStraightness,
-  getStrokesBoundingBox,
   computeDirectionChanges,
+  getSegmentIntersection,
+  detectStrokeIntersections,
 };
