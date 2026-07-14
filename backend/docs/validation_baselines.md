@@ -76,7 +76,6 @@ Fecha: 2026-07-06
 
 - Descriptor: kanji_descriptors.json -> 日
 - Pattern: box_with_inner_horizontal
-- Validator: validateBoxWithInnerHorizontal
 
 #### Resultado de referencia
 
