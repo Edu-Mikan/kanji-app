@@ -3,22 +3,6 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     return null;
   }
 
-  if (descriptor.pattern === "box_with_two_inner_horizontals") {
-    return validateBoxWithTwoInnerHorizontals({
-      kanji,
-      features,
-      descriptor,
-    });
-  }
-
-  if (descriptor.pattern === "box_with_two_inner_horizontals") {
-    return validateBoxWithTwoInnerHorizontals({
-      kanji,
-      features,
-      descriptor,
-    });
-  }
-
   if (descriptor.pattern === "box_with_inner_cross") {
     return validateBoxWithInnerCross({
       kanji,

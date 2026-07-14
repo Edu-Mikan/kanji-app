@@ -667,58 +667,255 @@
       }
     },
     "目": {
+      "kanji": "目",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 5,
       "pattern": "box_with_two_inner_horizontals",
-      "expectedStrokeCount": 5,
-      "description": "Patrón de caja con dos trazos horizontales interiores: trazo izquierdo vertical, trazo exterior superior/derecho, dos trazos interiores horizontales y trazo inferior horizontal.",
-      "rules": {
-        "minBboxWidth": 0.45,
-        "minBboxHeight": 0.6,
-        "aspectRatioMin": 0.4,
-        "aspectRatioMax": 1.8,
-
-        "minVerticalAngleAbs": 0.85,
-        "minHorizontalAngleMax": 0.6,
-        "minHeightVsWidthRatio": 1.35,
-        "minWidthVsHeightRatio": 1.35,
-
-        "leftStrokeCenterXMax": 0.42,
-        "leftStrokeMinXMax": 0.3,
-        "leftStrokeMinHeight": 0.5,
-
-        "outerStrokeMinWidth": 0.35,
-        "outerStrokeMinHeight": 0.5,
-        "outerStrokeMinYMax": 0.35,
-        "outerStrokeMaxXMin": 0.44,
-        "outerStrokeMaxYMin": 0.55,
-        "outerStrokeMaxStraightness": 0.92,
-
-        "upperInnerStrokeCenterYMin": 0.2,
-        "upperInnerStrokeCenterYMax": 0.58,
-        "upperInnerStrokeMinWidth": 0.2,
-        "upperInnerStrokeMaxHeight": 0.3,
-        "upperInnerStrokeDeltaYMin": -0.18,
-
-        "lowerInnerStrokeCenterYMin": 0.38,
-        "lowerInnerStrokeCenterYMax": 0.78,
-        "lowerInnerStrokeMinWidth": 0.2,
-        "lowerInnerStrokeMaxHeight": 0.25,
-        "lowerInnerStrokeDeltaYMin": -0.25,
-
-        "bottomStrokeCenterYMin": 0.65,
-        "bottomStrokeMinWidth": 0.25,
-        "bottomStrokeMaxYMin": 0.65,
-        "bottomStrokeDeltaYMin": -0.22,
-
-        "minUpperLowerGap": 0.06,
-        "minLowerBottomGap": 0.06,
-        "minUpperOuterTopGap": 0.06,
-
-        "minBoxHorizontalCoverage": 0.44,
-        "minBoxVerticalCoverage": 0.55,
-
-        "minStraightnessMean": 0.5,
-        "maxSoftFailures": 4
+      "confidence": "medium",
+      "description": "Patrón declarativo y permisivo de caja con dos horizontales interiores: envolvente superior/derecho, vertical izquierdo, horizontal interior superior, horizontal interior inferior y horizontal inferior.",
+      "strokes": [
+        {
+          "id": "outerStroke",
+          "type": "wrapping_stroke",
+          "expected": {
+            "width": {
+              "min": 0.35
+            },
+            "height": {
+              "min": 0.5
+            },
+            "minY": {
+              "max": 0.35
+            },
+            "maxX": {
+              "min": 0.44
+            },
+            "maxY": {
+              "min": 0.55
+            },
+            "straightness": {
+              "max": 0.92
+            }
+          },
+          "weights": {
+            "width": 1.5,
+            "height": 1.5,
+            "minY": 1,
+            "maxX": 1.5,
+            "maxY": 1,
+            "straightness": 2.5
+          }
+        },
+        {
+          "id": "leftStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.85
+            },
+            "height": {
+              "min": 0.5
+            },
+            "centerX": {
+              "max": 0.42
+            },
+            "minX": {
+              "max": 0.3
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "centerX": 2,
+            "minX": 1.5
+          }
+        },
+        {
+          "id": "upperInnerStroke",
+          "type": "inner_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.6
+            },
+            "width": {
+              "min": 0.18
+            },
+            "height": {
+              "max": 0.3
+            },
+            "centerY": {
+              "min": 0.2,
+              "max": 0.58
+            },
+            "deltaY": {
+              "min": -0.18
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "lowerInnerStroke",
+          "type": "inner_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.6
+            },
+            "width": {
+              "min": 0.15
+            },
+            "height": {
+              "max": 0.25
+            },
+            "centerY": {
+              "min": 0.38,
+              "max": 0.8
+            },
+            "deltaY": {
+              "min": -0.25
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "bottomStroke",
+          "type": "horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.6
+            },
+            "width": {
+              "min": 0.25
+            },
+            "centerY": {
+              "min": 0.65
+            },
+            "maxY": {
+              "min": 0.65
+            },
+            "deltaY": {
+              "min": -0.22
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "centerY": 2,
+            "maxY": 1.5,
+            "deltaY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "leftStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "above",
+          "from": "upperInnerStroke",
+          "to": "lowerInnerStroke",
+          "minCenterYGap": 0.06
+        },
+        {
+          "type": "above",
+          "from": "lowerInnerStroke",
+          "to": "bottomStroke",
+          "minCenterYGap": 0.06
+        },
+        {
+          "type": "above",
+          "from": "leftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "outerStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "upperInnerStroke",
+          "to": "leftStroke"
+        },
+        {
+          "type": "connects",
+          "from": "upperInnerStroke",
+          "to": "outerStroke"
+        },
+        {
+          "type": "connects",
+          "from": "lowerInnerStroke",
+          "to": "leftStroke"
+        },
+        {
+          "type": "connects",
+          "from": "lowerInnerStroke",
+          "to": "outerStroke"
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.6
+        },
+        "aspectRatio": {
+          "min": 0.4,
+          "max": 1.8
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "outerStroke.matches",
+        "leftStroke.matches",
+        "upperInnerStroke.matches",
+        "lowerInnerStroke.matches",
+        "bottomStroke.matches",
+        "leftOf.leftStroke.outerStroke",
+        "above.upperInnerStroke.lowerInnerStroke",
+        "above.lowerInnerStroke.bottomStroke",
+        "above.leftStroke.bottomStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 目. Los dos horizontales interiores deben mantener su orden vertical. Las conexiones se observan como checks blandos para conservar una validación educativa permisiva."
       }
     },
     "田": {

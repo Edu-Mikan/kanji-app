@@ -26,6 +26,7 @@ const eightDescriptor = descriptorData.descriptors["八"];
 const mountainDescriptor = descriptorData.descriptors["山"];
 const boxDescriptor = descriptorData.descriptors["口"];
 const sunDescriptor = descriptorData.descriptors["日"];
+const eyeDescriptor = descriptorData.descriptors["目"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -1602,4 +1603,316 @@ test("日 should accept a slightly short but recognizable middle stroke", () => 
   assert.equal(result.isCorrect, true);
 
   assert.equal(result.checks["middleStroke.matches"], true);
+});
+
+function createEyeFeatures({
+  upperCenterY = 0.38,
+  lowerCenterY = 0.62,
+  bottomCenterY = 0.88,
+  intersections = [],
+  touches = [],
+} = {}) {
+  return {
+    strokeCountUser: 5,
+    strokeCountRef: 5,
+    geometry: {
+      bboxWidth: 0.78,
+      bboxHeight: 0.88,
+      aspectRatio: 0.78 / 0.88,
+      straightnessMean: 0.86,
+      straightnessMin: 0.68,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: 0.8,
+          centerX: 0.12,
+          centerY: 0.5,
+          minX: 0.1,
+          maxX: 0.15,
+          minY: 0.1,
+          maxY: 0.9,
+          straightness: 0.98,
+          deltaX: 0.02,
+          deltaY: 0.8,
+        },
+        {
+          index: 1,
+          angleAbs: 0.75,
+          width: 0.75,
+          height: 0.8,
+          centerX: 0.5,
+          centerY: 0.5,
+          minX: 0.12,
+          maxX: 0.87,
+          minY: 0.1,
+          maxY: 0.9,
+          straightness: 0.68,
+          deltaX: 0.75,
+          deltaY: 0.8,
+        },
+        {
+          index: 2,
+          angleAbs: 0.03,
+          width: 0.58,
+          height: 0.04,
+          centerX: 0.46,
+          centerY: upperCenterY,
+          minX: 0.17,
+          maxX: 0.75,
+          minY: upperCenterY - 0.02,
+          maxY: upperCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.58,
+          deltaY: 0.01,
+        },
+        {
+          index: 3,
+          angleAbs: 0.04,
+          width: 0.57,
+          height: 0.04,
+          centerX: 0.465,
+          centerY: lowerCenterY,
+          minX: 0.18,
+          maxX: 0.75,
+          minY: lowerCenterY - 0.02,
+          maxY: lowerCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.57,
+          deltaY: 0.01,
+        },
+        {
+          index: 4,
+          angleAbs: 0.03,
+          width: 0.68,
+          height: 0.04,
+          centerX: 0.49,
+          centerY: bottomCenterY,
+          minX: 0.15,
+          maxX: 0.83,
+          minY: bottomCenterY - 0.02,
+          maxY: bottomCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.68,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("目 descriptor should use declarative box roles", () => {
+  assert.ok(eyeDescriptor);
+
+  assert.equal(eyeDescriptor.pattern, "box_with_two_inner_horizontals");
+
+  assert.equal(eyeDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    eyeDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "outerStroke",
+      "leftStroke",
+      "upperInnerStroke",
+      "lowerInnerStroke",
+      "bottomStroke",
+    ],
+  );
+
+  assert.equal(eyeDescriptor.rules, undefined);
+
+  assert.equal(eyeDescriptor.expectedStrokeCount, undefined);
+});
+
+test("目 should pass with two ordered inner horizontals", () => {
+  const features = createEyeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.outerStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.upperInnerStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.lowerInnerStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.bottomStroke.matchedStrokeIndex, 4);
+
+  assert.equal(result.checks["above.upperInnerStroke.lowerInnerStroke"], true);
+
+  assert.equal(result.checks["above.lowerInnerStroke.bottomStroke"], true);
+});
+
+test("目 should fail when the two inner horizontals are too close", () => {
+  const features = createEyeFeatures({
+    upperCenterY: 0.5,
+    lowerCenterY: 0.54,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["above.upperInnerStroke.lowerInnerStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.upperInnerStroke.lowerInnerStroke"),
+  );
+
+  assert.equal(result.score, 10);
+});
+
+test("目 should fail when the lower inner stroke is too close to the bottom stroke", () => {
+  const features = createEyeFeatures({
+    lowerCenterY: 0.84,
+    bottomCenterY: 0.88,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["above.lowerInnerStroke.bottomStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.lowerInnerStroke.bottomStroke"),
+  );
+});
+
+test("目 should fail when an inner horizontal is clearly too short", () => {
+  const features = createEyeFeatures();
+
+  features.geometry.perStroke[2] = {
+    ...features.geometry.perStroke[2],
+    width: 0.1,
+    minX: 0.41,
+    maxX: 0.51,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["upperInnerStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("upperInnerStroke.matches"));
+});
+
+test("目 geometric connections should remain soft", () => {
+  const connectionCheckNames = [
+    "connects.leftStroke.outerStroke",
+    "connects.leftStroke.bottomStroke",
+    "connects.outerStroke.bottomStroke",
+    "connects.upperInnerStroke.leftStroke",
+    "connects.upperInnerStroke.outerStroke",
+    "connects.lowerInnerStroke.leftStroke",
+    "connects.lowerInnerStroke.outerStroke",
+  ];
+
+  for (const checkName of connectionCheckNames) {
+    assert.equal(
+      eyeDescriptor.hardChecks.includes(checkName),
+      false,
+      `${checkName} should remain soft`,
+    );
+  }
+});
+
+test("目 should accept recognizable disconnected inner horizontals", () => {
+  const features = createEyeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.checks["connects.upperInnerStroke.leftStroke"], false);
+  assert.equal(result.checks["connects.lowerInnerStroke.outerStroke"], false);
+
+  assert.equal(
+    result.hardFailedChecks.includes("connects.upperInnerStroke.leftStroke"),
+    false,
+  );
+
+  assert.equal(
+    result.hardFailedChecks.includes("connects.lowerInnerStroke.outerStroke"),
+    false,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("目 should accept a short but recognizable lower inner stroke", () => {
+  const features = createEyeFeatures();
+
+  features.geometry.perStroke[3] = {
+    ...features.geometry.perStroke[3],
+    width: 0.155,
+    minX: 0.35,
+    maxX: 0.505,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks["lowerInnerStroke.matches"], true);
+
+  assert.equal(result.roleMatches.lowerInnerStroke.matchedStrokeIndex, 3);
+});
+
+test("目 should fail when the lower inner stroke is extremely short", () => {
+  const features = createEyeFeatures();
+
+  features.geometry.perStroke[3] = {
+    ...features.geometry.perStroke[3],
+    width: 0.08,
+    minX: 0.42,
+    maxX: 0.5,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "目",
+    features,
+    descriptor: eyeDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["lowerInnerStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("lowerInnerStroke.matches"));
 });
