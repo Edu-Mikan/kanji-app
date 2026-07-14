@@ -25,15 +25,6 @@ function loadJsonl(filePath) {
     .map((line) => JSON.parse(line));
 }
 
-test("本 descriptor should exist and use tree_with_bottom_mark", () => {
-  const descriptor = descriptors["本"];
-
-  assert.ok(descriptor, "Missing descriptor for 本");
-  assert.equal(descriptor.enabled, true);
-  assert.equal(descriptor.pattern, "tree_with_bottom_mark");
-  assert.equal(descriptor.expectedStrokeCount, 5);
-});
-
 test("本 manually correct samples should pass validateByDescriptor", () => {
   const samples = loadJsonl(honFixtureFile);
   const descriptor = descriptors["本"];
@@ -101,31 +92,4 @@ test("本 manually incorrect samples should fail validateByDescriptor", () => {
       `Expected hard failure score for ${sample.recognitionId}, got ${result.score}`,
     );
   }
-});
-
-test("本 incorrect samples should include at least one diagonal direction failure", () => {
-  const samples = loadJsonl(honFixtureFile);
-  const descriptor = descriptors["本"];
-
-  const incorrectSamples = samples.filter(
-    (sample) => sample.isCorrect === false,
-  );
-
-  const allHardFailures = [];
-
-  for (const sample of incorrectSamples) {
-    const result = validateByDescriptor({
-      kanji: "本",
-      features: sample.features,
-      descriptor,
-    });
-
-    allHardFailures.push(...result.hardFailedChecks);
-  }
-
-  assert.ok(
-    allHardFailures.includes("leftDiagonalDirection") ||
-      allHardFailures.includes("rightDiagonalDirection"),
-    "Expected at least one diagonal direction failure in incorrect 本 samples",
-  );
 });

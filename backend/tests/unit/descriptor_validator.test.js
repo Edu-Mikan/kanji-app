@@ -33,6 +33,7 @@ const fieldDescriptor = descriptorData.descriptors["田"];
 const enclosureDescriptor = descriptorData.descriptors["回"];
 const useDescriptor = descriptorData.descriptors["用"];
 const treeDescriptor = descriptorData.descriptors["木"];
+const rootDescriptor = descriptorData.descriptors["本"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -3668,4 +3669,405 @@ test("木 should fail when the diagonals are too close", () => {
   );
 
   assert.equal(result.isCorrect, false);
+});
+
+function createRootFeatures({
+  horizontalCenterY = 0.28,
+  horizontalMinX = 0.15,
+  horizontalMaxX = 0.85,
+  verticalCenterX = 0.5,
+  verticalMinY = 0.08,
+  verticalMaxY = 0.92,
+  leftCenterX = 0.32,
+  leftCenterY = 0.66,
+  leftDeltaX = -0.28,
+  leftDeltaY = 0.4,
+  rightCenterX = 0.68,
+  rightCenterY = 0.66,
+  rightDeltaX = 0.28,
+  rightDeltaY = 0.4,
+  bottomMarkCenterX = 0.5,
+  bottomMarkCenterY = 0.72,
+  bottomMarkWidth = 0.22,
+  bottomMarkHeight = 0.04,
+  bottomMarkAngleAbs = 0.03,
+} = {}) {
+  return {
+    strokeCountUser: 5,
+    strokeCountRef: 5,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.84,
+      aspectRatio: 0.8 / 0.84,
+      straightnessMean: 0.92,
+      straightnessMin: 0.88,
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0.03,
+          width: horizontalMaxX - horizontalMinX,
+          height: 0.04,
+          centerX: (horizontalMinX + horizontalMaxX) / 2,
+          centerY: horizontalCenterY,
+          minX: horizontalMinX,
+          maxX: horizontalMaxX,
+          minY: horizontalCenterY - 0.02,
+          maxY: horizontalCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: horizontalMaxX - horizontalMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 1,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: verticalMaxY - verticalMinY,
+          centerX: verticalCenterX,
+          centerY: (verticalMinY + verticalMaxY) / 2,
+          minX: verticalCenterX - 0.025,
+          maxX: verticalCenterX + 0.025,
+          minY: verticalMinY,
+          maxY: verticalMaxY,
+          straightness: 0.98,
+          deltaX: 0.01,
+          deltaY: verticalMaxY - verticalMinY,
+        },
+        {
+          index: 2,
+          angleAbs: 0.98,
+          width: Math.abs(leftDeltaX),
+          height: leftDeltaY,
+          centerX: leftCenterX,
+          centerY: leftCenterY,
+          minX: leftCenterX - Math.abs(leftDeltaX) / 2,
+          maxX: leftCenterX + Math.abs(leftDeltaX) / 2,
+          minY: leftCenterY - leftDeltaY / 2,
+          maxY: leftCenterY + leftDeltaY / 2,
+          straightness: 0.95,
+          deltaX: leftDeltaX,
+          deltaY: leftDeltaY,
+        },
+        {
+          index: 3,
+          angleAbs: 0.98,
+          width: Math.abs(rightDeltaX),
+          height: rightDeltaY,
+          centerX: rightCenterX,
+          centerY: rightCenterY,
+          minX: rightCenterX - Math.abs(rightDeltaX) / 2,
+          maxX: rightCenterX + Math.abs(rightDeltaX) / 2,
+          minY: rightCenterY - rightDeltaY / 2,
+          maxY: rightCenterY + rightDeltaY / 2,
+          straightness: 0.95,
+          deltaX: rightDeltaX,
+          deltaY: rightDeltaY,
+        },
+        {
+          index: 4,
+          angleAbs: bottomMarkAngleAbs,
+          width: bottomMarkWidth,
+          height: bottomMarkHeight,
+          centerX: bottomMarkCenterX,
+          centerY: bottomMarkCenterY,
+          minX: bottomMarkCenterX - bottomMarkWidth / 2,
+          maxX: bottomMarkCenterX + bottomMarkWidth / 2,
+          minY: bottomMarkCenterY - bottomMarkHeight / 2,
+          maxY: bottomMarkCenterY + bottomMarkHeight / 2,
+          straightness: 0.98,
+          deltaX: bottomMarkWidth,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("本 descriptor should use declarative tree roles with a bottom mark", () => {
+  assert.ok(rootDescriptor);
+
+  assert.equal(rootDescriptor.pattern, "tree_with_bottom_mark");
+
+  assert.equal(rootDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    rootDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "horizontalStroke",
+      "verticalStroke",
+      "leftDiagonalStroke",
+      "rightDiagonalStroke",
+      "bottomMarkStroke",
+    ],
+  );
+
+  assert.equal(rootDescriptor.rules, undefined);
+
+  assert.equal(rootDescriptor.expectedStrokeCount, undefined);
+});
+
+test("本 should pass with a tree structure and a centered bottom mark", () => {
+  const features = createRootFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.horizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.verticalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftDiagonalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.rightDiagonalStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.bottomMarkStroke.matchedStrokeIndex, 4);
+
+  assert.equal(result.checks["above.horizontalStroke.bottomMarkStroke"], true);
+
+  assert.equal(
+    result.checks["centerXDistance.bottomMarkStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(result.score, 0.5);
+});
+
+test("本 should fail when the bottom mark is too close to the main horizontal", () => {
+  const features = createRootFeatures({
+    horizontalCenterY: 0.28,
+    bottomMarkCenterY: 0.36,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.checks["above.horizontalStroke.bottomMarkStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.horizontalStroke.bottomMarkStroke"),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("本 should fail when the bottom mark is too far from the vertical", () => {
+  const features = createRootFeatures({
+    bottomMarkCenterX: 0.88,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(
+    result.checks["centerXDistance.bottomMarkStroke.verticalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "centerXDistance.bottomMarkStroke.verticalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("本 should fail when the bottom mark is extremely short", () => {
+  const features = createRootFeatures({
+    bottomMarkWidth: 0.04,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.checks["bottomMarkStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("bottomMarkStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("本 should accept a slightly diagonal bottom mark", () => {
+  const features = createRootFeatures({
+    bottomMarkAngleAbs: 0.75,
+    bottomMarkWidth: 0.18,
+    bottomMarkHeight: 0.12,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.roleMatches.bottomMarkStroke.matchedStrokeIndex, 4);
+
+  assert.equal(result.checks["bottomMarkStroke.matches"], true);
+
+  assert.equal(
+    result.checks["centerXDistance.bottomMarkStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("本 should retain both outward diagonal directions", () => {
+  const features = createRootFeatures({
+    rightDeltaX: -0.28,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.checks["direction.rightDiagonalStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.rightDiagonalStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("centerXDistance should pass within the configured maximum", () => {
+  const roleMatches = {
+    firstStroke: {
+      stroke: {
+        index: 0,
+        centerX: 0.5,
+      },
+    },
+    secondStroke: {
+      stroke: {
+        index: 1,
+        centerX: 0.76,
+      },
+    },
+  };
+
+  const result = validateRelation(
+    {
+      type: "centerXDistance",
+      from: "firstStroke",
+      to: "secondStroke",
+      max: 0.28,
+    },
+    roleMatches,
+  );
+
+  assert.equal(result, true);
+});
+
+test("centerXDistance should fail outside the configured maximum", () => {
+  const roleMatches = {
+    firstStroke: {
+      stroke: {
+        index: 0,
+        centerX: 0.5,
+      },
+    },
+    secondStroke: {
+      stroke: {
+        index: 1,
+        centerX: 0.8,
+      },
+    },
+  };
+
+  const result = validateRelation(
+    {
+      type: "centerXDistance",
+      from: "firstStroke",
+      to: "secondStroke",
+      max: 0.28,
+    },
+    roleMatches,
+  );
+
+  assert.equal(result, false);
+});
+
+test("本 should accept a right diagonal slightly left of centerX 0.45", () => {
+  const features = createRootFeatures({
+    verticalCenterX: 0.37,
+    rightCenterX: 0.4498,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.roleMatches.verticalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.rightDiagonalStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.checks["verticalStroke.matches"], true);
+
+  assert.equal(result.checks["rightDiagonalStroke.matches"], true);
+
+  assert.equal(result.checks["leftOf.leftDiagonalStroke.verticalStroke"], true);
+
+  assert.equal(
+    result.checks["leftOf.verticalStroke.rightDiagonalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["centerXGap.leftDiagonalStroke.rightDiagonalStroke"],
+    true,
+  );
+
+  assert.equal(result.checks["direction.rightDiagonalStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("本 should reject a right diagonal clearly outside its expected zone", () => {
+  const features = createRootFeatures({
+    rightCenterX: 0.39,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "本",
+    features,
+    descriptor: rootDescriptor,
+  });
+
+  assert.equal(result.checks["rightDiagonalStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("rightDiagonalStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
 });
