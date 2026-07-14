@@ -1470,57 +1470,266 @@
       }
     },
     "用": {
+      "kanji": "用",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 5,
       "pattern": "open_box_with_inner_vertical_and_horizontals",
-      "expectedStrokeCount": 5,
-      "description": "Patrón de caja abierta/semiabierta con vertical interior y dos horizontales internas: trazo izquierdo, trazo envolvente superior/derecho, trazo vertical interior y dos horizontales internas.",
-      "rules": {
-        "minBboxWidth": 0.45,
-        "minBboxHeight": 0.55,
-        "aspectRatioMin": 0.45,
-        "aspectRatioMax": 1.9,
-
-        "minVerticalAngleAbs": 0.8,
-        "minHorizontalAngleMax": 0.65,
-        "minHeightVsWidthRatio": 1.2,
-        "minWidthVsHeightRatio": 1.2,
-
-        "leftStrokeCenterXMax": 0.42,
-        "leftStrokeMinXMax": 0.3,
-        "leftStrokeMinHeight": 0.45,
-
-        "outerWrappingMinWidth": 0.35,
-        "outerWrappingMinHeight": 0.45,
-        "outerWrappingMinYMax": 0.35,
-        "outerWrappingMaxXMin": 0.5,
-        "outerWrappingMaxYMin": 0.55,
-        "outerWrappingMaxStraightness": 0.94,
-
-        "innerVerticalCenterXMin": 0.25,
-        "innerVerticalCenterXMax": 0.72,
-        "innerVerticalMinHeight": 0.35,
-        "innerVerticalMaxWidth": 0.32,
-
-        "upperInnerCenterYMin": 0.25,
-        "upperInnerCenterYMax": 0.58,
-        "upperInnerMinWidth": 0.18,
-        "upperInnerMaxHeight": 0.3,
-        "upperInnerDeltaYMin": -0.22,
-
-        "lowerInnerCenterYMin": 0.45,
-        "lowerInnerCenterYMax": 0.82,
-        "lowerInnerMinWidth": 0.18,
-        "lowerInnerMaxHeight": 0.3,
-        "lowerInnerDeltaYMin": -0.22,
-
-        "minUpperLowerGap": 0.06,
-        "minLowerOuterBottomGap": 0.06,
-
-        "minBoxHorizontalCoverage": 0.44,
-        "minBoxVerticalCoverage": 0.55,
-
-        "minStraightnessMean": 0.5,
-        "maxSoftFailures": 4
+      "confidence": "medium",
+      "description": "Patrón declarativo y permisivo de caja exterior sin cierre independiente, con vertical interior y dos horizontales interiores ordenados.",
+      "strokes": [
+        {
+          "id": "outerWrappingStroke",
+          "type": "wrapping_stroke",
+          "expected": {
+            "width": {
+              "min": 0.35
+            },
+            "height": {
+              "min": 0.45
+            },
+            "minY": {
+              "max": 0.35
+            },
+            "maxX": {
+              "min": 0.5
+            },
+            "maxY": {
+              "min": 0.55
+            },
+            "straightness": {
+              "max": 0.94
+            }
+          },
+          "weights": {
+            "width": 1.5,
+            "height": 1.5,
+            "minY": 1,
+            "maxX": 1.5,
+            "maxY": 1,
+            "straightness": 2.5
+          }
+        },
+        {
+          "id": "leftStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.8
+            },
+            "height": {
+              "min": 0.45
+            },
+            "centerX": {
+              "max": 0.42
+            },
+            "minX": {
+              "max": 0.3
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "centerX": 2,
+            "minX": 1.5
+          }
+        },
+        {
+          "id": "innerVerticalStroke",
+          "type": "inner_vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.8
+            },
+            "height": {
+              "min": 0.35
+            },
+            "width": {
+              "max": 0.32
+            },
+            "centerX": {
+              "min": 0.2,
+              "max": 0.72
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "width": 1,
+            "centerX": 2
+          }
+        },
+        {
+          "id": "upperInnerHorizontalStroke",
+          "type": "inner_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.18
+            },
+            "height": {
+              "max": 0.3
+            },
+            "centerY": {
+              "min": 0.18,
+              "max": 0.58
+            },
+            "deltaY": {
+              "min": -0.22
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "lowerInnerHorizontalStroke",
+          "type": "inner_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.18
+            },
+            "height": {
+              "max": 0.3
+            },
+            "centerY": {
+              "min": 0.28,
+              "max": 0.82
+            },
+            "deltaY": {
+              "min": -0.22
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "leftStroke",
+          "to": "outerWrappingStroke"
+        },
+        {
+          "type": "above",
+          "from": "upperInnerHorizontalStroke",
+          "to": "lowerInnerHorizontalStroke",
+          "minCenterYGap": 0.04
+        },
+        {
+          "type": "orthogonalCross",
+          "from": "upperInnerHorizontalStroke",
+          "to": "innerVerticalStroke",
+          "toleranceX": 0.08,
+          "toleranceY": 0.08
+        },
+        {
+          "type": "orthogonalCross",
+          "from": "lowerInnerHorizontalStroke",
+          "to": "innerVerticalStroke",
+          "toleranceX": 0.08,
+          "toleranceY": 0.08
+        },
+        {
+          "id": "innerStructureInsideOuterBox",
+          "type": "containsGroup",
+          "outer": ["leftStroke", "outerWrappingStroke"],
+          "inner": [
+            "innerVerticalStroke",
+            "upperInnerHorizontalStroke",
+            "lowerInnerHorizontalStroke"
+          ],
+          "margin": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": -0.01
+          }
+        },
+        {
+          "type": "connects",
+          "from": "leftStroke",
+          "to": "outerWrappingStroke"
+        },
+        {
+          "type": "connects",
+          "from": "upperInnerHorizontalStroke",
+          "to": "leftStroke"
+        },
+        {
+          "type": "connects",
+          "from": "upperInnerHorizontalStroke",
+          "to": "outerWrappingStroke"
+        },
+        {
+          "type": "connects",
+          "from": "lowerInnerHorizontalStroke",
+          "to": "leftStroke"
+        },
+        {
+          "type": "connects",
+          "from": "lowerInnerHorizontalStroke",
+          "to": "outerWrappingStroke"
+        },
+        {
+          "type": "connects",
+          "from": "innerVerticalStroke",
+          "to": "outerWrappingStroke"
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.55
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 1.9
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "outerWrappingStroke.matches",
+        "leftStroke.matches",
+        "innerVerticalStroke.matches",
+        "upperInnerHorizontalStroke.matches",
+        "lowerInnerHorizontalStroke.matches",
+        "leftOf.leftStroke.outerWrappingStroke",
+        "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke",
+        "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke",
+        "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa de 用. Los horizontales interiores deben mantener su orden y formar cruces ortogonales con el vertical interior. Las conexiones exactas y la contención completa de la estructura interior permanecen como checks blandos, ya que los horizontales y el vertical central pueden prolongarse ligeramente respecto al envolvente."
       }
     },
     "木": {

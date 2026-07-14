@@ -31,6 +31,7 @@ const sunDescriptor = descriptorData.descriptors["日"];
 const eyeDescriptor = descriptorData.descriptors["目"];
 const fieldDescriptor = descriptorData.descriptors["田"];
 const enclosureDescriptor = descriptorData.descriptors["回"];
+const useDescriptor = descriptorData.descriptors["用"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -2777,4 +2778,608 @@ test("回 should accept an inner box close to the left outer border when still c
   assert.equal(result.isCorrect, true);
 
   assert.equal(result.score, 0.5);
+});
+
+function createUseFeatures({
+  upperCenterY = 0.38,
+  lowerCenterY = 0.62,
+  innerVerticalCenterX = 0.5,
+  innerVerticalMinY = 0.2,
+  innerVerticalMaxY = 0.78,
+  intersections = [],
+  touches = [],
+} = {}) {
+  return {
+    strokeCountUser: 5,
+    strokeCountRef: 5,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.82,
+      aspectRatio: 0.8 / 0.82,
+      straightnessMean: 0.84,
+      straightnessMin: 0.66,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: 0.74,
+          centerX: 0.12,
+          centerY: 0.47,
+          minX: 0.1,
+          maxX: 0.15,
+          minY: 0.1,
+          maxY: 0.84,
+          straightness: 0.98,
+          deltaX: 0.02,
+          deltaY: 0.74,
+        },
+        {
+          index: 1,
+          angleAbs: 0.75,
+          width: 0.75,
+          height: 0.74,
+          centerX: 0.5,
+          centerY: 0.47,
+          minX: 0.12,
+          maxX: 0.87,
+          minY: 0.1,
+          maxY: 0.84,
+          straightness: 0.66,
+          deltaX: 0.75,
+          deltaY: 0.74,
+        },
+        {
+          index: 2,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: innerVerticalMaxY - innerVerticalMinY,
+          centerX: innerVerticalCenterX,
+          centerY: (innerVerticalMinY + innerVerticalMaxY) / 2,
+          minX: innerVerticalCenterX - 0.025,
+          maxX: innerVerticalCenterX + 0.025,
+          minY: innerVerticalMinY,
+          maxY: innerVerticalMaxY,
+          straightness: 0.98,
+          deltaX: 0.01,
+          deltaY: innerVerticalMaxY - innerVerticalMinY,
+        },
+        {
+          index: 3,
+          angleAbs: 0.03,
+          width: 0.58,
+          height: 0.04,
+          centerX: 0.49,
+          centerY: upperCenterY,
+          minX: 0.2,
+          maxX: 0.78,
+          minY: upperCenterY - 0.02,
+          maxY: upperCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.58,
+          deltaY: 0.01,
+        },
+        {
+          index: 4,
+          angleAbs: 0.04,
+          width: 0.56,
+          height: 0.04,
+          centerX: 0.49,
+          centerY: lowerCenterY,
+          minX: 0.21,
+          maxX: 0.77,
+          minY: lowerCenterY - 0.02,
+          maxY: lowerCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.56,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("用 descriptor should use declarative open box roles", () => {
+  assert.ok(useDescriptor);
+
+  assert.equal(
+    useDescriptor.pattern,
+    "open_box_with_inner_vertical_and_horizontals",
+  );
+
+  assert.equal(useDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    useDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "outerWrappingStroke",
+      "leftStroke",
+      "innerVerticalStroke",
+      "upperInnerHorizontalStroke",
+      "lowerInnerHorizontalStroke",
+    ],
+  );
+
+  assert.equal(useDescriptor.rules, undefined);
+
+  assert.equal(useDescriptor.expectedStrokeCount, undefined);
+});
+
+test("用 should pass with two ordered horizontals crossing the inner vertical", () => {
+  const features = createUseFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.outerWrappingStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.innerVerticalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(
+    result.roleMatches.upperInnerHorizontalStroke.matchedStrokeIndex,
+    3,
+  );
+
+  assert.equal(
+    result.roleMatches.lowerInnerHorizontalStroke.matchedStrokeIndex,
+    4,
+  );
+
+  assert.equal(
+    result.checks[
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(result.checks["innerStructureInsideOuterBox"], true);
+});
+
+test("用 should fail when its inner horizontals are too close", () => {
+  const features = createUseFeatures({
+    upperCenterY: 0.5,
+    lowerCenterY: 0.53,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(
+    result.checks[
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke"
+    ],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke",
+    ),
+  );
+
+  assert.equal(result.score, 10);
+});
+
+test("用 should fail when the inner vertical does not cross the horizontals", () => {
+  const features = createUseFeatures({
+    innerVerticalCenterX: 0.88,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke",
+    ),
+  );
+});
+
+test("用 should fail when the lower horizontal is outside the vertical span", () => {
+  const features = createUseFeatures({
+    lowerCenterY: 0.81,
+    innerVerticalMaxY: 0.7,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("用 inner structure containment should remain soft", () => {
+  assert.equal(
+    useDescriptor.hardChecks.includes("innerStructureInsideOuterBox"),
+    false,
+  );
+
+  assert.equal(
+    useDescriptor.relations.some(
+      (relation) =>
+        relation.id === "innerStructureInsideOuterBox" &&
+        relation.type === "containsGroup",
+    ),
+    true,
+  );
+});
+
+test("用 should report an inner structure extending outside without making it a hard failure", () => {
+  const features = createUseFeatures();
+
+  features.geometry.perStroke[4] = {
+    ...features.geometry.perStroke[4],
+    width: 0.75,
+    centerX: 0.7,
+    minX: 0.325,
+    maxX: 1.075,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.checks["innerStructureInsideOuterBox"], false);
+
+  assert.equal(
+    result.hardFailedChecks.includes("innerStructureInsideOuterBox"),
+    false,
+  );
+});
+
+test("用 geometric connections should remain soft", () => {
+  const connectionCheckNames = [
+    "connects.leftStroke.outerWrappingStroke",
+    "connects.upperInnerHorizontalStroke.leftStroke",
+    "connects.upperInnerHorizontalStroke.outerWrappingStroke",
+    "connects.lowerInnerHorizontalStroke.leftStroke",
+    "connects.lowerInnerHorizontalStroke.outerWrappingStroke",
+    "connects.innerVerticalStroke.outerWrappingStroke",
+  ];
+
+  for (const checkName of connectionCheckNames) {
+    assert.equal(
+      useDescriptor.hardChecks.includes(checkName),
+      false,
+      `${checkName} should remain soft`,
+    );
+  }
+});
+
+test("用 should accept a recognizable structure without stored connections", () => {
+  const features = createUseFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(features.geometry.intersections.length, 0);
+
+  assert.equal(features.geometry.touches.length, 0);
+
+  assert.equal(
+    result.checks["connects.upperInnerHorizontalStroke.leftStroke"],
+    false,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+  assert.equal(result.score, 0.5);
+});
+
+test("用 should allow the inner vertical to extend slightly below the outer wrapping stroke", () => {
+  const features = createUseFeatures({
+    innerVerticalMaxY: 0.845,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(features.geometry.perStroke[1].maxY, 0.84);
+
+  assert.equal(features.geometry.perStroke[2].maxY, 0.845);
+
+  assert.equal(result.roleMatches.innerVerticalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.checks["innerStructureInsideOuterBox"], true);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+});
+
+test("用 should report when the inner vertical extends clearly below the outer wrapping stroke", () => {
+  const features = createUseFeatures({
+    innerVerticalMaxY: 0.87,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.checks["innerStructureInsideOuterBox"], false);
+
+  assert.ok(result.failedChecks.includes("innerStructureInsideOuterBox"));
+
+  assert.equal(
+    result.hardFailedChecks.includes("innerStructureInsideOuterBox"),
+    false,
+  );
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("用 should accept an upper horizontal slightly above centerY 0.20", () => {
+  const features = createUseFeatures({
+    upperCenterY: 0.198,
+    lowerCenterY: 0.42,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(
+    result.roleMatches.upperInnerHorizontalStroke.matchedStrokeIndex,
+    3,
+  );
+
+  assert.equal(
+    result.roleMatches.lowerInnerHorizontalStroke.matchedStrokeIndex,
+    4,
+  );
+
+  assert.equal(result.checks["upperInnerHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["lowerInnerHorizontalStroke.matches"], true);
+
+  assert.equal(
+    result.checks[
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke"
+    ],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("用 should accept a recognizable lower horizontal slightly above the initial range", () => {
+  const features = createUseFeatures({
+    upperCenterY: 0.28,
+    lowerCenterY: 0.425,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.checks["lowerInnerHorizontalStroke.matches"], true);
+
+  assert.equal(
+    result.checks[
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+test("用 should accept recognizable inner horizontals separated by slightly more than 0.05", () => {
+  const features = createUseFeatures({
+    upperCenterY: 0.482,
+    lowerCenterY: 0.534,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(
+    result.checks[
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke"
+    ],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("用 should accept a left-shifted inner vertical that crosses both horizontals", () => {
+  const features = createUseFeatures({
+    innerVerticalCenterX: 0.228,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.checks["innerVerticalStroke.matches"], true);
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("用 should accept two ordered inner horizontals positioned high in the box", () => {
+  const features = createUseFeatures({
+    upperCenterY: 0.198,
+    lowerCenterY: 0.291,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(
+    result.roleMatches.upperInnerHorizontalStroke.matchedStrokeIndex,
+    3,
+  );
+
+  assert.equal(
+    result.roleMatches.lowerInnerHorizontalStroke.matchedStrokeIndex,
+    4,
+  );
+
+  assert.equal(result.checks["upperInnerHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["lowerInnerHorizontalStroke.matches"], true);
+
+  assert.equal(
+    result.checks[
+      "above.upperInnerHorizontalStroke.lowerInnerHorizontalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.upperInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.equal(
+    result.checks[
+      "orthogonalCross.lowerInnerHorizontalStroke.innerVerticalStroke"
+    ],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+});
+test("用 should reject a lower horizontal positioned too high", () => {
+  const features = createUseFeatures({
+    upperCenterY: 0.18,
+    lowerCenterY: 0.25,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.checks["lowerInnerHorizontalStroke.matches"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("lowerInnerHorizontalStroke.matches"),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
 });
