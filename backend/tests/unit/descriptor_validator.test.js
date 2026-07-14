@@ -7,7 +7,6 @@ const {
   isExpectedRange,
   isValidExpectedRangeWeight,
   getExpectedRangeWeight,
-
   validateRelation,
   getMatchedStrokeIndex,
   strokePairMatches,
@@ -15,9 +14,9 @@ const {
   validateIntersectsRelation,
   validateTouchesRelation,
   validateConnectsRelation,
-
   validateByDescriptor,
   validateDisconnectedRelation,
+  validateOrthogonalCrossRelation,
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
@@ -27,6 +26,7 @@ const mountainDescriptor = descriptorData.descriptors["山"];
 const boxDescriptor = descriptorData.descriptors["口"];
 const sunDescriptor = descriptorData.descriptors["日"];
 const eyeDescriptor = descriptorData.descriptors["目"];
+const fieldDescriptor = descriptorData.descriptors["田"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -1915,4 +1915,400 @@ test("目 should fail when the lower inner stroke is extremely short", () => {
   assert.equal(result.checks["lowerInnerStroke.matches"], false);
 
   assert.ok(result.hardFailedChecks.includes("lowerInnerStroke.matches"));
+});
+
+function createFieldFeatures({
+  includeInnerIntersection = true,
+  innerHorizontalCenterY = 0.5,
+  bottomCenterY = 0.86,
+  intersections = [],
+  touches = [],
+} = {}) {
+  const effectiveIntersections = [...intersections];
+
+  if (includeInnerIntersection) {
+    effectiveIntersections.push({
+      strokeA: 2,
+      strokeB: 3,
+      x: 0.5,
+      y: innerHorizontalCenterY,
+    });
+  }
+
+  return {
+    strokeCountUser: 5,
+    strokeCountRef: 5,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.82,
+      aspectRatio: 0.8 / 0.82,
+      straightnessMean: 0.85,
+      straightnessMin: 0.68,
+      intersections: effectiveIntersections,
+      intersectionCount: effectiveIntersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: 0.75,
+          centerX: 0.12,
+          centerY: 0.48,
+          minX: 0.1,
+          maxX: 0.15,
+          minY: 0.1,
+          maxY: 0.85,
+          straightness: 0.98,
+          deltaX: 0.02,
+          deltaY: 0.75,
+        },
+        {
+          index: 1,
+          angleAbs: 0.75,
+          width: 0.75,
+          height: 0.75,
+          centerX: 0.5,
+          centerY: 0.48,
+          minX: 0.12,
+          maxX: 0.87,
+          minY: 0.1,
+          maxY: 0.85,
+          straightness: 0.68,
+          deltaX: 0.75,
+          deltaY: 0.75,
+        },
+        {
+          index: 2,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: 0.58,
+          centerX: 0.5,
+          centerY: 0.49,
+          minX: 0.475,
+          maxX: 0.525,
+          minY: 0.2,
+          maxY: 0.78,
+          straightness: 0.98,
+          deltaX: 0.01,
+          deltaY: 0.58,
+        },
+        {
+          index: 3,
+          angleAbs: 0.03,
+          width: 0.58,
+          height: 0.04,
+          centerX: 0.5,
+          centerY: innerHorizontalCenterY,
+          minX: 0.21,
+          maxX: 0.79,
+          minY: innerHorizontalCenterY - 0.02,
+          maxY: innerHorizontalCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.58,
+          deltaY: 0.01,
+        },
+        {
+          index: 4,
+          angleAbs: 0.03,
+          width: 0.68,
+          height: 0.04,
+          centerX: 0.49,
+          centerY: bottomCenterY,
+          minX: 0.15,
+          maxX: 0.83,
+          minY: bottomCenterY - 0.02,
+          maxY: bottomCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.68,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("田 descriptor should use declarative cross-box roles", () => {
+  assert.ok(fieldDescriptor);
+
+  assert.equal(fieldDescriptor.pattern, "box_with_inner_cross");
+
+  assert.equal(fieldDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    fieldDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "outerStroke",
+      "leftStroke",
+      "innerVerticalStroke",
+      "innerHorizontalStroke",
+      "bottomStroke",
+    ],
+  );
+
+  assert.equal(fieldDescriptor.rules, undefined);
+
+  assert.equal(fieldDescriptor.expectedStrokeCount, undefined);
+});
+
+test("田 should pass with an orthogonal inner cross", () => {
+  const features = createFieldFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor: fieldDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.outerStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.innerVerticalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.innerHorizontalStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.bottomStroke.matchedStrokeIndex, 4);
+
+  result.checks["orthogonalCross.innerHorizontalStroke.innerVerticalStroke"];
+});
+
+test("田 should fail when the inner strokes do not form an orthogonal cross", () => {
+  const features = createFieldFeatures({
+    includeInnerIntersection: false,
+  });
+
+  features.geometry.perStroke[3] = {
+    ...features.geometry.perStroke[3],
+    minX: 0.58,
+    maxX: 0.88,
+    width: 0.3,
+    centerX: 0.73,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor: fieldDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(
+    result.checks["orthogonalCross.innerHorizontalStroke.innerVerticalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.innerHorizontalStroke.innerVerticalStroke",
+    ),
+  );
+
+  assert.equal(result.score, 10);
+});
+
+test("田 orthogonal cross should not depend on stored intersections", () => {
+  const features = createFieldFeatures({
+    includeInnerIntersection: false,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor: fieldDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(
+    result.checks["orthogonalCross.innerHorizontalStroke.innerVerticalStroke"],
+    true,
+  );
+
+  assert.equal(features.geometry.intersections.length, 0);
+});
+
+test("田 should fail when the inner horizontal is too close to the bottom stroke", () => {
+  const features = createFieldFeatures({
+    innerHorizontalCenterY: 0.82,
+    bottomCenterY: 0.86,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor: fieldDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(
+    result.checks["above.innerHorizontalStroke.bottomStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.innerHorizontalStroke.bottomStroke",
+    ),
+  );
+});
+
+test("田 should fail when the inner vertical is outside the central zone", () => {
+  const features = createFieldFeatures();
+
+  features.geometry.perStroke[2] = {
+    ...features.geometry.perStroke[2],
+    centerX: 0.82,
+    minX: 0.795,
+    maxX: 0.845,
+  };
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor: fieldDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["innerVerticalStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("innerVerticalStroke.matches"));
+});
+
+test("田 box connections should remain soft", () => {
+  const connectionCheckNames = [
+    "connects.leftStroke.outerStroke",
+    "connects.leftStroke.bottomStroke",
+    "connects.outerStroke.bottomStroke",
+    "connects.innerHorizontalStroke.leftStroke",
+    "connects.innerHorizontalStroke.outerStroke",
+    "connects.innerVerticalStroke.outerStroke",
+    "connects.innerVerticalStroke.bottomStroke",
+  ];
+
+  for (const checkName of connectionCheckNames) {
+    assert.equal(
+      fieldDescriptor.hardChecks.includes(checkName),
+      false,
+      `${checkName} should remain soft`,
+    );
+  }
+});
+
+test("田 should accept a recognizable box with soft closure gaps", () => {
+  const features = createFieldFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor: fieldDescriptor,
+  });
+
+  assert.equal(result.checks["connects.leftStroke.outerStroke"], false);
+
+  assert.equal(result.checks["connects.outerStroke.bottomStroke"], false);
+
+  assert.equal(
+    result.hardFailedChecks.includes("connects.leftStroke.outerStroke"),
+    false,
+  );
+
+  assert.equal(
+    result.hardFailedChecks.includes("connects.outerStroke.bottomStroke"),
+    false,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+test("orthogonalCross should pass when both stroke spans cross", () => {
+  const horizontalStroke = {
+    minX: 0.2,
+    maxX: 0.8,
+    centerY: 0.5,
+  };
+
+  const verticalStroke = {
+    minY: 0.2,
+    maxY: 0.8,
+    centerX: 0.5,
+  };
+
+  assert.equal(
+    validateOrthogonalCrossRelation(horizontalStroke, verticalStroke),
+    true,
+  );
+});
+
+test("orthogonalCross should fail when the vertical is outside the horizontal span", () => {
+  const horizontalStroke = {
+    minX: 0.2,
+    maxX: 0.6,
+    centerY: 0.5,
+  };
+
+  const verticalStroke = {
+    minY: 0.2,
+    maxY: 0.8,
+    centerX: 0.75,
+  };
+
+  assert.equal(
+    validateOrthogonalCrossRelation(horizontalStroke, verticalStroke),
+    false,
+  );
+});
+
+test("orthogonalCross should fail when the horizontal is outside the vertical span", () => {
+  const horizontalStroke = {
+    minX: 0.2,
+    maxX: 0.8,
+    centerY: 0.85,
+  };
+
+  const verticalStroke = {
+    minY: 0.2,
+    maxY: 0.7,
+    centerX: 0.5,
+  };
+
+  assert.equal(
+    validateOrthogonalCrossRelation(horizontalStroke, verticalStroke),
+    false,
+  );
+});
+
+test("orthogonalCross should support configurable tolerances", () => {
+  const horizontalStroke = {
+    minX: 0.2,
+    maxX: 0.48,
+    centerY: 0.5,
+  };
+
+  const verticalStroke = {
+    minY: 0.2,
+    maxY: 0.8,
+    centerX: 0.5,
+  };
+
+  assert.equal(
+    validateOrthogonalCrossRelation(horizontalStroke, verticalStroke),
+    false,
+  );
+
+  assert.equal(
+    validateOrthogonalCrossRelation(horizontalStroke, verticalStroke, {
+      toleranceX: 0.03,
+    }),
+    true,
+  );
 });
