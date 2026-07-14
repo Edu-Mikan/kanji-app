@@ -32,6 +32,7 @@ const eyeDescriptor = descriptorData.descriptors["目"];
 const fieldDescriptor = descriptorData.descriptors["田"];
 const enclosureDescriptor = descriptorData.descriptors["回"];
 const useDescriptor = descriptorData.descriptors["用"];
+const treeDescriptor = descriptorData.descriptors["木"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -3382,4 +3383,289 @@ test("用 should reject a lower horizontal positioned too high", () => {
   assert.equal(result.isCorrect, false);
 
   assert.equal(result.score, 10);
+});
+
+function createTreeFeatures({
+  horizontalCenterY = 0.3,
+  horizontalMinX = 0.15,
+  horizontalMaxX = 0.85,
+  verticalCenterX = 0.5,
+  verticalMinY = 0.08,
+  verticalMaxY = 0.92,
+  leftCenterX = 0.32,
+  leftCenterY = 0.68,
+  leftDeltaX = -0.28,
+  leftDeltaY = 0.42,
+  rightCenterX = 0.68,
+  rightCenterY = 0.68,
+  rightDeltaX = 0.28,
+  rightDeltaY = 0.42,
+} = {}) {
+  return {
+    strokeCountUser: 4,
+    strokeCountRef: 4,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.84,
+      aspectRatio: 0.8 / 0.84,
+      straightnessMean: 0.92,
+      straightnessMin: 0.88,
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0.03,
+          width: horizontalMaxX - horizontalMinX,
+          height: 0.04,
+          centerX: (horizontalMinX + horizontalMaxX) / 2,
+          centerY: horizontalCenterY,
+          minX: horizontalMinX,
+          maxX: horizontalMaxX,
+          minY: horizontalCenterY - 0.02,
+          maxY: horizontalCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: horizontalMaxX - horizontalMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 1,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: verticalMaxY - verticalMinY,
+          centerX: verticalCenterX,
+          centerY: (verticalMinY + verticalMaxY) / 2,
+          minX: verticalCenterX - 0.025,
+          maxX: verticalCenterX + 0.025,
+          minY: verticalMinY,
+          maxY: verticalMaxY,
+          straightness: 0.98,
+          deltaX: 0.01,
+          deltaY: verticalMaxY - verticalMinY,
+        },
+        {
+          index: 2,
+          angleAbs: 0.98,
+          width: Math.abs(leftDeltaX),
+          height: leftDeltaY,
+          centerX: leftCenterX,
+          centerY: leftCenterY,
+          minX: leftCenterX - Math.abs(leftDeltaX) / 2,
+          maxX: leftCenterX + Math.abs(leftDeltaX) / 2,
+          minY: leftCenterY - leftDeltaY / 2,
+          maxY: leftCenterY + leftDeltaY / 2,
+          straightness: 0.95,
+          deltaX: leftDeltaX,
+          deltaY: leftDeltaY,
+        },
+        {
+          index: 3,
+          angleAbs: 0.98,
+          width: Math.abs(rightDeltaX),
+          height: rightDeltaY,
+          centerX: rightCenterX,
+          centerY: rightCenterY,
+          minX: rightCenterX - Math.abs(rightDeltaX) / 2,
+          maxX: rightCenterX + Math.abs(rightDeltaX) / 2,
+          minY: rightCenterY - rightDeltaY / 2,
+          maxY: rightCenterY + rightDeltaY / 2,
+          straightness: 0.95,
+          deltaX: rightDeltaX,
+          deltaY: rightDeltaY,
+        },
+      ],
+    },
+  };
+}
+
+test("木 descriptor should use declarative tree roles", () => {
+  assert.ok(treeDescriptor);
+
+  assert.equal(treeDescriptor.pattern, "tree_cross_pattern");
+
+  assert.equal(treeDescriptor.strokeCount, 4);
+
+  assert.deepEqual(
+    treeDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "horizontalStroke",
+      "verticalStroke",
+      "leftDiagonalStroke",
+      "rightDiagonalStroke",
+    ],
+  );
+
+  assert.equal(treeDescriptor.rules, undefined);
+
+  assert.equal(treeDescriptor.expectedStrokeCount, undefined);
+});
+
+test("木 should pass with a central cross and two outward diagonals", () => {
+  const features = createTreeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.horizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.verticalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftDiagonalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.rightDiagonalStroke.matchedStrokeIndex, 3);
+
+  assert.equal(
+    result.checks["orthogonalCross.horizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(result.checks["direction.leftDiagonalStroke"], true);
+
+  assert.equal(result.checks["direction.rightDiagonalStroke"], true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("木 orthogonal cross should not depend on stored intersections", () => {
+  const features = createTreeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(features.geometry.intersections.length, 0);
+
+  assert.equal(
+    result.checks["orthogonalCross.horizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("木 should fail when the vertical does not cross the horizontal", () => {
+  const features = createTreeFeatures({
+    verticalCenterX: 0.93,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(
+    result.checks["orthogonalCross.horizontalStroke.verticalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.horizontalStroke.verticalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("木 should fail when the left diagonal descends to the right", () => {
+  const features = createTreeFeatures({
+    leftDeltaX: 0.28,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(result.checks["direction.leftDiagonalStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.leftDiagonalStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("木 should fail when the right diagonal descends to the left", () => {
+  const features = createTreeFeatures({
+    rightDeltaX: -0.28,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(result.checks["direction.rightDiagonalStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.rightDiagonalStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("木 should fail when a diagonal is not below the horizontal", () => {
+  const features = createTreeFeatures({
+    leftCenterY: 0.3,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(
+    result.checks["above.horizontalStroke.leftDiagonalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.horizontalStroke.leftDiagonalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("木 should fail when the diagonals are too close", () => {
+  const features = createTreeFeatures({
+    leftCenterX: 0.45,
+    rightCenterX: 0.54,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "木",
+    features,
+    descriptor: treeDescriptor,
+  });
+
+  assert.equal(
+    result.checks["centerXGap.leftDiagonalStroke.rightDiagonalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "centerXGap.leftDiagonalStroke.rightDiagonalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
 });

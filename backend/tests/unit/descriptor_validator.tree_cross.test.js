@@ -28,15 +28,6 @@ function loadJsonl(filePath) {
     .map((line) => JSON.parse(line));
 }
 
-test("木 descriptor should exist and use tree_cross_pattern", () => {
-  const descriptor = descriptors["木"];
-
-  assert.ok(descriptor, "Missing descriptor for 木");
-  assert.equal(descriptor.enabled, true);
-  assert.equal(descriptor.pattern, "tree_cross_pattern");
-  assert.equal(descriptor.expectedStrokeCount, 4);
-});
-
 test("木 manually correct samples should pass validateByDescriptor", () => {
   const samples = loadJsonl(woodFixtureFile);
   const descriptor = descriptors["木"];
@@ -104,31 +95,4 @@ test("木 manually incorrect samples should fail validateByDescriptor", () => {
       `Expected hard failure score for ${sample.recognitionId}, got ${result.score}`,
     );
   }
-});
-
-test("木 incorrect samples should include at least one diagonal direction failure", () => {
-  const samples = loadJsonl(woodFixtureFile);
-  const descriptor = descriptors["木"];
-
-  const incorrectSamples = samples.filter(
-    (sample) => sample.isCorrect === false,
-  );
-
-  const allHardFailures = [];
-
-  for (const sample of incorrectSamples) {
-    const result = validateByDescriptor({
-      kanji: "木",
-      features: sample.features,
-      descriptor,
-    });
-
-    allHardFailures.push(...result.hardFailedChecks);
-  }
-
-  assert.ok(
-    allHardFailures.includes("leftDiagonalDirection") ||
-      allHardFailures.includes("rightDiagonalDirection"),
-    "Expected at least one diagonal direction failure in incorrect 木 samples",
-  );
 });
