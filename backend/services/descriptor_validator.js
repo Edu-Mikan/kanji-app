@@ -3,14 +3,6 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     return null;
   }
 
-  if (descriptor.pattern === "nested_box_pattern") {
-    return validateNestedBoxPattern({
-      kanji,
-      features,
-      descriptor,
-    });
-  }
-
   if (descriptor.pattern === "open_box_with_inner_vertical_and_horizontals") {
     return validateOpenBoxWithInnerVerticalAndHorizontals({
       kanji,
@@ -402,6 +394,10 @@ function validateDisconnectedRelation(
 }
 
 function buildRelationCheckName(relation) {
+  if (relation.type === "containsGroup") {
+    return relation.id ?? "containsGroup";
+  }
+
   if (relation.stroke) {
     return `${relation.type}.${relation.stroke}`;
   }
@@ -454,6 +450,9 @@ function validateRelation(relation, roleMatches, geometry = {}) {
 
     case "orthogonalCross":
       return validateOrthogonalCrossRelation(from, to, relation);
+
+    case "containsGroup":
+      return validateContainsGroupRelation(relation, roleMatches);
 
     case "startsNearTopZone":
       return Boolean(
@@ -509,6 +508,87 @@ function validateRelation(relation, roleMatches, geometry = {}) {
       console.warn(`Unknown descriptor relation type: ${relation.type}`);
       return true;
   }
+}
+
+function getMatchedStrokes(roleMatches, roleIds) {
+  if (!Array.isArray(roleIds)) {
+    return [];
+  }
+
+  return roleIds
+    .map((roleId) => roleMatches?.[roleId]?.stroke ?? null)
+    .filter(Boolean);
+}
+
+function calculateCombinedBBox(strokes) {
+  if (!Array.isArray(strokes) || strokes.length === 0) {
+    return null;
+  }
+
+  const hasValidGeometry = strokes.every(
+    (stroke) =>
+      Number.isFinite(stroke.minX) &&
+      Number.isFinite(stroke.maxX) &&
+      Number.isFinite(stroke.minY) &&
+      Number.isFinite(stroke.maxY),
+  );
+
+  if (!hasValidGeometry) {
+    return null;
+  }
+
+  return {
+    minX: Math.min(...strokes.map((stroke) => stroke.minX)),
+    maxX: Math.max(...strokes.map((stroke) => stroke.maxX)),
+    minY: Math.min(...strokes.map((stroke) => stroke.minY)),
+    maxY: Math.max(...strokes.map((stroke) => stroke.maxY)),
+  };
+}
+
+function validateContainsGroupRelation(relation, roleMatches) {
+  const outerRoleIds = relation.outer ?? [];
+
+  const innerRoleIds = relation.inner ?? [];
+
+  if (outerRoleIds.length === 0 || innerRoleIds.length === 0) {
+    return false;
+  }
+
+  const outerStrokes = getMatchedStrokes(roleMatches, outerRoleIds);
+
+  const innerStrokes = getMatchedStrokes(roleMatches, innerRoleIds);
+
+  if (
+    outerStrokes.length !== outerRoleIds.length ||
+    innerStrokes.length !== innerRoleIds.length
+  ) {
+    return false;
+  }
+
+  const outerBBox = calculateCombinedBBox(outerStrokes);
+
+  const innerBBox = calculateCombinedBBox(innerStrokes);
+
+  if (!outerBBox || !innerBBox) {
+    return false;
+  }
+
+  const margin = relation.margin ?? {};
+
+  const leftMargin = margin.left ?? 0;
+
+  const topMargin = margin.top ?? 0;
+
+  const rightMargin = margin.right ?? 0;
+
+  const bottomMargin = margin.bottom ?? 0;
+
+  return (
+    innerBBox.minX >= outerBBox.minX + leftMargin &&
+    innerBBox.minY >= outerBBox.minY + topMargin &&
+    innerBBox.maxX <= outerBBox.maxX - rightMargin &&
+    innerBBox.maxY <= outerBBox.maxY - bottomMargin
+  );
 }
 
 function validateAboveRelation(from, to, relation) {
@@ -661,736 +741,6 @@ function simplifyRoleMatches(roleMatches) {
   }
 
   return result;
-}
-
-function validateNestedBoxPattern({ kanji, features, descriptor }) {
-  const geometry = features.geometry;
-
-  if (!geometry) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "descriptor_nested_box_pattern",
-      reason: "missing_geometry_features",
-      pattern: descriptor.pattern,
-    };
-  }
-
-  const perStroke = geometry.perStroke ?? [];
-  const rules = descriptor.rules ?? {};
-  const expectedStrokeCount = descriptor.expectedStrokeCount ?? 6;
-
-  if (perStroke.length !== expectedStrokeCount) {
-    const checks = {
-      strokeCount: features.strokeCountUser === expectedStrokeCount,
-      referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
-    };
-
-    const hardFailedChecks = Object.entries(checks)
-      .filter(([, value]) => value === false)
-      .map(([checkName]) => checkName);
-
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "descriptor_nested_box_pattern",
-      reason: "invalid_stroke_count",
-      pattern: descriptor.pattern,
-      checks,
-      failedChecks: hardFailedChecks,
-      hardFailedChecks,
-      softFailedChecks: [],
-      thresholds: {
-        expectedStrokeCount,
-      },
-    };
-  }
-
-  const minBboxWidth = rules.minBboxWidth ?? 0.45;
-  const minBboxHeight = rules.minBboxHeight ?? 0.55;
-  const aspectRatioMin = rules.aspectRatioMin ?? 0.45;
-  const aspectRatioMax = rules.aspectRatioMax ?? 1.8;
-
-  const minVerticalAngleAbs = rules.minVerticalAngleAbs ?? 0.85;
-  const minHorizontalAngleMax = rules.minHorizontalAngleMax ?? 0.6;
-  const minHeightVsWidthRatio = rules.minHeightVsWidthRatio ?? 1.25;
-  const minWidthVsHeightRatio = rules.minWidthVsHeightRatio ?? 1.25;
-
-  const outerLeftCenterXMax = rules.outerLeftCenterXMax ?? 0.35;
-  const outerLeftMinXMax = rules.outerLeftMinXMax ?? 0.25;
-  const outerLeftMinHeight = rules.outerLeftMinHeight ?? 0.45;
-
-  const outerWrappingMinWidth = rules.outerWrappingMinWidth ?? 0.35;
-  const outerWrappingMinHeight = rules.outerWrappingMinHeight ?? 0.45;
-  const outerWrappingMinYMax = rules.outerWrappingMinYMax ?? 0.35;
-  const outerWrappingMaxXMin = rules.outerWrappingMaxXMin ?? 0.44;
-  const outerWrappingMaxYMin = rules.outerWrappingMaxYMin ?? 0.48;
-  const outerWrappingMaxStraightness =
-    rules.outerWrappingMaxStraightness ?? 0.92;
-
-  const outerBottomCenterYMin = rules.outerBottomCenterYMin ?? 0.55;
-  const outerBottomMinWidth = rules.outerBottomMinWidth ?? 0.25;
-  const outerBottomMaxYMin = rules.outerBottomMaxYMin ?? 0.55;
-  const outerBottomDeltaYMin = rules.outerBottomDeltaYMin ?? -0.22;
-
-  const innerLeftCenterXMin = rules.innerLeftCenterXMin ?? 0.2;
-  const innerLeftCenterXMax = rules.innerLeftCenterXMax ?? 0.62;
-  const innerLeftCenterYMin = rules.innerLeftCenterYMin ?? 0.22;
-  const innerLeftCenterYMax = rules.innerLeftCenterYMax ?? 0.75;
-  const innerLeftMinHeight = rules.innerLeftMinHeight ?? 0.18;
-  const innerLeftMaxWidth = rules.innerLeftMaxWidth ?? 0.28;
-
-  const innerWrappingCenterXMin = rules.innerWrappingCenterXMin ?? 0.35;
-  const innerWrappingCenterXMax = rules.innerWrappingCenterXMax ?? 0.85;
-  const innerWrappingCenterYMin = rules.innerWrappingCenterYMin ?? 0.2;
-  const innerWrappingCenterYMax = rules.innerWrappingCenterYMax ?? 0.75;
-  const innerWrappingMinWidth = rules.innerWrappingMinWidth ?? 0.18;
-  const innerWrappingMinHeight = rules.innerWrappingMinHeight ?? 0.18;
-  const innerWrappingMaxStraightness =
-    rules.innerWrappingMaxStraightness ?? 0.95;
-
-  const innerBottomCenterYMin = rules.innerBottomCenterYMin ?? 0.38;
-  const innerBottomCenterYMax = rules.innerBottomCenterYMax ?? 0.82;
-  const innerBottomMinWidth = rules.innerBottomMinWidth ?? 0.18;
-  const innerBottomMaxHeight = rules.innerBottomMaxHeight ?? 0.28;
-  const innerBottomDeltaYMin = rules.innerBottomDeltaYMin ?? -0.22;
-
-  const minInnerBoxHorizontalCoverage =
-    rules.minInnerBoxHorizontalCoverage ?? 0.18;
-  const minInnerBoxVerticalCoverage = rules.minInnerBoxVerticalCoverage ?? 0.18;
-
-  const minOuterInnerLeftGap = rules.minOuterInnerLeftGap ?? 0.05;
-  const minOuterInnerTopGap = rules.minOuterInnerTopGap ?? 0.05;
-  const minInnerOuterRightGap = rules.minInnerOuterRightGap ?? 0.03;
-  const minInnerOuterBottomGap = rules.minInnerOuterBottomGap ?? 0.03;
-
-  const minBoxHorizontalCoverage = rules.minBoxHorizontalCoverage ?? 0.44;
-  const minBoxVerticalCoverage = rules.minBoxVerticalCoverage ?? 0.55;
-
-  const minStraightnessMean = rules.minStraightnessMean ?? 0.5;
-  const maxSoftFailures = rules.maxSoftFailures ?? 5;
-
-  const isVerticalish = (stroke) => {
-    const heightDominates =
-      stroke.height >= stroke.width * minHeightVsWidthRatio;
-
-    const angleLooksVertical = stroke.angleAbs >= minVerticalAngleAbs;
-
-    return heightDominates || angleLooksVertical;
-  };
-
-  const isHorizontalish = (stroke) => {
-    const widthDominates =
-      stroke.width >= stroke.height * minWidthVsHeightRatio;
-
-    const angleLooksHorizontal = stroke.angleAbs <= minHorizontalAngleMax;
-
-    return widthDominates || angleLooksHorizontal;
-  };
-
-  function rolePenalty(condition, penalty = 1) {
-    return condition ? 0 : penalty;
-  }
-
-  function scoreOuterLeftCandidate(stroke) {
-    return (
-      Math.abs(stroke.centerX - 0.12) * 2 +
-      stroke.minX * 2 +
-      rolePenalty(isVerticalish(stroke), 2) +
-      rolePenalty(stroke.height >= outerLeftMinHeight, 1.5) +
-      rolePenalty(stroke.centerX <= outerLeftCenterXMax, 1) +
-      rolePenalty(stroke.minX <= outerLeftMinXMax, 1)
-    );
-  }
-
-  function scoreOuterWrappingCandidate(stroke) {
-    return (
-      Math.abs(stroke.maxX - 1.0) * 2 +
-      stroke.minY +
-      rolePenalty(stroke.width >= outerWrappingMinWidth, 1.5) +
-      rolePenalty(stroke.height >= outerWrappingMinHeight, 1.5) +
-      rolePenalty(stroke.minY <= outerWrappingMinYMax, 1) +
-      rolePenalty(stroke.maxX >= outerWrappingMaxXMin, 1) +
-      rolePenalty(stroke.maxY >= outerWrappingMaxYMin, 1) +
-      rolePenalty(stroke.straightness <= outerWrappingMaxStraightness, 2)
-    );
-  }
-
-  function scoreOuterBottomCandidate(stroke) {
-    return (
-      Math.abs(stroke.centerY - 0.82) * 2 +
-      Math.max(0, outerBottomCenterYMin - stroke.centerY) * 3 +
-      Math.max(0, outerBottomMaxYMin - stroke.maxY) * 3 +
-      rolePenalty(isHorizontalish(stroke), 2) +
-      rolePenalty(stroke.width >= outerBottomMinWidth, 1.5) +
-      rolePenalty(stroke.deltaY >= outerBottomDeltaYMin, 1.5)
-    );
-  }
-
-  function scoreInnerLeftCandidate(stroke) {
-    return (
-      Math.abs(stroke.centerX - 0.36) * 2 +
-      Math.abs(stroke.centerY - 0.48) +
-      rolePenalty(isVerticalish(stroke), 2) +
-      rolePenalty(stroke.height >= innerLeftMinHeight, 1.5) +
-      rolePenalty(stroke.width <= innerLeftMaxWidth, 1) +
-      rolePenalty(stroke.centerX >= innerLeftCenterXMin, 1) +
-      rolePenalty(stroke.centerX <= innerLeftCenterXMax, 1) +
-      rolePenalty(stroke.centerY >= innerLeftCenterYMin, 1) +
-      rolePenalty(stroke.centerY <= innerLeftCenterYMax, 1)
-    );
-  }
-
-  function scoreInnerWrappingCandidate(stroke) {
-    return (
-      Math.abs(stroke.centerX - 0.58) +
-      Math.abs(stroke.centerY - 0.45) +
-      rolePenalty(stroke.width >= innerWrappingMinWidth, 1.5) +
-      rolePenalty(stroke.height >= innerWrappingMinHeight, 1.5) +
-      rolePenalty(stroke.centerX >= innerWrappingCenterXMin, 1) +
-      rolePenalty(stroke.centerX <= innerWrappingCenterXMax, 1) +
-      rolePenalty(stroke.centerY >= innerWrappingCenterYMin, 1) +
-      rolePenalty(stroke.centerY <= innerWrappingCenterYMax, 1) +
-      rolePenalty(stroke.straightness <= innerWrappingMaxStraightness, 1.5)
-    );
-  }
-
-  function scoreInnerBottomCandidate(stroke) {
-    return (
-      Math.abs(stroke.centerY - 0.62) * 2 +
-      rolePenalty(isHorizontalish(stroke), 2) +
-      rolePenalty(stroke.width >= innerBottomMinWidth, 1.5) +
-      rolePenalty(stroke.height <= innerBottomMaxHeight, 1) +
-      rolePenalty(stroke.centerY >= innerBottomCenterYMin, 1) +
-      rolePenalty(stroke.centerY <= innerBottomCenterYMax, 1) +
-      rolePenalty(stroke.deltaY >= innerBottomDeltaYMin, 1)
-    );
-  }
-
-  let bestRoleAssignment = null;
-  let bestRoleAssignmentScore = Infinity;
-
-  for (const outerLeftCandidate of perStroke) {
-    for (const outerWrappingCandidate of perStroke) {
-      if (outerWrappingCandidate === outerLeftCandidate) {
-        continue;
-      }
-
-      for (const outerBottomCandidate of perStroke) {
-        if (
-          outerBottomCandidate === outerLeftCandidate ||
-          outerBottomCandidate === outerWrappingCandidate
-        ) {
-          continue;
-        }
-
-        for (const innerLeftCandidate of perStroke) {
-          if (
-            innerLeftCandidate === outerLeftCandidate ||
-            innerLeftCandidate === outerWrappingCandidate ||
-            innerLeftCandidate === outerBottomCandidate
-          ) {
-            continue;
-          }
-
-          for (const innerWrappingCandidate of perStroke) {
-            if (
-              innerWrappingCandidate === outerLeftCandidate ||
-              innerWrappingCandidate === outerWrappingCandidate ||
-              innerWrappingCandidate === outerBottomCandidate ||
-              innerWrappingCandidate === innerLeftCandidate
-            ) {
-              continue;
-            }
-
-            for (const innerBottomCandidate of perStroke) {
-              if (
-                innerBottomCandidate === outerLeftCandidate ||
-                innerBottomCandidate === outerWrappingCandidate ||
-                innerBottomCandidate === outerBottomCandidate ||
-                innerBottomCandidate === innerLeftCandidate ||
-                innerBottomCandidate === innerWrappingCandidate
-              ) {
-                continue;
-              }
-
-              const outerBottomOrderPenalty =
-                outerBottomCandidate.centerY > outerLeftCandidate.centerY
-                  ? 0
-                  : 2;
-
-              const innerBottomOrderPenalty =
-                innerBottomCandidate.centerY > innerLeftCandidate.centerY
-                  ? 0
-                  : 2;
-
-              const innerInsidePenalty =
-                innerLeftCandidate.centerX > outerLeftCandidate.centerX &&
-                innerWrappingCandidate.maxX < outerWrappingCandidate.maxX &&
-                innerBottomCandidate.centerY < outerBottomCandidate.centerY
-                  ? 0
-                  : 4;
-
-              const score =
-                scoreOuterLeftCandidate(outerLeftCandidate) +
-                scoreOuterWrappingCandidate(outerWrappingCandidate) +
-                scoreOuterBottomCandidate(outerBottomCandidate) +
-                scoreInnerLeftCandidate(innerLeftCandidate) +
-                scoreInnerWrappingCandidate(innerWrappingCandidate) +
-                scoreInnerBottomCandidate(innerBottomCandidate) +
-                outerBottomOrderPenalty +
-                innerBottomOrderPenalty +
-                innerInsidePenalty;
-
-              if (score < bestRoleAssignmentScore) {
-                bestRoleAssignmentScore = score;
-                bestRoleAssignment = {
-                  outerLeftStroke: outerLeftCandidate,
-                  outerWrappingStroke: outerWrappingCandidate,
-                  outerBottomStroke: outerBottomCandidate,
-                  innerLeftStroke: innerLeftCandidate,
-                  innerWrappingStroke: innerWrappingCandidate,
-                  innerBottomStroke: innerBottomCandidate,
-                };
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  const outerLeftStroke = bestRoleAssignment?.outerLeftStroke ?? null;
-  const outerWrappingStroke = bestRoleAssignment?.outerWrappingStroke ?? null;
-  const outerBottomStroke = bestRoleAssignment?.outerBottomStroke ?? null;
-  const innerLeftStroke = bestRoleAssignment?.innerLeftStroke ?? null;
-  const innerWrappingStroke = bestRoleAssignment?.innerWrappingStroke ?? null;
-  const innerBottomStroke = bestRoleAssignment?.innerBottomStroke ?? null;
-
-  const outerBoxMinX = Math.min(...perStroke.map((stroke) => stroke.minX));
-  const outerBoxMaxX = Math.max(...perStroke.map((stroke) => stroke.maxX));
-  const outerBoxMinY = Math.min(...perStroke.map((stroke) => stroke.minY));
-  const outerBoxMaxY = Math.max(...perStroke.map((stroke) => stroke.maxY));
-
-  const outerBoxHorizontalCoverage = outerBoxMaxX - outerBoxMinX;
-  const outerBoxVerticalCoverage = outerBoxMaxY - outerBoxMinY;
-
-  const innerStrokes = [
-    innerLeftStroke,
-    innerWrappingStroke,
-    innerBottomStroke,
-  ].filter(Boolean);
-
-  const innerBoxMinX =
-    innerStrokes.length > 0
-      ? Math.min(...innerStrokes.map((stroke) => stroke.minX))
-      : 0;
-
-  const innerBoxMaxX =
-    innerStrokes.length > 0
-      ? Math.max(...innerStrokes.map((stroke) => stroke.maxX))
-      : 0;
-
-  const innerBoxMinY =
-    innerStrokes.length > 0
-      ? Math.min(...innerStrokes.map((stroke) => stroke.minY))
-      : 0;
-
-  const innerBoxMaxY =
-    innerStrokes.length > 0
-      ? Math.max(...innerStrokes.map((stroke) => stroke.maxY))
-      : 0;
-
-  const innerBoxHorizontalCoverage = innerBoxMaxX - innerBoxMinX;
-  const innerBoxVerticalCoverage = innerBoxMaxY - innerBoxMinY;
-
-  const checks = {
-    strokeCount: features.strokeCountUser === expectedStrokeCount,
-    referenceStrokeCount: features.strokeCountRef === expectedStrokeCount,
-
-    bboxWidth: geometry.bboxWidth >= minBboxWidth,
-    bboxHeight: geometry.bboxHeight >= minBboxHeight,
-    aspectRatio:
-      geometry.aspectRatio >= aspectRatioMin &&
-      geometry.aspectRatio <= aspectRatioMax,
-
-    hasOuterLeftStroke: Boolean(outerLeftStroke),
-    hasOuterWrappingStroke: Boolean(outerWrappingStroke),
-    hasOuterBottomStroke: Boolean(outerBottomStroke),
-    hasInnerLeftStroke: Boolean(innerLeftStroke),
-    hasInnerWrappingStroke: Boolean(innerWrappingStroke),
-    hasInnerBottomStroke: Boolean(innerBottomStroke),
-
-    outerLeftIsLeft:
-      Boolean(outerLeftStroke) &&
-      outerLeftStroke.centerX <= outerLeftCenterXMax &&
-      outerLeftStroke.minX <= outerLeftMinXMax,
-
-    outerLeftIsVerticalish:
-      Boolean(outerLeftStroke) && isVerticalish(outerLeftStroke),
-
-    outerLeftHasHeight:
-      Boolean(outerLeftStroke) && outerLeftStroke.height >= outerLeftMinHeight,
-
-    outerWrappingHasWidth:
-      Boolean(outerWrappingStroke) &&
-      outerWrappingStroke.width >= outerWrappingMinWidth,
-
-    outerWrappingHasHeight:
-      Boolean(outerWrappingStroke) &&
-      outerWrappingStroke.height >= outerWrappingMinHeight,
-
-    outerWrappingStartsNearTop:
-      Boolean(outerWrappingStroke) &&
-      outerWrappingStroke.minY <= outerWrappingMinYMax,
-
-    outerWrappingExtendsRight:
-      Boolean(outerWrappingStroke) &&
-      outerWrappingStroke.maxX >= outerWrappingMaxXMin,
-
-    outerWrappingExtendsDown:
-      Boolean(outerWrappingStroke) &&
-      outerWrappingStroke.maxY >= outerWrappingMaxYMin,
-
-    outerWrappingHasCorner:
-      Boolean(outerWrappingStroke) &&
-      outerWrappingStroke.straightness <= outerWrappingMaxStraightness,
-
-    outerBottomIsLower:
-      Boolean(outerBottomStroke) &&
-      outerBottomStroke.centerY >= outerBottomCenterYMin,
-
-    outerBottomIsHorizontalish:
-      Boolean(outerBottomStroke) && isHorizontalish(outerBottomStroke),
-
-    outerBottomHasWidth:
-      Boolean(outerBottomStroke) &&
-      outerBottomStroke.width >= outerBottomMinWidth,
-
-    outerBottomReachesBottom:
-      Boolean(outerBottomStroke) &&
-      outerBottomStroke.maxY >= outerBottomMaxYMin,
-
-    outerBottomNotStronglyUpward:
-      Boolean(outerBottomStroke) &&
-      outerBottomStroke.deltaY >= outerBottomDeltaYMin,
-
-    innerLeftIsVerticalish:
-      Boolean(innerLeftStroke) && isVerticalish(innerLeftStroke),
-
-    innerLeftHasHeight:
-      Boolean(innerLeftStroke) && innerLeftStroke.height >= innerLeftMinHeight,
-
-    innerLeftIsThin:
-      Boolean(innerLeftStroke) && innerLeftStroke.width <= innerLeftMaxWidth,
-
-    innerLeftXInRange:
-      Boolean(innerLeftStroke) &&
-      innerLeftStroke.centerX >= innerLeftCenterXMin &&
-      innerLeftStroke.centerX <= innerLeftCenterXMax,
-
-    innerLeftYInRange:
-      Boolean(innerLeftStroke) &&
-      innerLeftStroke.centerY >= innerLeftCenterYMin &&
-      innerLeftStroke.centerY <= innerLeftCenterYMax,
-
-    innerWrappingHasWidth:
-      Boolean(innerWrappingStroke) &&
-      innerWrappingStroke.width >= innerWrappingMinWidth,
-
-    innerWrappingHasHeight:
-      Boolean(innerWrappingStroke) &&
-      innerWrappingStroke.height >= innerWrappingMinHeight,
-
-    innerWrappingXInRange:
-      Boolean(innerWrappingStroke) &&
-      innerWrappingStroke.centerX >= innerWrappingCenterXMin &&
-      innerWrappingStroke.centerX <= innerWrappingCenterXMax,
-
-    innerWrappingYInRange:
-      Boolean(innerWrappingStroke) &&
-      innerWrappingStroke.centerY >= innerWrappingCenterYMin &&
-      innerWrappingStroke.centerY <= innerWrappingCenterYMax,
-
-    innerWrappingHasCorner:
-      Boolean(innerWrappingStroke) &&
-      innerWrappingStroke.straightness <= innerWrappingMaxStraightness,
-
-    innerBottomIsHorizontalish:
-      Boolean(innerBottomStroke) && isHorizontalish(innerBottomStroke),
-
-    innerBottomHasWidth:
-      Boolean(innerBottomStroke) &&
-      innerBottomStroke.width >= innerBottomMinWidth,
-
-    innerBottomIsThin:
-      Boolean(innerBottomStroke) &&
-      innerBottomStroke.height <= innerBottomMaxHeight,
-
-    innerBottomYInRange:
-      Boolean(innerBottomStroke) &&
-      innerBottomStroke.centerY >= innerBottomCenterYMin &&
-      innerBottomStroke.centerY <= innerBottomCenterYMax,
-
-    innerBottomNotStronglyUpward:
-      Boolean(innerBottomStroke) &&
-      innerBottomStroke.deltaY >= innerBottomDeltaYMin,
-
-    innerBoxHasHorizontalCoverage:
-      innerBoxHorizontalCoverage >= minInnerBoxHorizontalCoverage,
-
-    innerBoxHasVerticalCoverage:
-      innerBoxVerticalCoverage >= minInnerBoxVerticalCoverage,
-
-    innerBoxInsideOuterBox:
-      Boolean(innerLeftStroke) &&
-      Boolean(innerWrappingStroke) &&
-      Boolean(innerBottomStroke) &&
-      Boolean(outerLeftStroke) &&
-      Boolean(outerWrappingStroke) &&
-      Boolean(outerBottomStroke) &&
-      innerBoxMinX >= outerBoxMinX + minOuterInnerLeftGap &&
-      innerBoxMinY >= outerBoxMinY + minOuterInnerTopGap &&
-      innerBoxMaxX <= outerBoxMaxX - minInnerOuterRightGap &&
-      innerBoxMaxY <= outerBoxMaxY - minInnerOuterBottomGap,
-
-    innerBottomBelowInnerLeft:
-      Boolean(innerBottomStroke) &&
-      Boolean(innerLeftStroke) &&
-      innerBottomStroke.centerY > innerLeftStroke.centerY,
-
-    outerBottomBelowOuterLeft:
-      Boolean(outerBottomStroke) &&
-      Boolean(outerLeftStroke) &&
-      outerBottomStroke.centerY > outerLeftStroke.centerY,
-
-    outerRightOfOuterLeft:
-      Boolean(outerWrappingStroke) &&
-      Boolean(outerLeftStroke) &&
-      outerWrappingStroke.maxX > outerLeftStroke.centerX,
-
-    outerBoxHasHorizontalCoverage:
-      outerBoxHorizontalCoverage >= minBoxHorizontalCoverage,
-
-    outerBoxHasVerticalCoverage:
-      outerBoxVerticalCoverage >= minBoxVerticalCoverage,
-
-    straightnessMean: geometry.straightnessMean >= minStraightnessMean,
-
-    // Checks blandos de cierre aproximado.
-    outerLeftTouchesTopHalf:
-      Boolean(outerLeftStroke) && outerLeftStroke.minY <= 0.35,
-
-    outerLeftTouchesBottomHalf:
-      Boolean(outerLeftStroke) && outerLeftStroke.maxY >= 0.55,
-
-    outerBottomTouchesLeftHalf:
-      Boolean(outerBottomStroke) && outerBottomStroke.minX <= 0.45,
-
-    outerBottomTouchesRightHalf:
-      Boolean(outerBottomStroke) && outerBottomStroke.maxX >= 0.55,
-
-    innerLeftTouchesTopHalf:
-      Boolean(innerLeftStroke) && innerLeftStroke.minY <= 0.65,
-
-    innerBottomTouchesLeftHalf:
-      Boolean(innerBottomStroke) && innerBottomStroke.minX <= 0.65,
-
-    innerBottomTouchesRightHalf:
-      Boolean(innerBottomStroke) && innerBottomStroke.maxX >= 0.35,
-  };
-
-  const hardCheckNames = [
-    "strokeCount",
-    "referenceStrokeCount",
-
-    "bboxWidth",
-    "bboxHeight",
-    "aspectRatio",
-
-    "hasOuterLeftStroke",
-    "hasOuterWrappingStroke",
-    "hasOuterBottomStroke",
-    "hasInnerLeftStroke",
-    "hasInnerWrappingStroke",
-    "hasInnerBottomStroke",
-
-    "outerLeftIsLeft",
-    "outerLeftIsVerticalish",
-    "outerLeftHasHeight",
-
-    "outerWrappingHasWidth",
-    "outerWrappingHasHeight",
-    "outerWrappingStartsNearTop",
-    "outerWrappingExtendsRight",
-    "outerWrappingExtendsDown",
-    "outerWrappingHasCorner",
-
-    "outerBottomIsLower",
-    "outerBottomIsHorizontalish",
-    "outerBottomHasWidth",
-    "outerBottomReachesBottom",
-    "outerBottomNotStronglyUpward",
-
-    "innerLeftHasHeight",
-    "innerLeftIsThin",
-    "innerLeftXInRange",
-    "innerLeftYInRange",
-
-    "innerWrappingHasWidth",
-    "innerWrappingHasHeight",
-    "innerWrappingXInRange",
-    "innerWrappingYInRange",
-    "innerWrappingHasCorner",
-
-    "innerBottomIsHorizontalish",
-    "innerBottomHasWidth",
-    "innerBottomIsThin",
-    "innerBottomYInRange",
-    "innerBottomNotStronglyUpward",
-
-    "innerBoxHasHorizontalCoverage",
-    "innerBoxHasVerticalCoverage",
-    "innerBoxInsideOuterBox",
-
-    //"innerBottomBelowInnerLeft",
-    "outerBottomBelowOuterLeft",
-    "outerRightOfOuterLeft",
-
-    "outerBoxHasHorizontalCoverage",
-    "outerBoxHasVerticalCoverage",
-  ];
-
-  const softCheckNames = [
-    "straightnessMean",
-    "outerLeftTouchesTopHalf",
-    "outerLeftTouchesBottomHalf",
-    "outerBottomTouchesLeftHalf",
-    "outerBottomTouchesRightHalf",
-    "innerLeftTouchesTopHalf",
-    "innerBottomTouchesLeftHalf",
-    "innerBottomTouchesRightHalf",
-    "innerBottomBelowInnerLeft",
-    "innerLeftIsVerticalish",
-  ];
-
-  const hardFailedChecks = hardCheckNames.filter(
-    (checkName) => checks[checkName] === false,
-  );
-
-  const softFailedChecks = softCheckNames.filter(
-    (checkName) => checks[checkName] === false,
-  );
-
-  const failedChecks = [...hardFailedChecks, ...softFailedChecks];
-
-  const totalChecks = Object.keys(checks).length || 1;
-  const passedChecks = Object.values(checks).filter(Boolean).length;
-  const descriptorMatchScore = passedChecks / totalChecks;
-
-  const isCorrect =
-    hardFailedChecks.length === 0 && softFailedChecks.length <= maxSoftFailures;
-
-  const hasHardFailure = hardFailedChecks.length > 0;
-
-  return {
-    isCorrect,
-    score: isCorrect ? 0.5 : hasHardFailure ? 10 : 0.75,
-    strategy: "descriptor_nested_box_pattern",
-    pattern: descriptor.pattern,
-    kanji,
-
-    checks,
-    failedChecks,
-    hardFailedChecks,
-    softFailedChecks,
-    descriptorMatchScore,
-
-    descriptor,
-
-    details: {
-      outerLeftStroke,
-      outerWrappingStroke,
-      outerBottomStroke,
-      innerLeftStroke,
-      innerWrappingStroke,
-      innerBottomStroke,
-      allStrokes: perStroke,
-      outerBoxHorizontalCoverage,
-      outerBoxVerticalCoverage,
-      innerBoxHorizontalCoverage,
-      innerBoxVerticalCoverage,
-      innerBoxMinX,
-      innerBoxMaxX,
-      innerBoxMinY,
-      innerBoxMaxY,
-      roleAssignmentScore: bestRoleAssignmentScore,
-    },
-
-    thresholds: {
-      expectedStrokeCount,
-
-      minBboxWidth,
-      minBboxHeight,
-      aspectRatioMin,
-      aspectRatioMax,
-
-      minVerticalAngleAbs,
-      minHorizontalAngleMax,
-      minHeightVsWidthRatio,
-      minWidthVsHeightRatio,
-
-      outerLeftCenterXMax,
-      outerLeftMinXMax,
-      outerLeftMinHeight,
-
-      outerWrappingMinWidth,
-      outerWrappingMinHeight,
-      outerWrappingMinYMax,
-      outerWrappingMaxXMin,
-      outerWrappingMaxYMin,
-      outerWrappingMaxStraightness,
-
-      outerBottomCenterYMin,
-      outerBottomMinWidth,
-      outerBottomMaxYMin,
-      outerBottomDeltaYMin,
-
-      innerLeftCenterXMin,
-      innerLeftCenterXMax,
-      innerLeftCenterYMin,
-      innerLeftCenterYMax,
-      innerLeftMinHeight,
-      innerLeftMaxWidth,
-
-      innerWrappingCenterXMin,
-      innerWrappingCenterXMax,
-      innerWrappingCenterYMin,
-      innerWrappingCenterYMax,
-      innerWrappingMinWidth,
-      innerWrappingMinHeight,
-      innerWrappingMaxStraightness,
-
-      innerBottomCenterYMin,
-      innerBottomCenterYMax,
-      innerBottomMinWidth,
-      innerBottomMaxHeight,
-      innerBottomDeltaYMin,
-
-      minInnerBoxHorizontalCoverage,
-      minInnerBoxVerticalCoverage,
-      minOuterInnerLeftGap,
-      minOuterInnerTopGap,
-      minInnerOuterRightGap,
-      minInnerOuterBottomGap,
-
-      minBoxHorizontalCoverage,
-      minBoxVerticalCoverage,
-
-      minStraightnessMean,
-      maxSoftFailures,
-    },
-  };
 }
 
 function validateOpenBoxWithInnerVerticalAndHorizontals({
@@ -4039,4 +3389,7 @@ module.exports = {
   validateConnectsRelation,
   validateDisconnectedRelation,
   validateOrthogonalCrossRelation,
+  getMatchedStrokes,
+  calculateCombinedBBox,
+  validateContainsGroupRelation,
 };

@@ -17,6 +17,9 @@ const {
   validateByDescriptor,
   validateDisconnectedRelation,
   validateOrthogonalCrossRelation,
+  buildRelationCheckName,
+  calculateCombinedBBox,
+  validateContainsGroupRelation,
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
@@ -27,6 +30,7 @@ const boxDescriptor = descriptorData.descriptors["口"];
 const sunDescriptor = descriptorData.descriptors["日"];
 const eyeDescriptor = descriptorData.descriptors["目"];
 const fieldDescriptor = descriptorData.descriptors["田"];
+const enclosureDescriptor = descriptorData.descriptors["回"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -2311,4 +2315,466 @@ test("orthogonalCross should support configurable tolerances", () => {
     }),
     true,
   );
+});
+function createNestedBoxRoleMatches() {
+  return {
+    outerWrappingStroke: {
+      stroke: {
+        index: 1,
+        minX: 0.1,
+        maxX: 0.9,
+        minY: 0.1,
+        maxY: 0.9,
+      },
+    },
+
+    outerLeftStroke: {
+      stroke: {
+        index: 0,
+        minX: 0.1,
+        maxX: 0.15,
+        minY: 0.1,
+        maxY: 0.9,
+      },
+    },
+
+    outerBottomStroke: {
+      stroke: {
+        index: 5,
+        minX: 0.1,
+        maxX: 0.9,
+        minY: 0.85,
+        maxY: 0.9,
+      },
+    },
+
+    innerWrappingStroke: {
+      stroke: {
+        index: 3,
+        minX: 0.3,
+        maxX: 0.7,
+        minY: 0.3,
+        maxY: 0.7,
+      },
+    },
+
+    innerLeftStroke: {
+      stroke: {
+        index: 2,
+        minX: 0.3,
+        maxX: 0.35,
+        minY: 0.3,
+        maxY: 0.7,
+      },
+    },
+
+    innerBottomStroke: {
+      stroke: {
+        index: 4,
+        minX: 0.3,
+        maxX: 0.7,
+        minY: 0.65,
+        maxY: 0.7,
+      },
+    },
+  };
+}
+
+function createContainsGroupRelation({
+  margin = {
+    left: 0.05,
+    top: 0.05,
+    right: 0.05,
+    bottom: 0.05,
+  },
+} = {}) {
+  return {
+    id: "innerBoxInsideOuterBox",
+    type: "containsGroup",
+    outer: ["outerWrappingStroke", "outerLeftStroke", "outerBottomStroke"],
+    inner: ["innerWrappingStroke", "innerLeftStroke", "innerBottomStroke"],
+    margin,
+  };
+}
+test("containsGroup should pass when the inner group is inside the outer group", () => {
+  const roleMatches = createNestedBoxRoleMatches();
+
+  const relation = createContainsGroupRelation();
+
+  assert.equal(validateContainsGroupRelation(relation, roleMatches), true);
+
+  assert.equal(validateRelation(relation, roleMatches), true);
+});
+
+test("containsGroup should fail when the inner group extends outside the outer group", () => {
+  const roleMatches = createNestedBoxRoleMatches();
+
+  roleMatches.innerWrappingStroke.stroke.maxX = 0.95;
+
+  const relation = createContainsGroupRelation();
+
+  assert.equal(validateRelation(relation, roleMatches), false);
+});
+
+test("containsGroup should fail safely when a role is missing", () => {
+  const roleMatches = createNestedBoxRoleMatches();
+
+  delete roleMatches.innerBottomStroke;
+
+  const relation = createContainsGroupRelation();
+
+  assert.equal(validateRelation(relation, roleMatches), false);
+});
+
+test("containsGroup should respect configured margins", () => {
+  const roleMatches = createNestedBoxRoleMatches();
+
+  roleMatches.innerLeftStroke.stroke.minX = 0.12;
+
+  const noMarginRelation = createContainsGroupRelation({
+    margin: {
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+    },
+  });
+
+  const marginRelation = createContainsGroupRelation();
+
+  assert.equal(validateRelation(noMarginRelation, roleMatches), true);
+
+  assert.equal(validateRelation(marginRelation, roleMatches), false);
+});
+
+test("containsGroup should use its configured id as check name", () => {
+  const relation = createContainsGroupRelation();
+
+  assert.equal(buildRelationCheckName(relation), "innerBoxInsideOuterBox");
+});
+
+function createEnclosureFeatures({
+  innerLeftX = 0.34,
+  innerRightX = 0.68,
+  innerTopY = 0.32,
+  innerBottomY = 0.66,
+  outerBottomY = 0.88,
+  intersections = [],
+  touches = [],
+} = {}) {
+  return {
+    strokeCountUser: 6,
+    strokeCountRef: 6,
+    geometry: {
+      bboxWidth: 0.82,
+      bboxHeight: 0.82,
+      aspectRatio: 1,
+      straightnessMean: 0.83,
+      straightnessMin: 0.65,
+      intersections,
+      intersectionCount: intersections.length,
+      touches,
+      touchCount: touches.length,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: 0.78,
+          centerX: 0.12,
+          centerY: 0.49,
+          minX: 0.1,
+          maxX: 0.15,
+          minY: 0.1,
+          maxY: 0.88,
+          straightness: 0.98,
+          deltaX: 0.02,
+          deltaY: 0.78,
+        },
+        {
+          index: 1,
+          angleAbs: 0.75,
+          width: 0.78,
+          height: 0.78,
+          centerX: 0.5,
+          centerY: 0.49,
+          minX: 0.1,
+          maxX: 0.88,
+          minY: 0.1,
+          maxY: 0.88,
+          straightness: 0.65,
+          deltaX: 0.78,
+          deltaY: 0.78,
+        },
+        {
+          index: 2,
+          angleAbs: Math.PI / 2,
+          width: 0.04,
+          height: innerBottomY - innerTopY,
+          centerX: innerLeftX,
+          centerY: (innerTopY + innerBottomY) / 2,
+          minX: innerLeftX - 0.02,
+          maxX: innerLeftX + 0.02,
+          minY: innerTopY,
+          maxY: innerBottomY,
+          straightness: 0.98,
+          deltaX: 0.01,
+          deltaY: innerBottomY - innerTopY,
+        },
+        {
+          index: 3,
+          angleAbs: 0.75,
+          width: innerRightX - innerLeftX,
+          height: innerBottomY - innerTopY,
+          centerX: (innerLeftX + innerRightX) / 2,
+          centerY: (innerTopY + innerBottomY) / 2,
+          minX: innerLeftX,
+          maxX: innerRightX,
+          minY: innerTopY,
+          maxY: innerBottomY,
+          straightness: 0.72,
+          deltaX: innerRightX - innerLeftX,
+          deltaY: innerBottomY - innerTopY,
+        },
+        {
+          index: 4,
+          angleAbs: 0.03,
+          width: innerRightX - innerLeftX,
+          height: 0.04,
+          centerX: (innerLeftX + innerRightX) / 2,
+          centerY: innerBottomY,
+          minX: innerLeftX,
+          maxX: innerRightX,
+          minY: innerBottomY - 0.02,
+          maxY: innerBottomY + 0.02,
+          straightness: 0.98,
+          deltaX: innerRightX - innerLeftX,
+          deltaY: 0.01,
+        },
+        {
+          index: 5,
+          angleAbs: 0.03,
+          width: 0.7,
+          height: 0.04,
+          centerX: 0.5,
+          centerY: outerBottomY,
+          minX: 0.15,
+          maxX: 0.85,
+          minY: outerBottomY - 0.02,
+          maxY: outerBottomY + 0.02,
+          straightness: 0.98,
+          deltaX: 0.7,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("回 descriptor should use declarative nested box roles", () => {
+  assert.ok(enclosureDescriptor);
+
+  assert.equal(enclosureDescriptor.pattern, "nested_box_pattern");
+
+  assert.equal(enclosureDescriptor.strokeCount, 6);
+
+  assert.deepEqual(
+    enclosureDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "outerWrappingStroke",
+      "outerLeftStroke",
+      "innerWrappingStroke",
+      "innerLeftStroke",
+      "innerBottomStroke",
+      "outerBottomStroke",
+    ],
+  );
+
+  assert.equal(enclosureDescriptor.rules, undefined);
+
+  assert.equal(enclosureDescriptor.expectedStrokeCount, undefined);
+});
+
+test("回 should pass with an inner box contained in the outer box", () => {
+  const features = createEnclosureFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "回",
+    features,
+    descriptor: enclosureDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.outerWrappingStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.outerLeftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.innerWrappingStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.innerLeftStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.innerBottomStroke.matchedStrokeIndex, 4);
+
+  assert.equal(result.roleMatches.outerBottomStroke.matchedStrokeIndex, 5);
+
+  assert.equal(result.checks["innerBoxInsideOuterBox"], true);
+});
+
+test("回 should fail when the inner box extends outside the outer box", () => {
+  const features = createEnclosureFeatures({
+    innerRightX: 0.9,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "回",
+    features,
+    descriptor: enclosureDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["innerBoxInsideOuterBox"], false);
+
+  assert.ok(result.hardFailedChecks.includes("innerBoxInsideOuterBox"));
+
+  assert.equal(result.score, 10);
+});
+
+test("回 should enforce the configured top containment margin", () => {
+  const features = createEnclosureFeatures({
+    innerTopY: 0.12,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "回",
+    features,
+    descriptor: enclosureDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.checks["innerBoxInsideOuterBox"], false);
+});
+
+test("回 should fail when the inner bottom is too close to the outer bottom", () => {
+  const features = createEnclosureFeatures({
+    innerBottomY: 0.86,
+    outerBottomY: 0.88,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "回",
+    features,
+    descriptor: enclosureDescriptor,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(
+    result.checks["above.innerBottomStroke.outerBottomStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.innerBottomStroke.outerBottomStroke",
+    ),
+  );
+});
+
+test("回 box connections should remain soft", () => {
+  const connectionCheckNames = [
+    "connects.outerLeftStroke.outerWrappingStroke",
+    "connects.outerLeftStroke.outerBottomStroke",
+    "connects.outerWrappingStroke.outerBottomStroke",
+    "connects.innerLeftStroke.innerWrappingStroke",
+    "connects.innerLeftStroke.innerBottomStroke",
+    "connects.innerWrappingStroke.innerBottomStroke",
+  ];
+
+  for (const checkName of connectionCheckNames) {
+    assert.equal(
+      enclosureDescriptor.hardChecks.includes(checkName),
+      false,
+      `${checkName} should remain soft`,
+    );
+  }
+});
+
+test("回 should accept recognizable nested boxes with soft closure gaps", () => {
+  const features = createEnclosureFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "回",
+    features,
+    descriptor: enclosureDescriptor,
+  });
+
+  assert.equal(
+    result.checks["connects.outerLeftStroke.outerWrappingStroke"],
+    false,
+  );
+
+  assert.equal(
+    result.checks["connects.innerLeftStroke.innerBottomStroke"],
+    false,
+  );
+
+  assert.equal(
+    result.hardFailedChecks.includes(
+      "connects.outerLeftStroke.outerWrappingStroke",
+    ),
+    false,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("回 inner left and bottom relative position should remain soft", () => {
+  assert.equal(
+    enclosureDescriptor.hardChecks.includes(
+      "above.innerLeftStroke.innerBottomStroke",
+    ),
+    false,
+  );
+
+  assert.equal(
+    enclosureDescriptor.relations.some(
+      (relation) =>
+        relation.type === "above" &&
+        relation.from === "innerLeftStroke" &&
+        relation.to === "innerBottomStroke",
+    ),
+    true,
+  );
+});
+
+test("回 should accept an inner box close to the left outer border when still contained", () => {
+  const features = createEnclosureFeatures({
+    innerLeftX: 0.17,
+    innerRightX: 0.52,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "回",
+    features,
+    descriptor: enclosureDescriptor,
+  });
+
+  assert.equal(result.roleMatches.innerWrappingStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.checks["innerWrappingStroke.matches"], true);
+
+  assert.equal(result.checks["innerBoxInsideOuterBox"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
 });
