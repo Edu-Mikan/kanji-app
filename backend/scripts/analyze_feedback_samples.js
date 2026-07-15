@@ -821,6 +821,7 @@ function analyzeSamples(samples, options) {
       return (
         sample.descriptorValidation ||
         sample.validationStrategy?.startsWith("descriptor_") ||
+        sample.validationStrategy?.startsWith("descriptor_") ||
         sample.features?.descriptorPattern
       );
     });

@@ -9,6 +9,69 @@
     }
   },
   "descriptors": {
+    "一": {
+      "kanji": "一",
+      "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 1,
+      "pattern": "single_horizontal_line",
+      "confidence": "medium",
+      "description": "Patrón declarativo de 一: un único trazo horizontal, ancho y relativamente bajo.",
+      "strokes": [
+        {
+          "id": "horizontalStroke",
+          "type": "horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.3
+            },
+            "width": {
+              "min": 0.7
+            },
+            "height": {
+              "max": 0.25
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1
+          }
+        }
+      ],
+      "relations": [],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.7
+        },
+        "bboxHeight": {
+          "max": 0.25
+        },
+        "aspectRatio": {
+          "min": 3
+        },
+        "straightnessMean": {
+          "min": 0.65
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "horizontalStroke.matches",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 一. La horizontalidad, anchura, altura y proporción global son checks duros. La rectitud media permanece como señal blanda para mantener una validación educativa permisiva."
+      }
+    },
     "八": {
       "kanji": "八",
       "enabled": true,

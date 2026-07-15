@@ -1,9 +1,6 @@
 // services/simple_kanji_rules.js
 
 const SIMPLE_KANJI_RULES = {
-  一: {
-    pattern: "single_horizontal_line",
-  },
   二: {
     pattern: "two_horizontal_lines",
   },
@@ -41,10 +38,6 @@ function validateSimpleKanji({ kanji, features }) {
     return null;
   }
 
-  if (rule.pattern === "single_horizontal_line") {
-    return validateSingleHorizontalLine(features);
-  }
-
   if (rule.pattern === "two_horizontal_lines") {
     return validateTwoHorizontalLines(features);
   }
@@ -74,72 +67,6 @@ function validateSimpleKanji({ kanji, features }) {
   }
 
   return null;
-}
-
-/**
- * Validador para 一
- */
-function validateSingleHorizontalLine(features) {
-  const geometry = features.geometry;
-
-  if (!geometry) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "single_horizontal_line",
-      reason: "missing_geometry_features",
-    };
-  }
-
-  const checks = {
-    strokeCount: features.strokeCountUser === 1,
-    bboxWidth: geometry.bboxWidth >= 0.7,
-    bboxHeight: geometry.bboxHeight <= 0.25,
-    aspectRatio: geometry.aspectRatio >= 3.0,
-
-    // Check blando: una entrada inicial torcida puede bajar mucho este valor
-    straightnessMean: geometry.straightnessMean >= 0.6,
-
-    // Este sí es mucho más fiable para 一
-    coarseAngleAbsMean: geometry.coarseAngleAbsMean <= 0.3,
-  };
-
-  const hardCheckNames = [
-    "strokeCount",
-    "bboxWidth",
-    "bboxHeight",
-    "aspectRatio",
-    "coarseAngleAbsMean",
-  ];
-
-  const softCheckNames = ["straightnessMean"];
-
-  const hardFailedChecks = hardCheckNames.filter(
-    (checkName) => checks[checkName] === false,
-  );
-
-  const softFailedChecks = softCheckNames.filter(
-    (checkName) => checks[checkName] === false,
-  );
-
-  const isCorrect =
-    hardFailedChecks.length === 0 && softFailedChecks.length <= 1;
-
-  return {
-    isCorrect,
-    score: isCorrect ? 0.5 : 10,
-    strategy: "single_horizontal_line",
-    checks,
-    hardFailedChecks,
-    softFailedChecks,
-    thresholds: {
-      bboxWidthMin: 0.7,
-      bboxHeightMax: 0.25,
-      aspectRatioMin: 3.0,
-      straightnessMeanMin: 0.65,
-      coarseAngleAbsMeanMax: 0.3,
-    },
-  };
 }
 
 /**

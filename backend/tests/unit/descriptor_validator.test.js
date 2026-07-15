@@ -23,6 +23,7 @@ const {
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
+const oneDescriptor = descriptorData.descriptors["一"];
 const crossDescriptor = descriptorData.descriptors["十"];
 const eightDescriptor = descriptorData.descriptors["八"];
 const mountainDescriptor = descriptorData.descriptors["山"];
@@ -4612,4 +4613,240 @@ test("未 orthogonal crosses should not depend on stored intersections", () => {
   );
 
   assert.equal(result.isCorrect, true);
+});
+
+function createOneFeatures({
+  angleAbs = 0.03,
+  width = 0.82,
+  height = 0.08,
+  straightness = 0.98,
+  bboxWidth = width,
+  bboxHeight = height,
+  aspectRatio = bboxHeight > 0 ? bboxWidth / bboxHeight : Infinity,
+  straightnessMean = straightness,
+  strokeCountUser = 1,
+  strokeCountRef = 1,
+} = {}) {
+  return {
+    strokeCountUser,
+    strokeCountRef,
+    geometry: {
+      bboxWidth,
+      bboxHeight,
+      aspectRatio,
+      straightnessMean,
+      straightnessMin: straightness,
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs,
+          width,
+          height,
+          centerX: 0.5,
+          centerY: 0.5,
+          minX: 0.5 - width / 2,
+          maxX: 0.5 + width / 2,
+          minY: 0.5 - height / 2,
+          maxY: 0.5 + height / 2,
+          straightness,
+          deltaX: width,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("一 descriptor should use a declarative single horizontal role", () => {
+  assert.ok(oneDescriptor);
+
+  assert.equal(oneDescriptor.pattern, "single_horizontal_line");
+
+  assert.equal(oneDescriptor.strokeCount, 1);
+
+  assert.deepEqual(
+    oneDescriptor.strokes.map((stroke) => stroke.id),
+    ["horizontalStroke"],
+  );
+
+  assert.equal(oneDescriptor.rules, undefined);
+
+  assert.equal(oneDescriptor.expectedStrokeCount, undefined);
+});
+
+test("一 should pass with one wide horizontal stroke", () => {
+  const features = createOneFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.pattern, "single_horizontal_line");
+
+  assert.equal(result.roleMatches.horizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.checks["horizontalStroke.matches"], true);
+
+  assert.equal(result.checks.bboxWidth, true);
+
+  assert.equal(result.checks.bboxHeight, true);
+
+  assert.equal(result.checks.aspectRatio, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("一 should fail when its stroke is too inclined", () => {
+  const features = createOneFeatures({
+    angleAbs: 0.55,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.checks["horizontalStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("horizontalStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("一 should fail when its stroke is too short", () => {
+  const features = createOneFeatures({
+    width: 0.5,
+    bboxWidth: 0.5,
+    bboxHeight: 0.08,
+    aspectRatio: 6.25,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.checks["horizontalStroke.matches"], false);
+
+  assert.equal(result.checks.bboxWidth, false);
+
+  assert.ok(result.hardFailedChecks.includes("horizontalStroke.matches"));
+
+  assert.ok(result.hardFailedChecks.includes("bboxWidth"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("一 should fail when its stroke is too tall", () => {
+  const features = createOneFeatures({
+    width: 0.82,
+    height: 0.32,
+    bboxWidth: 0.82,
+    bboxHeight: 0.32,
+    aspectRatio: 0.82 / 0.32,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.checks["horizontalStroke.matches"], false);
+
+  assert.equal(result.checks.bboxHeight, false);
+
+  assert.equal(result.checks.aspectRatio, false);
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("一 should fail when its global aspect ratio is too low", () => {
+  const features = createOneFeatures({
+    width: 0.75,
+    height: 0.2,
+    bboxWidth: 0.75,
+    bboxHeight: 0.3,
+    aspectRatio: 2.5,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.checks.aspectRatio, false);
+
+  assert.ok(result.hardFailedChecks.includes("aspectRatio"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("一 straightness should initially remain a soft check", () => {
+  assert.equal(oneDescriptor.hardChecks.includes("straightnessMean"), false);
+
+  assert.equal(
+    Object.hasOwn(oneDescriptor.globalChecks, "straightnessMean"),
+    true,
+  );
+});
+
+test("一 should report low straightness without making it a hard failure", () => {
+  const features = createOneFeatures({
+    straightness: 0.5,
+    straightnessMean: 0.5,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.checks.straightnessMean, false);
+
+  assert.ok(result.failedChecks.includes("straightnessMean"));
+
+  assert.equal(result.hardFailedChecks.includes("straightnessMean"), false);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("一 should fail when the user stroke count is not one", () => {
+  const features = createOneFeatures({
+    strokeCountUser: 2,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "一",
+    features,
+    descriptor: oneDescriptor,
+  });
+
+  assert.equal(result.checks.strokeCount, false);
+
+  assert.ok(result.hardFailedChecks.includes("strokeCount"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
 });
