@@ -296,6 +296,124 @@
         "notes": "Migración declarativa inicial de 三. Los tres horizontales deben conservar su orden y una separación mínima. La rectitud global y las proporciones relativas entre anchuras permanecen inicialmente como señales blandas o pendientes de calibración con muestras reales."
       }
     },
+    "七": {
+      "kanji": "七",
+      "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 2,
+      "pattern": "shichi_kanji",
+      "confidence": "medium",
+      "description": "Patrón declarativo de 七: un horizontal superior ancho atravesado o solapado por un segundo trazo diagonal con gancho que se extiende hacia abajo.",
+      "strokes": [
+        {
+          "id": "topHorizontalStroke",
+          "type": "upper_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.4
+            },
+            "width": {
+              "min": 0.5
+            },
+            "height": {
+              "max": 0.35
+            },
+            "centerY": {
+              "max": 0.55
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 1.5
+          }
+        },
+        {
+          "id": "hookStroke",
+          "type": "diagonal_hook",
+          "expected": {
+            "angleAbs": {
+              "min": 0.55,
+              "max": 1.35
+            },
+            "width": {
+              "min": 0.25
+            },
+            "height": {
+              "min": 0.4
+            },
+            "centerX": {
+              "min": 0.4
+            },
+            "maxY": {
+              "min": 0.55
+            },
+            "straightness": {
+              "min": 0.5
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1.5,
+            "centerX": 1.5,
+            "maxY": 1,
+            "straightness": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "orthogonalCross",
+          "from": "topHorizontalStroke",
+          "to": "hookStroke",
+          "toleranceX": 0.12,
+          "toleranceY": 0.12
+        },
+        {
+          "type": "direction",
+          "stroke": "hookStroke",
+          "deltaXMin": 0.05,
+          "deltaYMin": 0.35
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.55
+        },
+        "bboxHeight": {
+          "min": 0.45
+        },
+        "aspectRatio": {
+          "min": 0.75,
+          "max": 2.3
+        },
+        "straightnessMean": {
+          "min": 0.55
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "topHorizontalStroke.matches",
+        "hookStroke.matches",
+        "orthogonalCross.topHorizontalStroke.hookStroke",
+        "direction.hookStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa de 七. El horizontal superior y el trazo con gancho deben solaparse estructuralmente. El segundo trazo debe descender con desplazamiento neto hacia la derecha; esta dirección separa las muestras correctas observadas de un falso positivo que descendía hacia la izquierda. La rectitud global permanece como check blando."
+      }
+    },
     "八": {
       "kanji": "八",
       "enabled": true,

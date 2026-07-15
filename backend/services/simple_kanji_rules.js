@@ -7,9 +7,6 @@ const SIMPLE_KANJI_RULES = {
   六: {
     pattern: "roku_kanji",
   },
-  七: {
-    pattern: "shichi_kanji",
-  },
 };
 
 /**
@@ -34,17 +31,13 @@ function validateSimpleKanji({ kanji, features }) {
     return validateRokuKanji(features);
   }
 
-  if (rule.pattern === "shichi_kanji") {
-    return validateShichiKanji(features);
-  }
+  // if (rule.pattern === "hachi_kanji") {
+  //   return validateHachiKanji(features);
+  // }
 
-  if (rule.pattern === "hachi_kanji") {
-    return validateHachiKanji(features);
-  }
-
-  if (rule.pattern === "cross_kanji") {
-    return validateCrossKanji(features);
-  }
+  // if (rule.pattern === "cross_kanji") {
+  //   return validateCrossKanji(features);
+  // }
 
   return null;
 }
@@ -535,142 +528,6 @@ function validateCrossKanji(features) {
       verticalHeightMinRatioVsBBox: 0.8,
       verticalWidthMax: 0.35,
       straightnessMin: 0.85,
-    },
-  };
-}
-
-function validateShichiKanji(features) {
-  const geometry = features.geometry;
-
-  if (!geometry) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "shichi_kanji",
-      reason: "missing_geometry_features",
-    };
-  }
-
-  const perStroke = geometry.perStroke ?? [];
-
-  if (perStroke.length !== 2) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "shichi_kanji",
-      reason: "invalid_stroke_count",
-      checks: {
-        strokeCount: features.strokeCountUser === 2,
-        referenceStrokeCount: features.strokeCountRef === 2,
-      },
-      thresholds: {
-        expectedStrokeCount: 2,
-      },
-    };
-  }
-
-  // Buscar el trazo superior horizontal/ligeramente inclinado.
-  // No asumimos orden, aunque en los datos correctos suele ser stroke 0.
-  const topHorizontalCandidates = perStroke.filter(
-    (s) =>
-      s.angleAbs <= 0.35 &&
-      s.width >= 0.6 &&
-      s.height <= 0.32 &&
-      s.straightness >= 0.85 &&
-      s.centerY >= 0.15 &&
-      s.centerY <= 0.55,
-  );
-
-  const topHorizontal =
-    topHorizontalCandidates.length > 0
-      ? topHorizontalCandidates.sort((a, b) => b.width - a.width)[0]
-      : null;
-
-  const remaining = perStroke.filter((s) => s !== topHorizontal);
-  const secondStroke = remaining.length === 1 ? remaining[0] : null;
-
-  const hasTopHorizontal = Boolean(topHorizontal);
-  const hasSecondStroke = Boolean(secondStroke);
-
-  const secondStrokeDiagonalOrHook =
-    hasSecondStroke &&
-    secondStroke.angleAbs >= 0.65 &&
-    secondStroke.angleAbs <= 1.25 &&
-    secondStroke.width >= 0.35 &&
-    secondStroke.height >= 0.45 &&
-    secondStroke.straightness >= 0.55;
-
-  const secondStrokeStartsNearTopZone =
-    hasSecondStroke &&
-    hasTopHorizontal &&
-    secondStroke.minY <= topHorizontal.maxY + 0.12;
-
-  const secondStrokeOnRightSide =
-    hasSecondStroke && secondStroke.centerX >= 0.45;
-
-  const secondStrokeExtendsDown =
-    hasSecondStroke &&
-    hasTopHorizontal &&
-    secondStroke.maxY > topHorizontal.centerY + 0.18;
-
-  const topCrossesSecondXRange =
-    hasTopHorizontal &&
-    hasSecondStroke &&
-    secondStroke.minX <= topHorizontal.maxX &&
-    secondStroke.maxX >= topHorizontal.minX;
-
-  const globalAspectReasonable =
-    geometry.aspectRatio >= 0.9 && geometry.aspectRatio <= 2.0;
-
-  const checks = {
-    strokeCount: features.strokeCountUser === 2,
-    referenceStrokeCount: features.strokeCountRef === 2,
-
-    hasTopHorizontal,
-    hasSecondStroke,
-
-    secondStrokeDiagonalOrHook,
-    secondStrokeStartsNearTopZone,
-    secondStrokeOnRightSide,
-    secondStrokeExtendsDown,
-    topCrossesSecondXRange,
-    globalAspectReasonable,
-  };
-
-  const isCorrect = Object.values(checks).every(Boolean);
-
-  return {
-    isCorrect,
-    score: isCorrect ? 0.5 : 10,
-    strategy: "shichi_kanji",
-    checks,
-    details: {
-      topHorizontal,
-      secondStroke,
-      allStrokes: perStroke,
-    },
-    thresholds: {
-      expectedStrokeCount: 2,
-
-      topHorizontalAngleAbsMax: 0.35,
-      topHorizontalWidthMin: 0.6,
-      topHorizontalHeightMax: 0.32,
-      topHorizontalStraightnessMin: 0.85,
-      topHorizontalCenterYMin: 0.15,
-      topHorizontalCenterYMax: 0.55,
-
-      secondStrokeAngleAbsMin: 0.65,
-      secondStrokeAngleAbsMax: 1.25,
-      secondStrokeWidthMin: 0.35,
-      secondStrokeHeightMin: 0.45,
-      secondStrokeStraightnessMin: 0.55,
-      secondStrokeCenterXMin: 0.45,
-
-      secondStrokeStartToleranceY: 0.12,
-      secondStrokeDownExtensionMin: 0.18,
-
-      aspectRatioMin: 0.9,
-      aspectRatioMax: 2.0,
     },
   };
 }

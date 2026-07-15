@@ -26,8 +26,9 @@ const descriptorData = require("../../data/kanji_descriptors.json");
 const oneDescriptor = descriptorData.descriptors["一"];
 const twoDescriptor = descriptorData.descriptors["二"];
 const threeDescriptor = descriptorData.descriptors["三"];
-const crossDescriptor = descriptorData.descriptors["十"];
+const sevenDescriptor = descriptorData.descriptors["七"];
 const eightDescriptor = descriptorData.descriptors["八"];
+const crossDescriptor = descriptorData.descriptors["十"];
 const mountainDescriptor = descriptorData.descriptors["山"];
 const boxDescriptor = descriptorData.descriptors["口"];
 const sunDescriptor = descriptorData.descriptors["日"];
@@ -5695,4 +5696,477 @@ test("三 should accept recognizable horizontals with moderate inclination", () 
   assert.equal(result.isCorrect, true);
 
   assert.deepEqual(result.hardFailedChecks, []);
+});
+
+function createSevenFeatures({
+  horizontalCenterY = 0.3,
+  horizontalMinX = 0.1,
+  horizontalMaxX = 0.9,
+  horizontalAngleAbs = 0.04,
+  horizontalHeight = 0.06,
+  horizontalStraightness = 0.98,
+
+  hookCenterX = 0.62,
+  hookCenterY = 0.55,
+  hookMinX = 0.38,
+  hookMaxX = 0.82,
+  hookMinY = 0.2,
+  hookMaxY = 0.9,
+  hookAngleAbs = 1.0,
+  hookStraightness = 0.72,
+  hookDeltaX = 0.3,
+  hookDeltaY = 0.65,
+
+  bboxWidth = 0.8,
+  bboxHeight = 0.8,
+  aspectRatio = bboxHeight > 0 ? bboxWidth / bboxHeight : Infinity,
+
+  straightnessMean = (horizontalStraightness + hookStraightness) / 2,
+
+  strokeCountUser = 2,
+  strokeCountRef = 2,
+  reverseStrokeOrder = false,
+} = {}) {
+  const horizontalStroke = {
+    index: 0,
+    angleAbs: horizontalAngleAbs,
+    width: horizontalMaxX - horizontalMinX,
+    height: horizontalHeight,
+    centerX: (horizontalMinX + horizontalMaxX) / 2,
+    centerY: horizontalCenterY,
+    minX: horizontalMinX,
+    maxX: horizontalMaxX,
+    minY: horizontalCenterY - horizontalHeight / 2,
+    maxY: horizontalCenterY + horizontalHeight / 2,
+    straightness: horizontalStraightness,
+    deltaX: horizontalMaxX - horizontalMinX,
+    deltaY: 0.01,
+  };
+
+  const hookStroke = {
+    index: 1,
+    angleAbs: hookAngleAbs,
+    width: hookMaxX - hookMinX,
+    height: hookMaxY - hookMinY,
+    centerX: hookCenterX,
+    centerY: hookCenterY,
+    minX: hookMinX,
+    maxX: hookMaxX,
+    minY: hookMinY,
+    maxY: hookMaxY,
+    straightness: hookStraightness,
+    deltaX: hookDeltaX,
+    deltaY: hookDeltaY,
+  };
+
+  const perStroke = reverseStrokeOrder
+    ? [
+        {
+          ...hookStroke,
+          index: 0,
+        },
+        {
+          ...horizontalStroke,
+          index: 1,
+        },
+      ]
+    : [horizontalStroke, hookStroke];
+
+  return {
+    strokeCountUser,
+    strokeCountRef,
+    geometry: {
+      bboxWidth,
+      bboxHeight,
+      aspectRatio,
+      straightnessMean,
+      straightnessMin: Math.min(horizontalStraightness, hookStraightness),
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke,
+    },
+  };
+}
+
+test("七 descriptor should use declarative horizontal and hook roles", () => {
+  assert.ok(sevenDescriptor);
+
+  assert.equal(sevenDescriptor.pattern, "shichi_kanji");
+
+  assert.equal(sevenDescriptor.strokeCount, 2);
+
+  assert.deepEqual(
+    sevenDescriptor.strokes.map((stroke) => stroke.id),
+    ["topHorizontalStroke", "hookStroke"],
+  );
+
+  assert.equal(sevenDescriptor.rules, undefined);
+
+  assert.equal(sevenDescriptor.expectedStrokeCount, undefined);
+
+  assert.ok(
+    sevenDescriptor.relations.some(
+      (relation) =>
+        relation.type === "orthogonalCross" &&
+        relation.from === "topHorizontalStroke" &&
+        relation.to === "hookStroke",
+    ),
+  );
+});
+
+test("七 should pass with an upper horizontal crossed by a descending hook stroke", () => {
+  const features = createSevenFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.pattern, "shichi_kanji");
+
+  assert.equal(result.roleMatches.topHorizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.hookStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.checks["topHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["hookStroke.matches"], true);
+
+  assert.equal(
+    result.checks["orthogonalCross.topHorizontalStroke.hookStroke"],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("七 should assign its roles regardless of stored stroke order", () => {
+  const features = createSevenFeatures({
+    reverseStrokeOrder: true,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.roleMatches.topHorizontalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.hookStroke.matchedStrokeIndex, 0);
+
+  assert.equal(
+    result.checks["orthogonalCross.topHorizontalStroke.hookStroke"],
+    true,
+  );
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("七 should fail when its top stroke is clearly not horizontal", () => {
+  const features = createSevenFeatures({
+    horizontalAngleAbs: 0.8,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  const roleCheckNames = ["topHorizontalStroke.matches", "hookStroke.matches"];
+
+  const failedRoleChecks = roleCheckNames.filter(
+    (checkName) => result.checks[checkName] === false,
+  );
+
+  assert.ok(failedRoleChecks.length >= 1);
+
+  assert.ok(
+    failedRoleChecks.some((checkName) =>
+      result.hardFailedChecks.includes(checkName),
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("七 should fail when its hook stroke is too horizontal", () => {
+  const features = createSevenFeatures({
+    hookAngleAbs: 0.25,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.checks["hookStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("hookStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("七 should fail when its hook stroke does not extend sufficiently downward", () => {
+  const features = createSevenFeatures({
+    hookCenterY: 0.42,
+    hookMinY: 0.22,
+    hookMaxY: 0.52,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.ok(Math.abs(features.geometry.perStroke[1].height - 0.3) < 1e-9);
+
+  assert.equal(result.checks["hookStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("hookStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("七 should fail when its hook stroke is extremely narrow", () => {
+  const features = createSevenFeatures({
+    hookCenterX: 0.62,
+    hookMinX: 0.54,
+    hookMaxX: 0.7,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.ok(Math.abs(features.geometry.perStroke[1].width - 0.16) < 1e-9);
+
+  assert.equal(result.checks["hookStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("hookStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("七 should fail when the horizontal and hook spans do not cross", () => {
+  const features = createSevenFeatures({
+    horizontalMinX: 0.05,
+    horizontalMaxX: 0.45,
+
+    hookCenterX: 0.78,
+    hookMinX: 0.65,
+    hookMaxX: 0.95,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(
+    result.checks["orthogonalCross.topHorizontalStroke.hookStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.topHorizontalStroke.hookStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("七 should fail when the hook starts too far below the horizontal", () => {
+  const features = createSevenFeatures({
+    horizontalCenterY: 0.25,
+    horizontalHeight: 0.06,
+
+    hookCenterY: 0.69,
+    hookMinY: 0.48,
+    hookMaxY: 0.9,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(
+    result.checks["orthogonalCross.topHorizontalStroke.hookStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.topHorizontalStroke.hookStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("七 should accept a small gap between the horizontal and hook spans", () => {
+  const features = createSevenFeatures({
+    horizontalCenterY: 0.3,
+    horizontalHeight: 0.06,
+    hookMinY: 0.36,
+    hookMaxY: 0.9,
+    hookCenterY: 0.63,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(
+    result.checks["orthogonalCross.topHorizontalStroke.hookStroke"],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("七 straightness should initially remain a soft check", () => {
+  assert.equal(sevenDescriptor.hardChecks.includes("straightnessMean"), false);
+
+  assert.equal(
+    Object.hasOwn(sevenDescriptor.globalChecks, "straightnessMean"),
+    true,
+  );
+});
+
+test("七 should report low mean straightness without making it a hard failure", () => {
+  const features = createSevenFeatures({
+    horizontalStraightness: 0.5,
+    hookStraightness: 0.5,
+    straightnessMean: 0.5,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.checks.straightnessMean, false);
+
+  assert.ok(result.failedChecks.includes("straightnessMean"));
+
+  assert.equal(result.hardFailedChecks.includes("straightnessMean"), false);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("七 should fail when the user stroke count is not two", () => {
+  const features = createSevenFeatures({
+    strokeCountUser: 3,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.checks.strokeCount, false);
+
+  assert.ok(result.hardFailedChecks.includes("strokeCount"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("七 should reject a hook stroke that descends toward the left", () => {
+  const features = createSevenFeatures({
+    horizontalCenterY: 0.36,
+    horizontalMinX: 0,
+    horizontalMaxX: 1,
+    horizontalAngleAbs: 0.13,
+    horizontalHeight: 0.13,
+
+    hookCenterX: 0.448,
+    hookCenterY: 0.473,
+    hookMinX: 0.279,
+    hookMaxX: 0.617,
+    hookMinY: 0,
+    hookMaxY: 0.945,
+    hookAngleAbs: 1.322,
+    hookStraightness: 0.831,
+    hookDeltaX: -0.24,
+    hookDeltaY: 0.945,
+
+    bboxWidth: 1,
+    bboxHeight: 0.945,
+    aspectRatio: 1 / 0.945,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.checks["topHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["hookStroke.matches"], true);
+
+  assert.equal(
+    result.checks["orthogonalCross.topHorizontalStroke.hookStroke"],
+    true,
+  );
+
+  assert.equal(result.checks["direction.hookStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.hookStroke"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("七 should accept a recognizable hook with a small rightward displacement", () => {
+  const features = createSevenFeatures({
+    hookDeltaX: 0.08,
+    hookDeltaY: 0.65,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "七",
+    features,
+    descriptor: sevenDescriptor,
+  });
+
+  assert.equal(result.checks["direction.hookStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
 });
