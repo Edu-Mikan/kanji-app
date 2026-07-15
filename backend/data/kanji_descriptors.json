@@ -72,6 +72,104 @@
         "notes": "Migración declarativa inicial de 一. La horizontalidad, anchura, altura y proporción global son checks duros. La rectitud media permanece como señal blanda para mantener una validación educativa permisiva."
       }
     },
+    "二": {
+      "kanji": "二",
+      "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 2,
+      "pattern": "two_horizontal_lines",
+      "confidence": "medium",
+      "description": "Patrón declarativo de 二: dos trazos horizontales ordenados y suficientemente separados en vertical.",
+      "strokes": [
+        {
+          "id": "upperHorizontalStroke",
+          "type": "upper_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.35
+            },
+            "width": {
+              "min": 0.4
+            },
+            "height": {
+              "max": 0.28
+            },
+            "centerY": {
+              "max": 0.5
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2
+          }
+        },
+        {
+          "id": "lowerHorizontalStroke",
+          "type": "lower_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.35
+            },
+            "width": {
+              "min": 0.4
+            },
+            "height": {
+              "max": 0.28
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "above",
+          "from": "upperHorizontalStroke",
+          "to": "lowerHorizontalStroke",
+          "minCenterYGap": 0.18
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.7
+        },
+        "bboxHeight": {
+          "min": 0.25,
+          "max": 0.85
+        },
+        "aspectRatio": {
+          "min": 1.1,
+          "max": 3.2
+        },
+        "straightnessMean": {
+          "min": 0.75
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "upperHorizontalStroke.matches",
+        "lowerHorizontalStroke.matches",
+        "above.upperHorizontalStroke.lowerHorizontalStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 二. Los dos trazos deben ser horizontales, mantener el orden vertical y estar suficientemente separados. La rectitud media permanece inicialmente como check blando. La relación relativa entre anchuras se calibrará con muestras reales."
+      }
+    },
     "八": {
       "kanji": "八",
       "enabled": true,
