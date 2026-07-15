@@ -34,6 +34,8 @@ const enclosureDescriptor = descriptorData.descriptors["回"];
 const useDescriptor = descriptorData.descriptors["用"];
 const treeDescriptor = descriptorData.descriptors["木"];
 const rootDescriptor = descriptorData.descriptors["本"];
+const notYetDescriptor = descriptorData.descriptors["未"];
+const endDescriptor = descriptorData.descriptors["末"];
 
 test("isExpectedRange should accept numeric min and max ranges", () => {
   assert.equal(
@@ -4070,4 +4072,544 @@ test("本 should reject a right diagonal clearly outside its expected zone", () 
   assert.equal(result.isCorrect, false);
 
   assert.equal(result.score, 10);
+});
+
+function createTwoHorizontalTreeFeatures({
+  upperCenterY = 0.2,
+  upperMinX = 0.25,
+  upperMaxX = 0.75,
+  lowerCenterY = 0.4,
+  lowerMinX = 0.15,
+  lowerMaxX = 0.85,
+  verticalCenterX = 0.5,
+  verticalMinY = 0.05,
+  verticalMaxY = 0.95,
+  leftCenterX = 0.3,
+  leftCenterY = 0.7,
+  leftDeltaX = -0.28,
+  leftDeltaY = 0.4,
+  rightCenterX = 0.7,
+  rightCenterY = 0.7,
+  rightDeltaX = 0.28,
+  rightDeltaY = 0.4,
+  rightAngleAbs = 0.95,
+} = {}) {
+  return {
+    strokeCountUser: 5,
+    strokeCountRef: 5,
+    geometry: {
+      bboxWidth: 0.8,
+      bboxHeight: 0.9,
+      aspectRatio: 0.8 / 0.9,
+      straightnessMean: 0.92,
+      straightnessMin: 0.88,
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0.03,
+          width: upperMaxX - upperMinX,
+          height: 0.04,
+          centerX: (upperMinX + upperMaxX) / 2,
+          centerY: upperCenterY,
+          minX: upperMinX,
+          maxX: upperMaxX,
+          minY: upperCenterY - 0.02,
+          maxY: upperCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: upperMaxX - upperMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 1,
+          angleAbs: 0.03,
+          width: lowerMaxX - lowerMinX,
+          height: 0.04,
+          centerX: (lowerMinX + lowerMaxX) / 2,
+          centerY: lowerCenterY,
+          minX: lowerMinX,
+          maxX: lowerMaxX,
+          minY: lowerCenterY - 0.02,
+          maxY: lowerCenterY + 0.02,
+          straightness: 0.98,
+          deltaX: lowerMaxX - lowerMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 2,
+          angleAbs: Math.PI / 2,
+          width: 0.05,
+          height: verticalMaxY - verticalMinY,
+          centerX: verticalCenterX,
+          centerY: (verticalMinY + verticalMaxY) / 2,
+          minX: verticalCenterX - 0.025,
+          maxX: verticalCenterX + 0.025,
+          minY: verticalMinY,
+          maxY: verticalMaxY,
+          straightness: 0.98,
+          deltaX: 0.01,
+          deltaY: verticalMaxY - verticalMinY,
+        },
+        {
+          index: 3,
+          angleAbs: 0.95,
+          width: Math.abs(leftDeltaX),
+          height: Math.abs(leftDeltaY),
+          centerX: leftCenterX,
+          centerY: leftCenterY,
+          minX: leftCenterX - Math.abs(leftDeltaX) / 2,
+          maxX: leftCenterX + Math.abs(leftDeltaX) / 2,
+          minY: leftCenterY - Math.abs(leftDeltaY) / 2,
+          maxY: leftCenterY + Math.abs(leftDeltaY) / 2,
+          straightness: 0.95,
+          deltaX: leftDeltaX,
+          deltaY: leftDeltaY,
+        },
+        {
+          index: 4,
+          angleAbs: rightAngleAbs,
+          width: Math.abs(rightDeltaX),
+          height: Math.abs(rightDeltaY),
+          centerX: rightCenterX,
+          centerY: rightCenterY,
+          minX: rightCenterX - Math.abs(rightDeltaX) / 2,
+          maxX: rightCenterX + Math.abs(rightDeltaX) / 2,
+          minY: rightCenterY - Math.abs(rightDeltaY) / 2,
+          maxY: rightCenterY + Math.abs(rightDeltaY) / 2,
+          straightness: 0.95,
+          deltaX: rightDeltaX,
+          deltaY: rightDeltaY,
+        },
+      ],
+    },
+  };
+}
+
+test("未 descriptor should use declarative two-horizontal tree roles", () => {
+  assert.ok(notYetDescriptor);
+
+  assert.equal(notYetDescriptor.pattern, "tree_with_two_horizontals");
+
+  assert.equal(notYetDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    notYetDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "upperHorizontalStroke",
+      "lowerHorizontalStroke",
+      "verticalStroke",
+      "leftDiagonalStroke",
+      "rightDiagonalStroke",
+    ],
+  );
+
+  assert.equal(notYetDescriptor.rules, undefined);
+
+  assert.equal(notYetDescriptor.expectedStrokeCount, undefined);
+});
+
+test("末 descriptor should use declarative two-horizontal tree roles", () => {
+  assert.ok(endDescriptor);
+
+  assert.equal(endDescriptor.pattern, "tree_with_two_horizontals");
+
+  assert.equal(endDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    endDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "upperHorizontalStroke",
+      "lowerHorizontalStroke",
+      "verticalStroke",
+      "leftDiagonalStroke",
+      "rightDiagonalStroke",
+    ],
+  );
+
+  assert.equal(endDescriptor.rules, undefined);
+
+  assert.equal(endDescriptor.expectedStrokeCount, undefined);
+});
+
+test("未 should pass with two ordered horizontals and two outward diagonals", () => {
+  const features = createTwoHorizontalTreeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.upperHorizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.lowerHorizontalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.verticalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.leftDiagonalStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.rightDiagonalStroke.matchedStrokeIndex, 4);
+
+  assert.equal(
+    result.checks["above.upperHorizontalStroke.lowerHorizontalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["orthogonalCross.upperHorizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["orthogonalCross.lowerHorizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(result.score, 0.5);
+});
+
+test("末 should pass with two ordered horizontals and two outward diagonals", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    upperMinX: 0.15,
+    upperMaxX: 0.85,
+    lowerMinX: 0.27,
+    lowerMaxX: 0.73,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "末",
+    features,
+    descriptor: endDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.roleMatches.upperHorizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.lowerHorizontalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.verticalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.leftDiagonalStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.rightDiagonalStroke.matchedStrokeIndex, 4);
+
+  assert.equal(
+    result.checks["above.upperHorizontalStroke.lowerHorizontalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["orthogonalCross.upperHorizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["orthogonalCross.lowerHorizontalStroke.verticalStroke"],
+    true,
+  );
+});
+
+test("未 should fail when its two horizontals are too close", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    upperCenterY: 0.3,
+    lowerCenterY: 0.35,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(
+    result.checks["above.upperHorizontalStroke.lowerHorizontalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.upperHorizontalStroke.lowerHorizontalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("未 should fail when the vertical does not cross the upper horizontal", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    upperCenterY: 0.12,
+    upperMinX: 0.7,
+    upperMaxX: 0.92,
+    lowerCenterY: 0.42,
+    lowerMinX: 0.15,
+    lowerMaxX: 0.85,
+    verticalCenterX: 0.4,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(result.roleMatches.upperHorizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.lowerHorizontalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(
+    result.checks["orthogonalCross.upperHorizontalStroke.verticalStroke"],
+    false,
+  );
+
+  assert.equal(
+    result.checks["orthogonalCross.lowerHorizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.upperHorizontalStroke.verticalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("末 should fail when the vertical does not cross the lower horizontal", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    lowerMinX: 0.65,
+    lowerMaxX: 0.88,
+    verticalCenterX: 0.4,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "末",
+    features,
+    descriptor: endDescriptor,
+  });
+
+  assert.equal(
+    result.checks["orthogonalCross.lowerHorizontalStroke.verticalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "orthogonalCross.lowerHorizontalStroke.verticalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("未 should fail when a diagonal is not below the lower horizontal", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    lowerCenterY: 0.4,
+    leftCenterY: 0.41,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(
+    result.checks["above.lowerHorizontalStroke.leftDiagonalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.lowerHorizontalStroke.leftDiagonalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("未 should fail when the left diagonal descends to the right", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    leftDeltaX: 0.28,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(result.checks["direction.leftDiagonalStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.leftDiagonalStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("末 should fail when the right diagonal descends to the left", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    rightDeltaX: -0.28,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "末",
+    features,
+    descriptor: endDescriptor,
+  });
+
+  assert.equal(result.checks["direction.rightDiagonalStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.rightDiagonalStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("未 should fail when the diagonals are too close", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    leftCenterX: 0.45,
+    rightCenterX: 0.54,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(
+    result.checks["centerXGap.leftDiagonalStroke.rightDiagonalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "centerXGap.leftDiagonalStroke.rightDiagonalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("末 should accept a shorter lower horizontal allowed by its descriptor", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    upperMinX: 0.15,
+    upperMaxX: 0.85,
+    lowerMinX: 0.405,
+    lowerMaxX: 0.595,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "末",
+    features,
+    descriptor: endDescriptor,
+  });
+
+  assert.equal(result.roleMatches.upperHorizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.lowerHorizontalStroke.matchedStrokeIndex, 1);
+
+  assert.ok(Math.abs(features.geometry.perStroke[1].width - 0.19) < 1e-9);
+
+  assert.equal(result.checks["lowerHorizontalStroke.matches"], true);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+});
+
+test("未 should reject a lower horizontal below its minimum width", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    lowerMinX: 0.405,
+    lowerMaxX: 0.595,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(result.checks["lowerHorizontalStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("lowerHorizontalStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("末 should accept its more permissive right diagonal angle", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    rightAngleAbs: 0.22,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "末",
+    features,
+    descriptor: endDescriptor,
+  });
+
+  assert.equal(result.checks["rightDiagonalStroke.matches"], true);
+
+  assert.equal(result.checks["direction.rightDiagonalStroke"], true);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("未 should reject a right diagonal angle below its configured minimum", () => {
+  const features = createTwoHorizontalTreeFeatures({
+    rightAngleAbs: 0.22,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(result.checks["rightDiagonalStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("rightDiagonalStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("未 orthogonal crosses should not depend on stored intersections", () => {
+  const features = createTwoHorizontalTreeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "未",
+    features,
+    descriptor: notYetDescriptor,
+  });
+
+  assert.equal(features.geometry.intersections.length, 0);
+
+  assert.equal(
+    result.checks["orthogonalCross.upperHorizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["orthogonalCross.lowerHorizontalStroke.verticalStroke"],
+    true,
+  );
+
+  assert.equal(result.isCorrect, true);
 });

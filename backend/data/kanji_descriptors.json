@@ -2212,132 +2212,523 @@
       }
     },
     "未": {
+      "kanji": "未",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 5,
       "pattern": "tree_with_two_horizontals",
-      "expectedStrokeCount": 5,
-      "description": "Patrón tipo árbol con dos horizontales: estructura compartida para 未/末.",
-      "rules": {
-        "minBboxWidth": 0.45,
-        "minBboxHeight": 0.6,
-        "aspectRatioMin": 0.45,
-        "aspectRatioMax": 1.9,
-
-        "minVerticalAngleAbs": 0.85,
-        "minHorizontalAngleMax": 0.65,
-        "minDiagonalAngleAbs": 0.3,
-        "maxDiagonalAngleAbs": 1.35,
-        "genericDiagonalMinWidth": 0.08,
-        "genericDiagonalMinHeight": 0.1,
-
-        "minHeightVsWidthRatio": 1.2,
-        "minWidthVsHeightRatio": 1.2,
-
-        "upperHorizontalCenterYMin": 0.05,
-        "upperHorizontalCenterYMax": 0.42,
-        "upperHorizontalMinWidth": 0.22,
-        "upperHorizontalMaxHeight": 0.35,
-        "upperHorizontalDeltaYMin": -0.45,
-
-        "lowerHorizontalCenterYMin": 0.25,
-        "lowerHorizontalCenterYMax": 0.62,
-        "lowerHorizontalMinWidth": 0.22,
-        "lowerHorizontalMaxHeight": 0.35,
-        "lowerHorizontalDeltaYMin": -0.45,
-
-        "verticalCenterXMin": 0.25,
-        "verticalCenterXMax": 0.72,
-        "verticalMinHeight": 0.5,
-        "verticalMaxWidth": 0.4,
-
-        "leftDiagonalCenterXMax": 0.55,
-        "leftDiagonalCenterYMin": 0.38,
-        "leftDiagonalMinWidth": 0.1,
-        "leftDiagonalMinHeight": 0.12,
-        "leftDiagonalDeltaXMax": -0.02,
-        "leftDiagonalDeltaYMin": 0.08,
-
-        "rightDiagonalCenterXMin": 0.45,
-        "rightDiagonalCenterYMin": 0.38,
-        "rightDiagonalMinWidth": 0.08,
-        "rightDiagonalMinHeight": 0.1,
-        "rightDiagonalDeltaXMin": 0.02,
-        "rightDiagonalDeltaYMin": 0.08,
-
-        "minHorizontalGap": 0.08,
-        "minDiagonalCenterGap": 0.12,
-        "minHorizontalVerticalCrossTolerance": 0.08,
-        "minDiagonalBelowLowerHorizontalGap": 0.02,
-
-        "minBoxHorizontalCoverage": 0.45,
-        "minBoxVerticalCoverage": 0.6,
-
-        "minStraightnessMean": 0.5,
-        "maxSoftFailures": 5
+      "confidence": "medium",
+      "description": "Patrón declarativo de 未: dos horizontales ordenados atravesados por un vertical central y dos diagonales inferiores orientadas hacia lados opuestos.",
+      "strokes": [
+        {
+          "id": "upperHorizontalStroke",
+          "type": "upper_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.22
+            },
+            "height": {
+              "max": 0.35
+            },
+            "centerY": {
+              "min": 0.05,
+              "max": 0.42
+            },
+            "deltaY": {
+              "min": -0.45
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "lowerHorizontalStroke",
+          "type": "lower_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.22
+            },
+            "height": {
+              "max": 0.35
+            },
+            "centerY": {
+              "min": 0.25,
+              "max": 0.62
+            },
+            "deltaY": {
+              "min": -0.45
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "verticalStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.85
+            },
+            "height": {
+              "min": 0.5
+            },
+            "width": {
+              "max": 0.4
+            },
+            "centerX": {
+              "min": 0.25,
+              "max": 0.72
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "width": 1,
+            "centerX": 2
+          }
+        },
+        {
+          "id": "leftDiagonalStroke",
+          "type": "left_diagonal",
+          "expected": {
+            "angleAbs": {
+              "min": 0.3,
+              "max": 1.35
+            },
+            "width": {
+              "min": 0.1
+            },
+            "height": {
+              "min": 0.12
+            },
+            "centerX": {
+              "max": 0.55
+            },
+            "centerY": {
+              "min": 0.38
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1.5,
+            "centerX": 2,
+            "centerY": 1
+          }
+        },
+        {
+          "id": "rightDiagonalStroke",
+          "type": "right_diagonal",
+          "expected": {
+            "angleAbs": {
+              "min": 0.3,
+              "max": 1.35
+            },
+            "width": {
+              "min": 0.08
+            },
+            "height": {
+              "min": 0.1
+            },
+            "centerX": {
+              "min": 0.45
+            },
+            "centerY": {
+              "min": 0.38
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1.5,
+            "centerX": 2,
+            "centerY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "above",
+          "from": "upperHorizontalStroke",
+          "to": "lowerHorizontalStroke",
+          "minCenterYGap": 0.08
+        },
+        {
+          "type": "orthogonalCross",
+          "from": "upperHorizontalStroke",
+          "to": "verticalStroke",
+          "toleranceX": 0.08,
+          "toleranceY": 0.08
+        },
+        {
+          "type": "orthogonalCross",
+          "from": "lowerHorizontalStroke",
+          "to": "verticalStroke",
+          "toleranceX": 0.08,
+          "toleranceY": 0.08
+        },
+        {
+          "type": "above",
+          "from": "lowerHorizontalStroke",
+          "to": "leftDiagonalStroke",
+          "minCenterYGap": 0.02
+        },
+        {
+          "type": "above",
+          "from": "lowerHorizontalStroke",
+          "to": "rightDiagonalStroke",
+          "minCenterYGap": 0.02
+        },
+        {
+          "type": "leftOf",
+          "from": "leftDiagonalStroke",
+          "to": "verticalStroke"
+        },
+        {
+          "type": "leftOf",
+          "from": "verticalStroke",
+          "to": "rightDiagonalStroke"
+        },
+        {
+          "type": "centerXGap",
+          "from": "leftDiagonalStroke",
+          "to": "rightDiagonalStroke",
+          "min": 0.12
+        },
+        {
+          "type": "direction",
+          "stroke": "leftDiagonalStroke",
+          "deltaXMax": -0.02,
+          "deltaYMin": 0.08
+        },
+        {
+          "type": "direction",
+          "stroke": "rightDiagonalStroke",
+          "deltaXMin": 0.02,
+          "deltaYMin": 0.08
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.6
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 1.9
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "upperHorizontalStroke.matches",
+        "lowerHorizontalStroke.matches",
+        "verticalStroke.matches",
+        "leftDiagonalStroke.matches",
+        "rightDiagonalStroke.matches",
+        "above.upperHorizontalStroke.lowerHorizontalStroke",
+        "orthogonalCross.upperHorizontalStroke.verticalStroke",
+        "orthogonalCross.lowerHorizontalStroke.verticalStroke",
+        "above.lowerHorizontalStroke.leftDiagonalStroke",
+        "above.lowerHorizontalStroke.rightDiagonalStroke",
+        "leftOf.leftDiagonalStroke.verticalStroke",
+        "leftOf.verticalStroke.rightDiagonalStroke",
+        "centerXGap.leftDiagonalStroke.rightDiagonalStroke",
+        "direction.leftDiagonalStroke",
+        "direction.rightDiagonalStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 未. Los dos horizontales deben estar ordenados y suficientemente separados, ambos deben cruzar el vertical central y las diagonales deben quedar debajo del horizontal inferior."
       }
     },
     "末": {
+      "kanji": "末",
       "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 5,
       "pattern": "tree_with_two_horizontals",
-      "expectedStrokeCount": 5,
-      "description": "Patrón tipo árbol con dos horizontales: estructura compartida para 未/末.",
-      "rules": {
-        "minBboxWidth": 0.45,
-        "minBboxHeight": 0.6,
-        "aspectRatioMin": 0.45,
-        "aspectRatioMax": 1.9,
-
-        "minVerticalAngleAbs": 0.85,
-        "minHorizontalAngleMax": 0.65,
-        "minDiagonalAngleAbs": 0.3,
-        "maxDiagonalAngleAbs": 1.35,
-        "genericDiagonalMinWidth": 0.08,
-        "genericDiagonalMinHeight": 0.1,
-
-        "minHeightVsWidthRatio": 1.2,
-        "minWidthVsHeightRatio": 1.2,
-
-        "upperHorizontalCenterYMin": 0.05,
-        "upperHorizontalCenterYMax": 0.42,
-        "upperHorizontalMinWidth": 0.22,
-        "upperHorizontalMaxHeight": 0.35,
-        "upperHorizontalDeltaYMin": -0.45,
-
-        "lowerHorizontalCenterYMin": 0.25,
-        "lowerHorizontalCenterYMax": 0.62,
-        "lowerHorizontalMinWidth": 0.18,
-        "lowerHorizontalMaxHeight": 0.35,
-        "lowerHorizontalDeltaYMin": -0.45,
-
-        "verticalCenterXMin": 0.25,
-        "verticalCenterXMax": 0.72,
-        "verticalMinHeight": 0.5,
-        "verticalMaxWidth": 0.4,
-
-        "leftDiagonalCenterXMax": 0.55,
-        "leftDiagonalCenterYMin": 0.38,
-        "leftDiagonalMinWidth": 0.1,
-        "leftDiagonalMinHeight": 0.12,
-        "leftDiagonalDeltaXMax": -0.02,
-        "leftDiagonalDeltaYMin": 0.08,
-
-        "rightDiagonalCenterXMin": 0.45,
-        "rightDiagonalCenterYMin": 0.38,
-        "rightDiagonalMinWidth": 0.08,
-        "rightDiagonalMinHeight": 0.1,
-        "rightDiagonalDeltaXMin": 0.02,
-        "rightDiagonalDeltaYMin": 0.08,
-        "rightDiagonalMinAngleAbs": 0.18,
-
-        "minHorizontalGap": 0.08,
-        "minDiagonalCenterGap": 0.12,
-        "minHorizontalVerticalCrossTolerance": 0.08,
-        "minDiagonalBelowLowerHorizontalGap": 0.02,
-
-        "minBoxHorizontalCoverage": 0.45,
-        "minBoxVerticalCoverage": 0.6,
-
-        "minStraightnessMean": 0.5,
-        "maxSoftFailures": 5
+      "confidence": "medium",
+      "description": "Patrón declarativo de 末: dos horizontales ordenados atravesados por un vertical central y dos diagonales inferiores orientadas hacia lados opuestos.",
+      "strokes": [
+        {
+          "id": "upperHorizontalStroke",
+          "type": "upper_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.22
+            },
+            "height": {
+              "max": 0.35
+            },
+            "centerY": {
+              "min": 0.05,
+              "max": 0.42
+            },
+            "deltaY": {
+              "min": -0.45
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "lowerHorizontalStroke",
+          "type": "lower_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.18
+            },
+            "height": {
+              "max": 0.35
+            },
+            "centerY": {
+              "min": 0.25,
+              "max": 0.62
+            },
+            "deltaY": {
+              "min": -0.45
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "deltaY": 1
+          }
+        },
+        {
+          "id": "verticalStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.85
+            },
+            "height": {
+              "min": 0.5
+            },
+            "width": {
+              "max": 0.4
+            },
+            "centerX": {
+              "min": 0.25,
+              "max": 0.72
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "width": 1,
+            "centerX": 2
+          }
+        },
+        {
+          "id": "leftDiagonalStroke",
+          "type": "left_diagonal",
+          "expected": {
+            "angleAbs": {
+              "min": 0.3,
+              "max": 1.35
+            },
+            "width": {
+              "min": 0.1
+            },
+            "height": {
+              "min": 0.12
+            },
+            "centerX": {
+              "max": 0.55
+            },
+            "centerY": {
+              "min": 0.38
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1.5,
+            "centerX": 2,
+            "centerY": 1
+          }
+        },
+        {
+          "id": "rightDiagonalStroke",
+          "type": "right_diagonal",
+          "expected": {
+            "angleAbs": {
+              "min": 0.18,
+              "max": 1.35
+            },
+            "width": {
+              "min": 0.08
+            },
+            "height": {
+              "min": 0.1
+            },
+            "centerX": {
+              "min": 0.45
+            },
+            "centerY": {
+              "min": 0.38
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1.5,
+            "centerX": 2,
+            "centerY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "above",
+          "from": "upperHorizontalStroke",
+          "to": "lowerHorizontalStroke",
+          "minCenterYGap": 0.08
+        },
+        {
+          "type": "orthogonalCross",
+          "from": "upperHorizontalStroke",
+          "to": "verticalStroke",
+          "toleranceX": 0.08,
+          "toleranceY": 0.08
+        },
+        {
+          "type": "orthogonalCross",
+          "from": "lowerHorizontalStroke",
+          "to": "verticalStroke",
+          "toleranceX": 0.08,
+          "toleranceY": 0.08
+        },
+        {
+          "type": "above",
+          "from": "lowerHorizontalStroke",
+          "to": "leftDiagonalStroke",
+          "minCenterYGap": 0.02
+        },
+        {
+          "type": "above",
+          "from": "lowerHorizontalStroke",
+          "to": "rightDiagonalStroke",
+          "minCenterYGap": 0.02
+        },
+        {
+          "type": "leftOf",
+          "from": "leftDiagonalStroke",
+          "to": "verticalStroke"
+        },
+        {
+          "type": "leftOf",
+          "from": "verticalStroke",
+          "to": "rightDiagonalStroke"
+        },
+        {
+          "type": "centerXGap",
+          "from": "leftDiagonalStroke",
+          "to": "rightDiagonalStroke",
+          "min": 0.12
+        },
+        {
+          "type": "direction",
+          "stroke": "leftDiagonalStroke",
+          "deltaXMax": -0.02,
+          "deltaYMin": 0.08
+        },
+        {
+          "type": "direction",
+          "stroke": "rightDiagonalStroke",
+          "deltaXMin": 0.02,
+          "deltaYMin": 0.08
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.6
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 1.9
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "upperHorizontalStroke.matches",
+        "lowerHorizontalStroke.matches",
+        "verticalStroke.matches",
+        "leftDiagonalStroke.matches",
+        "rightDiagonalStroke.matches",
+        "above.upperHorizontalStroke.lowerHorizontalStroke",
+        "orthogonalCross.upperHorizontalStroke.verticalStroke",
+        "orthogonalCross.lowerHorizontalStroke.verticalStroke",
+        "above.lowerHorizontalStroke.leftDiagonalStroke",
+        "above.lowerHorizontalStroke.rightDiagonalStroke",
+        "leftOf.leftDiagonalStroke.verticalStroke",
+        "leftOf.verticalStroke.rightDiagonalStroke",
+        "centerXGap.leftDiagonalStroke.rightDiagonalStroke",
+        "direction.leftDiagonalStroke",
+        "direction.rightDiagonalStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 末. Comparte la estructura de dos horizontales de 未, conservando una mayor tolerancia para la anchura del horizontal inferior y para el ángulo de la diagonal derecha."
       }
     }
   }
