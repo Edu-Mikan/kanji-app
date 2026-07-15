@@ -1,9 +1,6 @@
 // services/simple_kanji_rules.js
 
 const SIMPLE_KANJI_RULES = {
-  三: {
-    pattern: "three_horizontal_lines",
-  },
   四: {
     pattern: "four_box_kanji",
   },
@@ -29,10 +26,6 @@ function validateSimpleKanji({ kanji, features }) {
     return null;
   }
 
-  if (rule.pattern === "three_horizontal_lines") {
-    return validateThreeHorizontalLines(features);
-  }
-
   if (rule.pattern === "four_box_kanji") {
     return validateFourBoxKanji(features);
   }
@@ -54,137 +47,6 @@ function validateSimpleKanji({ kanji, features }) {
   }
 
   return null;
-}
-
-/**
- * Validador para 三
- *
- * Estructura esperada:
- * - 3 trazos
- * - los 3 horizontales
- * - los 3 bastante rectos
- * - orden vertical correcto: arriba, medio, abajo
- * - separación vertical suficiente
- * - el trazo inferior debe ser el más largo o casi el más largo
- */
-function validateThreeHorizontalLines(features) {
-  const geometry = features.geometry;
-
-  if (!geometry) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "three_horizontal_lines",
-      reason: "missing_geometry_features",
-    };
-  }
-
-  const perStroke = geometry.perStroke ?? [];
-
-  if (perStroke.length !== 3) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "three_horizontal_lines",
-      reason: "invalid_stroke_count",
-      checks: {
-        strokeCount: features.strokeCountUser === 3,
-      },
-      thresholds: {
-        expectedStrokeCount: 3,
-      },
-    };
-  }
-
-  const sortedByY = [...perStroke].sort((a, b) => a.centerY - b.centerY);
-
-  const top = sortedByY[0];
-  const middle = sortedByY[1];
-  const bottom = sortedByY[2];
-
-  const gapTopMiddle = middle.centerY - top.centerY;
-  const gapMiddleBottom = bottom.centerY - middle.centerY;
-
-  const bothGapsReasonable = gapTopMiddle >= 0.2 && gapMiddleBottom >= 0.2;
-
-  const gapsBalanced =
-    gapTopMiddle / (gapMiddleBottom + 1e-6) >= 0.45 &&
-    gapTopMiddle / (gapMiddleBottom + 1e-6) <= 1.8;
-
-  const allHorizontal = perStroke.every((stroke) => stroke.angleAbs <= 0.7);
-  const allStraight = perStroke.every((stroke) => stroke.straightness >= 0.85);
-
-  const bottomIsLongEnough =
-    bottom.width >= top.width * 0.65 && bottom.width >= middle.width * 0.85;
-
-  const middleNotTooShort =
-    middle.width >= top.width * 0.35 && middle.width >= bottom.width * 0.18;
-
-  const checks = {
-    strokeCount: features.strokeCountUser === 3,
-    referenceStrokeCount: features.strokeCountRef === 3,
-
-    // Forma global. En tus datos correctos, aspectRatio ronda aprox 1.0 - 1.45.
-    bboxWidth: geometry.bboxWidth >= 0.45,
-    bboxHeight: geometry.bboxHeight >= 0.5 && geometry.bboxHeight <= 1.05,
-    aspectRatio: geometry.aspectRatio >= 0.45 && geometry.aspectRatio <= 2.2,
-
-    // Trazos horizontales y rectos
-    allHorizontal,
-    allStraight,
-    straightnessMean: geometry.straightnessMean >= 0.88,
-    coarseAngleAbsMean: geometry.coarseAngleAbsMean <= 0.55,
-    coarseAngleAbsMax: geometry.coarseAngleAbsMax <= 0.7,
-
-    // Estructura vertical
-    topAboveMiddle: top.centerY < middle.centerY,
-    middleAboveBottom: middle.centerY < bottom.centerY,
-    bothGapsReasonable,
-    gapsBalanced,
-
-    // Proporción de longitudes
-    bottomIsLongEnough,
-    middleNotTooShort,
-  };
-
-  const isCorrect = Object.values(checks).every(Boolean);
-
-  return {
-    isCorrect,
-    score: isCorrect ? 0.5 : 10,
-    strategy: "three_horizontal_lines",
-    checks,
-    details: {
-      top,
-      middle,
-      bottom,
-      gapTopMiddle,
-      gapMiddleBottom,
-      gapRatio: gapTopMiddle / (gapMiddleBottom + 1e-6),
-    },
-    thresholds: {
-      expectedStrokeCount: 3,
-      bboxWidthMin: 0.45,
-      bboxHeightMin: 0.5,
-      bboxHeightMax: 1.05,
-      aspectRatioMin: 0.45,
-      aspectRatioMax: 2.2,
-
-      strokeAngleAbsMax: 0.7,
-      straightnessPerStrokeMin: 0.85,
-      straightnessMeanMin: 0.88,
-      coarseAngleAbsMeanMax: 0.55,
-      coarseAngleAbsMax: 0.7,
-      verticalGapMin: 0.2,
-      gapRatioMin: 0.45,
-      gapRatioMax: 1.8,
-
-      bottomWidthVsTopWidthMinRatio: 0.65,
-      bottomWidthVsMiddleWidthMinRatio: 0.85,
-      middleWidthVsTopWidthMinRatio: 0.35,
-      middleWidthVsBottomWidthMinRatio: 0.18,
-    },
-  };
 }
 
 /**

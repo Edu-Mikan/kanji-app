@@ -170,6 +170,132 @@
         "notes": "Migración declarativa inicial de 二. Los dos trazos deben ser horizontales, mantener el orden vertical y estar suficientemente separados. La rectitud media permanece inicialmente como check blando. La relación relativa entre anchuras se calibrará con muestras reales."
       }
     },
+    "三": {
+      "kanji": "三",
+      "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 3,
+      "pattern": "three_horizontal_lines",
+      "confidence": "medium",
+      "description": "Patrón declarativo de 三: tres trazos horizontales ordenados y separados verticalmente.",
+      "strokes": [
+        {
+          "id": "upperHorizontalStroke",
+          "type": "upper_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.35
+            },
+            "width": {
+              "min": 0.3
+            },
+            "height": {
+              "max": 0.35
+            },
+            "centerY": {
+              "max": 0.38
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2
+          }
+        },
+        {
+          "id": "middleHorizontalStroke",
+          "type": "middle_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.35
+            },
+            "width": {
+              "min": 0.18
+            },
+            "height": {
+              "max": 0.35
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1
+          }
+        },
+        {
+          "id": "lowerHorizontalStroke",
+          "type": "lower_horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.35
+            },
+            "width": {
+              "min": 0.35
+            },
+            "height": {
+              "max": 0.35
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "above",
+          "from": "upperHorizontalStroke",
+          "to": "middleHorizontalStroke",
+          "minCenterYGap": 0.12
+        },
+        {
+          "type": "above",
+          "from": "middleHorizontalStroke",
+          "to": "lowerHorizontalStroke",
+          "minCenterYGap": 0.12
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.5,
+          "max": 1.05
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 2.2
+        },
+        "straightnessMean": {
+          "min": 0.7
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "upperHorizontalStroke.matches",
+        "middleHorizontalStroke.matches",
+        "lowerHorizontalStroke.matches",
+        "above.upperHorizontalStroke.middleHorizontalStroke",
+        "above.middleHorizontalStroke.lowerHorizontalStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 三. Los tres horizontales deben conservar su orden y una separación mínima. La rectitud global y las proporciones relativas entre anchuras permanecen inicialmente como señales blandas o pendientes de calibración con muestras reales."
+      }
+    },
     "八": {
       "kanji": "八",
       "enabled": true,

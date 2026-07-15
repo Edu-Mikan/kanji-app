@@ -25,6 +25,7 @@ const {
 const descriptorData = require("../../data/kanji_descriptors.json");
 const oneDescriptor = descriptorData.descriptors["一"];
 const twoDescriptor = descriptorData.descriptors["二"];
+const threeDescriptor = descriptorData.descriptors["三"];
 const crossDescriptor = descriptorData.descriptors["十"];
 const eightDescriptor = descriptorData.descriptors["八"];
 const mountainDescriptor = descriptorData.descriptors["山"];
@@ -5216,4 +5217,482 @@ test("二 should fail when its horizontals are too close", () => {
   );
 
   assert.equal(result.isCorrect, false);
+});
+
+function createThreeFeatures({
+  upperCenterY = 0.12,
+  upperMinX = 0.25,
+  upperMaxX = 0.75,
+  upperAngleAbs = 0.03,
+  upperHeight = 0.04,
+  upperStraightness = 0.98,
+
+  middleCenterY = 0.45,
+  middleMinX = 0.2,
+  middleMaxX = 0.8,
+  middleAngleAbs = 0.03,
+  middleHeight = 0.04,
+  middleStraightness = 0.98,
+
+  lowerCenterY = 0.82,
+  lowerMinX = 0.1,
+  lowerMaxX = 0.9,
+  lowerAngleAbs = 0.03,
+  lowerHeight = 0.04,
+  lowerStraightness = 0.98,
+
+  bboxWidth = 0.8,
+  bboxHeight = 0.74,
+  aspectRatio = bboxHeight > 0 ? bboxWidth / bboxHeight : Infinity,
+
+  straightnessMean = (upperStraightness +
+    middleStraightness +
+    lowerStraightness) /
+    3,
+
+  strokeCountUser = 3,
+  strokeCountRef = 3,
+} = {}) {
+  return {
+    strokeCountUser,
+    strokeCountRef,
+    geometry: {
+      bboxWidth,
+      bboxHeight,
+      aspectRatio,
+      straightnessMean,
+      straightnessMin: Math.min(
+        upperStraightness,
+        middleStraightness,
+        lowerStraightness,
+      ),
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: upperAngleAbs,
+          width: upperMaxX - upperMinX,
+          height: upperHeight,
+          centerX: (upperMinX + upperMaxX) / 2,
+          centerY: upperCenterY,
+          minX: upperMinX,
+          maxX: upperMaxX,
+          minY: upperCenterY - upperHeight / 2,
+          maxY: upperCenterY + upperHeight / 2,
+          straightness: upperStraightness,
+          deltaX: upperMaxX - upperMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 1,
+          angleAbs: middleAngleAbs,
+          width: middleMaxX - middleMinX,
+          height: middleHeight,
+          centerX: (middleMinX + middleMaxX) / 2,
+          centerY: middleCenterY,
+          minX: middleMinX,
+          maxX: middleMaxX,
+          minY: middleCenterY - middleHeight / 2,
+          maxY: middleCenterY + middleHeight / 2,
+          straightness: middleStraightness,
+          deltaX: middleMaxX - middleMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 2,
+          angleAbs: lowerAngleAbs,
+          width: lowerMaxX - lowerMinX,
+          height: lowerHeight,
+          centerX: (lowerMinX + lowerMaxX) / 2,
+          centerY: lowerCenterY,
+          minX: lowerMinX,
+          maxX: lowerMaxX,
+          minY: lowerCenterY - lowerHeight / 2,
+          maxY: lowerCenterY + lowerHeight / 2,
+          straightness: lowerStraightness,
+          deltaX: lowerMaxX - lowerMinX,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("三 descriptor should use three declarative horizontal roles", () => {
+  assert.ok(threeDescriptor);
+
+  assert.equal(threeDescriptor.pattern, "three_horizontal_lines");
+
+  assert.equal(threeDescriptor.strokeCount, 3);
+
+  assert.deepEqual(
+    threeDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "upperHorizontalStroke",
+      "middleHorizontalStroke",
+      "lowerHorizontalStroke",
+    ],
+  );
+
+  assert.equal(threeDescriptor.rules, undefined);
+
+  assert.equal(threeDescriptor.expectedStrokeCount, undefined);
+});
+
+test("三 should pass with three ordered horizontal strokes", () => {
+  const features = createThreeFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.pattern, "three_horizontal_lines");
+
+  assert.equal(result.roleMatches.upperHorizontalStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.middleHorizontalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.lowerHorizontalStroke.matchedStrokeIndex, 2);
+
+  assert.equal(
+    result.checks["above.upperHorizontalStroke.middleHorizontalStroke"],
+    true,
+  );
+
+  assert.equal(
+    result.checks["above.middleHorizontalStroke.lowerHorizontalStroke"],
+    true,
+  );
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("三 should fail when the upper and middle strokes are too close", () => {
+  const features = createThreeFeatures({
+    upperCenterY: 0.2,
+    middleCenterY: 0.29,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.equal(
+    result.checks["above.upperHorizontalStroke.middleHorizontalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.upperHorizontalStroke.middleHorizontalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("三 should fail when the middle and lower strokes are too close", () => {
+  const features = createThreeFeatures({
+    middleCenterY: 0.62,
+    lowerCenterY: 0.7,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.equal(
+    result.checks["above.middleHorizontalStroke.lowerHorizontalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "above.middleHorizontalStroke.lowerHorizontalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("三 should fail when one of its horizontal strokes is clearly not horizontal", () => {
+  const features = createThreeFeatures({
+    middleAngleAbs: 0.9,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  const horizontalRoleCheckNames = [
+    "upperHorizontalStroke.matches",
+    "middleHorizontalStroke.matches",
+    "lowerHorizontalStroke.matches",
+  ];
+
+  const failedHorizontalRoleChecks = horizontalRoleCheckNames.filter(
+    (checkName) => result.checks[checkName] === false,
+  );
+
+  assert.ok(
+    failedHorizontalRoleChecks.length >= 1,
+    "Expected at least one horizontal role to reject the inclined stroke",
+  );
+
+  assert.ok(
+    failedHorizontalRoleChecks.some((checkName) =>
+      result.hardFailedChecks.includes(checkName),
+    ),
+    "Expected the failed horizontal role check to be hard",
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("三 should fail when one of its horizontal strokes is extremely short", () => {
+  const features = createThreeFeatures({
+    middleMinX: 0.45,
+    middleMaxX: 0.57,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.ok(Math.abs(features.geometry.perStroke[1].width - 0.12) < 1e-9);
+
+  const horizontalRoleCheckNames = [
+    "upperHorizontalStroke.matches",
+    "middleHorizontalStroke.matches",
+    "lowerHorizontalStroke.matches",
+  ];
+
+  const failedHorizontalRoleChecks = horizontalRoleCheckNames.filter(
+    (checkName) => result.checks[checkName] === false,
+  );
+
+  assert.ok(
+    failedHorizontalRoleChecks.length >= 1,
+    "Expected at least one horizontal role to reject the extremely short stroke",
+  );
+
+  assert.ok(
+    failedHorizontalRoleChecks.some((checkName) =>
+      result.hardFailedChecks.includes(checkName),
+    ),
+    "Expected the failed horizontal role check to be hard",
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("三 should accept a short but recognizable middle stroke", () => {
+  const features = createThreeFeatures({
+    middleMinX: 0.38,
+    middleMaxX: 0.62,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.ok(Math.abs(features.geometry.perStroke[1].width - 0.24) < 1e-9);
+
+  assert.equal(result.checks["middleHorizontalStroke.matches"], true);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("三 straightness should initially remain a soft check", () => {
+  assert.equal(threeDescriptor.hardChecks.includes("straightnessMean"), false);
+
+  assert.equal(
+    Object.hasOwn(threeDescriptor.globalChecks, "straightnessMean"),
+    true,
+  );
+});
+
+test("三 should report low straightness without making it a hard failure", () => {
+  const features = createThreeFeatures({
+    upperStraightness: 0.65,
+    middleStraightness: 0.65,
+    lowerStraightness: 0.65,
+    straightnessMean: 0.65,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.equal(result.checks.straightnessMean, false);
+
+  assert.ok(result.failedChecks.includes("straightnessMean"));
+
+  assert.equal(result.hardFailedChecks.includes("straightnessMean"), false);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("三 should fail when the user stroke count is not three", () => {
+  const features = createThreeFeatures({
+    strokeCountUser: 4,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.equal(result.checks.strokeCount, false);
+
+  assert.ok(result.hardFailedChecks.includes("strokeCount"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("三 greedy role assignment may move a degraded middle stroke to another horizontal role", () => {
+  const features = createThreeFeatures({
+    middleAngleAbs: 0.9,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  const matchedIndexes = [
+    result.roleMatches.upperHorizontalStroke.matchedStrokeIndex,
+    result.roleMatches.middleHorizontalStroke.matchedStrokeIndex,
+    result.roleMatches.lowerHorizontalStroke.matchedStrokeIndex,
+  ];
+
+  assert.deepEqual(
+    [...matchedIndexes].sort((a, b) => a - b),
+    [0, 1, 2],
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.ok(
+    result.hardFailedChecks.some((checkName) => checkName.endsWith(".matches")),
+  );
+});
+
+test("三 should reject three clearly diagonal ordered strokes", () => {
+  const features = createThreeFeatures({
+    upperAngleAbs: 0.55,
+    upperHeight: 0.27,
+    upperMinX: 0.56,
+    upperMaxX: 1,
+    upperCenterY: 0.13,
+
+    middleAngleAbs: 0.53,
+    middleHeight: 0.31,
+    middleMinX: 0.25,
+    middleMaxX: 0.78,
+    middleCenterY: 0.45,
+
+    lowerAngleAbs: 0.47,
+    lowerHeight: 0.32,
+    lowerMinX: 0,
+    lowerMaxX: 0.62,
+    lowerCenterY: 0.78,
+
+    bboxWidth: 1,
+    bboxHeight: 0.94,
+    aspectRatio: 1 / 0.94,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  const horizontalRoleCheckNames = [
+    "upperHorizontalStroke.matches",
+    "middleHorizontalStroke.matches",
+    "lowerHorizontalStroke.matches",
+  ];
+
+  const failedHorizontalRoleChecks = horizontalRoleCheckNames.filter(
+    (checkName) => result.checks[checkName] === false,
+  );
+
+  assert.ok(
+    failedHorizontalRoleChecks.length >= 1,
+    "Expected at least one horizontal role to reject the diagonal strokes",
+  );
+
+  assert.ok(
+    failedHorizontalRoleChecks.some((checkName) =>
+      result.hardFailedChecks.includes(checkName),
+    ),
+    "Expected the failed horizontal role check to be hard",
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+test("三 should accept recognizable horizontals with moderate inclination", () => {
+  const features = createThreeFeatures({
+    upperAngleAbs: 0.28,
+    upperHeight: 0.16,
+
+    middleAngleAbs: 0.22,
+    middleHeight: 0.12,
+
+    lowerAngleAbs: 0.2,
+    lowerHeight: 0.12,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "三",
+    features,
+    descriptor: threeDescriptor,
+  });
+
+  assert.equal(result.checks["upperHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["middleHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["lowerHorizontalStroke.matches"], true);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
 });
