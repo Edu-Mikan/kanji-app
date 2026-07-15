@@ -26,6 +26,7 @@ const descriptorData = require("../../data/kanji_descriptors.json");
 const oneDescriptor = descriptorData.descriptors["一"];
 const twoDescriptor = descriptorData.descriptors["二"];
 const threeDescriptor = descriptorData.descriptors["三"];
+const sixDescriptor = descriptorData.descriptors["六"];
 const sevenDescriptor = descriptorData.descriptors["七"];
 const eightDescriptor = descriptorData.descriptors["八"];
 const crossDescriptor = descriptorData.descriptors["十"];
@@ -6169,4 +6170,384 @@ test("七 should accept a recognizable hook with a small rightward displacement"
   assert.deepEqual(result.hardFailedChecks, []);
 
   assert.equal(result.isCorrect, true);
+});
+
+function createSixFeatures({
+  topMarkCenterX = 0.5,
+  topMarkCenterY = 0.12,
+  topMarkWidth = 0.1,
+  topMarkHeight = 0.1,
+  topMarkAngleAbs = 0.8,
+  topMarkStraightness = 0.9,
+  topMarkDeltaX = 0.06,
+  topMarkDeltaY = 0.08,
+
+  horizontalCenterY = 0.34,
+  horizontalMinX = 0.15,
+  horizontalMaxX = 0.85,
+  horizontalHeight = 0.05,
+  horizontalAngleAbs = 0.04,
+  horizontalStraightness = 0.98,
+
+  leftCenterX = 0.3,
+  leftCenterY = 0.68,
+  leftDeltaX = -0.24,
+  leftDeltaY = 0.36,
+  leftAngleAbs = 0.95,
+  leftStraightness = 0.9,
+
+  rightCenterX = 0.7,
+  rightCenterY = 0.68,
+  rightDeltaX = 0.24,
+  rightDeltaY = 0.36,
+  rightAngleAbs = 0.95,
+  rightStraightness = 0.9,
+
+  bboxWidth = 0.75,
+  bboxHeight = 0.82,
+  aspectRatio = bboxHeight > 0 ? bboxWidth / bboxHeight : Infinity,
+
+  straightnessMean = (topMarkStraightness +
+    horizontalStraightness +
+    leftStraightness +
+    rightStraightness) /
+    4,
+
+  strokeCountUser = 4,
+  strokeCountRef = 4,
+} = {}) {
+  const leftWidth = Math.abs(leftDeltaX);
+
+  const leftHeight = Math.abs(leftDeltaY);
+
+  const rightWidth = Math.abs(rightDeltaX);
+
+  const rightHeight = Math.abs(rightDeltaY);
+
+  return {
+    strokeCountUser,
+    strokeCountRef,
+    geometry: {
+      bboxWidth,
+      bboxHeight,
+      aspectRatio,
+      straightnessMean,
+      straightnessMin: Math.min(
+        topMarkStraightness,
+        horizontalStraightness,
+        leftStraightness,
+        rightStraightness,
+      ),
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: topMarkAngleAbs,
+          width: topMarkWidth,
+          height: topMarkHeight,
+          centerX: topMarkCenterX,
+          centerY: topMarkCenterY,
+          minX: topMarkCenterX - topMarkWidth / 2,
+          maxX: topMarkCenterX + topMarkWidth / 2,
+          minY: topMarkCenterY - topMarkHeight / 2,
+          maxY: topMarkCenterY + topMarkHeight / 2,
+          straightness: topMarkStraightness,
+          deltaX: topMarkDeltaX,
+          deltaY: topMarkDeltaY,
+        },
+        {
+          index: 1,
+          angleAbs: horizontalAngleAbs,
+          width: horizontalMaxX - horizontalMinX,
+          height: horizontalHeight,
+          centerX: (horizontalMinX + horizontalMaxX) / 2,
+          centerY: horizontalCenterY,
+          minX: horizontalMinX,
+          maxX: horizontalMaxX,
+          minY: horizontalCenterY - horizontalHeight / 2,
+          maxY: horizontalCenterY + horizontalHeight / 2,
+          straightness: horizontalStraightness,
+          deltaX: horizontalMaxX - horizontalMinX,
+          deltaY: 0.01,
+        },
+        {
+          index: 2,
+          angleAbs: leftAngleAbs,
+          width: leftWidth,
+          height: leftHeight,
+          centerX: leftCenterX,
+          centerY: leftCenterY,
+          minX: leftCenterX - leftWidth / 2,
+          maxX: leftCenterX + leftWidth / 2,
+          minY: leftCenterY - leftHeight / 2,
+          maxY: leftCenterY + leftHeight / 2,
+          straightness: leftStraightness,
+          deltaX: leftDeltaX,
+          deltaY: leftDeltaY,
+        },
+        {
+          index: 3,
+          angleAbs: rightAngleAbs,
+          width: rightWidth,
+          height: rightHeight,
+          centerX: rightCenterX,
+          centerY: rightCenterY,
+          minX: rightCenterX - rightWidth / 2,
+          maxX: rightCenterX + rightWidth / 2,
+          minY: rightCenterY - rightHeight / 2,
+          maxY: rightCenterY + rightHeight / 2,
+          straightness: rightStraightness,
+          deltaX: rightDeltaX,
+          deltaY: rightDeltaY,
+        },
+      ],
+    },
+  };
+}
+
+test("六 descriptor should use declarative top mark, horizontal and lower diagonal roles", () => {
+  assert.ok(sixDescriptor);
+
+  assert.equal(sixDescriptor.pattern, "roku_kanji");
+
+  assert.equal(sixDescriptor.strokeCount, 4);
+
+  assert.deepEqual(
+    sixDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "topMarkStroke",
+      "horizontalStroke",
+      "leftLowerStroke",
+      "rightLowerStroke",
+    ],
+  );
+
+  assert.equal(sixDescriptor.rules, undefined);
+
+  assert.equal(sixDescriptor.expectedStrokeCount, undefined);
+});
+
+test("六 should pass with a top mark, central horizontal and two outward lower strokes", () => {
+  const features = createSixFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.pattern, "roku_kanji");
+
+  assert.equal(result.roleMatches.topMarkStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.horizontalStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.leftLowerStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.rightLowerStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.checks["above.topMarkStroke.horizontalStroke"], true);
+
+  assert.equal(result.checks["above.horizontalStroke.leftLowerStroke"], true);
+
+  assert.equal(result.checks["above.horizontalStroke.rightLowerStroke"], true);
+
+  assert.equal(result.checks["direction.leftLowerStroke"], true);
+
+  assert.equal(result.checks["direction.rightLowerStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("六 should fail when its top mark is too wide", () => {
+  const features = createSixFeatures({
+    topMarkWidth: 0.4,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.checks["topMarkStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("topMarkStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when its top mark is not above the horizontal", () => {
+  const features = createSixFeatures({
+    topMarkCenterY: 0.31,
+    horizontalCenterY: 0.34,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.checks["above.topMarkStroke.horizontalStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.topMarkStroke.horizontalStroke"),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when its central stroke is clearly not horizontal", () => {
+  const features = createSixFeatures({
+    horizontalAngleAbs: 0.8,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  const roleCheckNames = [
+    "topMarkStroke.matches",
+    "horizontalStroke.matches",
+    "leftLowerStroke.matches",
+    "rightLowerStroke.matches",
+  ];
+
+  const failedRoleChecks = roleCheckNames.filter(
+    (checkName) => result.checks[checkName] === false,
+  );
+
+  assert.ok(failedRoleChecks.length >= 1);
+
+  assert.ok(
+    failedRoleChecks.some((checkName) =>
+      result.hardFailedChecks.includes(checkName),
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when its lower strokes are too close", () => {
+  const features = createSixFeatures({
+    leftCenterX: 0.44,
+    rightCenterX: 0.55,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(
+    result.checks["centerXGap.leftLowerStroke.rightLowerStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "centerXGap.leftLowerStroke.rightLowerStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when its left lower stroke descends toward the right", () => {
+  const features = createSixFeatures({
+    leftDeltaX: 0.24,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.checks["direction.leftLowerStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.leftLowerStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when its right lower stroke descends toward the left", () => {
+  const features = createSixFeatures({
+    rightDeltaX: -0.24,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.checks["direction.rightLowerStroke"], false);
+
+  assert.ok(result.hardFailedChecks.includes("direction.rightLowerStroke"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when a lower stroke is not below the horizontal", () => {
+  const features = createSixFeatures({
+    horizontalCenterY: 0.34,
+    leftCenterY: 0.39,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.checks["above.horizontalStroke.leftLowerStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.horizontalStroke.leftLowerStroke"),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("六 should fail when the user stroke count is not four", () => {
+  const features = createSixFeatures({
+    strokeCountUser: 5,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "六",
+    features,
+    descriptor: sixDescriptor,
+  });
+
+  assert.equal(result.checks.strokeCount, false);
+
+  assert.ok(result.hardFailedChecks.includes("strokeCount"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("六 straightness should initially remain a soft check", () => {
+  assert.equal(sixDescriptor.hardChecks.includes("straightnessMean"), false);
+
+  assert.equal(
+    Object.hasOwn(sixDescriptor.globalChecks, "straightnessMean"),
+    true,
+  );
 });

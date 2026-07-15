@@ -4,9 +4,6 @@ const SIMPLE_KANJI_RULES = {
   四: {
     pattern: "four_box_kanji",
   },
-  六: {
-    pattern: "roku_kanji",
-  },
 };
 
 /**
@@ -25,10 +22,6 @@ function validateSimpleKanji({ kanji, features }) {
 
   if (rule.pattern === "four_box_kanji") {
     return validateFourBoxKanji(features);
-  }
-
-  if (rule.pattern === "roku_kanji") {
-    return validateRokuKanji(features);
   }
 
   // if (rule.pattern === "hachi_kanji") {
@@ -251,178 +244,6 @@ function validateFourBoxKanji(features) {
       bottomStrokeHeightMax: 0.2,
       bottomStrokeCenterYMin: 0.58,
       bottomStrokeStraightnessMin: 0.88,
-    },
-  };
-}
-
-function validateRokuKanji(features) {
-  if (!geometry) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "roku_kanji",
-      reason: "missing_geometry_features",
-    };
-  }
-
-  const perStroke = geometry.perStroke ?? [];
-
-  if (perStroke.length !== 4) {
-    return {
-      isCorrect: false,
-      score: 10,
-      strategy: "roku_kanji",
-      reason: "invalid_stroke_count",
-      checks: {
-        strokeCount: features.strokeCountUser === 4,
-        referenceStrokeCount: features.strokeCountRef === 4,
-      },
-      thresholds: {
-        expectedStrokeCount: 4,
-      },
-    };
-  }
-
-  // 1) Buscar trazo superior corto.
-  // No asumimos índice. Puede ser stroke 0 o stroke 1.
-  const topMarkCandidates = perStroke.filter(
-    (s) =>
-      s.centerY <= 0.28 &&
-      s.width <= 0.16 &&
-      s.height <= 0.35 &&
-      s.straightness >= 0.8,
-  );
-
-  const topMark =
-    topMarkCandidates.length > 0
-      ? topMarkCandidates.sort((a, b) => a.centerY - b.centerY)[0]
-      : null;
-
-  // 2) Buscar horizontal superior.
-  const horizontalCandidates = perStroke.filter(
-    (s) =>
-      s !== topMark &&
-      s.angleAbs <= 0.25 &&
-      s.width >= 0.4 &&
-      s.height <= 0.18 &&
-      s.centerY <= 0.4 &&
-      s.straightness >= 0.85,
-  );
-
-  const horizontal =
-    horizontalCandidates.length > 0
-      ? horizontalCandidates.sort((a, b) => b.width - a.width)[0]
-      : null;
-
-  // 3) Los dos restantes deberían ser diagonales inferiores.
-  const remaining = perStroke.filter((s) => s !== topMark && s !== horizontal);
-  const sortedLower = [...remaining].sort((a, b) => a.centerX - b.centerX);
-
-  const leftLower = sortedLower[0] ?? null;
-  const rightLower = sortedLower[1] ?? null;
-
-  const hasTopMark = Boolean(topMark);
-  const hasMiddleHorizontal = Boolean(horizontal);
-  const hasTwoLowerStrokes = remaining.length === 2;
-
-  const leftDiagonal =
-    Boolean(leftLower) &&
-    leftLower.angleAbs >= 0.65 &&
-    leftLower.angleAbs <= 1.35 &&
-    leftLower.width >= 0.1 &&
-    leftLower.height >= 0.2 &&
-    leftLower.centerX <= 0.4 &&
-    leftLower.centerY >= 0.45 &&
-    leftLower.straightness >= 0.8;
-
-  const rightDiagonal =
-    Boolean(rightLower) &&
-    rightLower.angleAbs >= 0.55 &&
-    rightLower.angleAbs <= 1.35 &&
-    rightLower.width >= 0.1 &&
-    rightLower.height >= 0.2 &&
-    rightLower.centerX >= 0.5 &&
-    rightLower.centerY >= 0.45 &&
-    rightLower.straightness >= 0.8;
-
-  const topAboveHorizontal =
-    hasTopMark && hasMiddleHorizontal && topMark.centerY < horizontal.centerY;
-
-  const horizontalAboveLower =
-    hasMiddleHorizontal &&
-    Boolean(leftLower) &&
-    Boolean(rightLower) &&
-    horizontal.centerY < Math.min(leftLower.centerY, rightLower.centerY) - 0.15;
-
-  const leftRightSeparated =
-    Boolean(leftLower) &&
-    Boolean(rightLower) &&
-    leftLower.centerX < rightLower.centerX - 0.25;
-
-  const lowerBelowHorizontal =
-    hasMiddleHorizontal &&
-    Boolean(leftLower) &&
-    Boolean(rightLower) &&
-    leftLower.minY > horizontal.maxY &&
-    rightLower.minY > horizontal.maxY;
-
-  const checks = {
-    strokeCount: features.strokeCountUser === 4,
-    referenceStrokeCount: features.strokeCountRef === 4,
-
-    hasTopMark,
-    hasMiddleHorizontal,
-    hasTwoLowerStrokes,
-
-    leftDiagonal,
-    rightDiagonal,
-
-    topAboveHorizontal,
-    horizontalAboveLower,
-    leftRightSeparated,
-    lowerBelowHorizontal,
-  };
-
-  const isCorrect = Object.values(checks).every(Boolean);
-
-  return {
-    isCorrect,
-    score: isCorrect ? 0.5 : 10,
-    strategy: "roku_kanji",
-    checks,
-    details: {
-      topMark,
-      horizontal,
-      leftLower,
-      rightLower,
-      allStrokes: perStroke,
-    },
-    thresholds: {
-      expectedStrokeCount: 4,
-
-      topMarkCenterYMax: 0.28,
-      topMarkWidthMax: 0.16,
-      topMarkHeightMax: 0.35,
-
-      horizontalAngleAbsMax: 0.25,
-      horizontalWidthMin: 0.4,
-      horizontalHeightMax: 0.18,
-      horizontalCenterYMax: 0.4,
-
-      leftDiagonalAngleAbsMin: 0.65,
-      leftDiagonalAngleAbsMax: 1.35,
-      leftDiagonalCenterXMax: 0.4,
-
-      rightDiagonalAngleAbsMin: 0.55,
-      rightDiagonalAngleAbsMax: 1.35,
-      rightDiagonalCenterXMin: 0.5,
-
-      lowerStrokeWidthMin: 0.1,
-      lowerStrokeHeightMin: 0.2,
-      lowerStrokeCenterYMin: 0.45,
-
-      leftRightCenterXGapMin: 0.25,
-      horizontalToLowerCenterYGapMin: 0.15,
     },
   };
 }
