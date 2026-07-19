@@ -26,6 +26,7 @@ const descriptorData = require("../../data/kanji_descriptors.json");
 const oneDescriptor = descriptorData.descriptors["一"];
 const twoDescriptor = descriptorData.descriptors["二"];
 const threeDescriptor = descriptorData.descriptors["三"];
+const fourDescriptor = descriptorData.descriptors["四"];
 const sixDescriptor = descriptorData.descriptors["六"];
 const sevenDescriptor = descriptorData.descriptors["七"];
 const eightDescriptor = descriptorData.descriptors["八"];
@@ -6550,4 +6551,593 @@ test("六 straightness should initially remain a soft check", () => {
     Object.hasOwn(sixDescriptor.globalChecks, "straightnessMean"),
     true,
   );
+});
+
+function createFourFeatures({
+  outerLeftCenterX = 0.1,
+  outerLeftCenterY = 0.47,
+  outerLeftWidth = 0.05,
+  outerLeftHeight = 0.72,
+  outerLeftAngleAbs = 1.5,
+  outerLeftStraightness = 0.98,
+
+  outerCenterX = 0.57,
+  outerCenterY = 0.43,
+  outerMinX = 0.2,
+  outerMaxX = 0.94,
+  outerMinY = 0.08,
+  outerMaxY = 0.78,
+  outerStraightness = 0.72,
+
+  innerLeftCenterX = 0.4,
+  innerLeftCenterY = 0.48,
+  innerLeftDeltaX = -0.14,
+  innerLeftDeltaY = 0.25,
+  innerLeftAngleAbs = 1.05,
+  innerLeftStraightness = 0.92,
+
+  innerRightCenterX = 0.64,
+  innerRightCenterY = 0.48,
+  innerRightDeltaX = 0.14,
+  innerRightDeltaY = 0.25,
+  innerRightAngleAbs = 1.05,
+  innerRightStraightness = 0.92,
+
+  bottomCenterY = 0.84,
+  bottomMinX = 0.1,
+  bottomMaxX = 0.94,
+  bottomHeight = 0.06,
+  bottomAngleAbs = 0.04,
+  bottomStraightness = 0.98,
+
+  bboxWidth = 0.89,
+  bboxHeight = 0.82,
+  aspectRatio = bboxHeight > 0 ? bboxWidth / bboxHeight : Infinity,
+
+  straightnessMean = (outerLeftStraightness +
+    outerStraightness +
+    innerLeftStraightness +
+    innerRightStraightness +
+    bottomStraightness) /
+    5,
+
+  strokeCountUser = 5,
+  strokeCountRef = 5,
+} = {}) {
+  const createDiagonalStroke = ({
+    index,
+    centerX,
+    centerY,
+    deltaX,
+    deltaY,
+    angleAbs,
+    straightness,
+  }) => {
+    const width = Math.abs(deltaX);
+
+    const height = Math.abs(deltaY);
+
+    return {
+      index,
+      angleAbs,
+      width,
+      height,
+      centerX,
+      centerY,
+      minX: centerX - width / 2,
+      maxX: centerX + width / 2,
+      minY: centerY - height / 2,
+      maxY: centerY + height / 2,
+      straightness,
+      deltaX,
+      deltaY,
+    };
+  };
+
+  return {
+    strokeCountUser,
+    strokeCountRef,
+    geometry: {
+      bboxWidth,
+      bboxHeight,
+      aspectRatio,
+      straightnessMean,
+      straightnessMin: Math.min(
+        outerLeftStraightness,
+        outerStraightness,
+        innerLeftStraightness,
+        innerRightStraightness,
+        bottomStraightness,
+      ),
+      intersections: [],
+      intersectionCount: 0,
+      touches: [],
+      touchCount: 0,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: outerLeftAngleAbs,
+          width: outerLeftWidth,
+          height: outerLeftHeight,
+          centerX: outerLeftCenterX,
+          centerY: outerLeftCenterY,
+          minX: outerLeftCenterX - outerLeftWidth / 2,
+          maxX: outerLeftCenterX + outerLeftWidth / 2,
+          minY: outerLeftCenterY - outerLeftHeight / 2,
+          maxY: outerLeftCenterY + outerLeftHeight / 2,
+          straightness: outerLeftStraightness,
+          deltaX: 0.01,
+          deltaY: outerLeftHeight,
+        },
+        {
+          index: 1,
+          width: outerMaxX - outerMinX,
+          height: outerMaxY - outerMinY,
+          centerX: outerCenterX,
+          centerY: outerCenterY,
+          minX: outerMinX,
+          maxX: outerMaxX,
+          minY: outerMinY,
+          maxY: outerMaxY,
+          angleAbs: 0.8,
+          straightness: outerStraightness,
+          deltaX: outerMaxX - outerMinX,
+          deltaY: outerMaxY - outerMinY,
+        },
+        createDiagonalStroke({
+          index: 2,
+          centerX: innerLeftCenterX,
+          centerY: innerLeftCenterY,
+          deltaX: innerLeftDeltaX,
+          deltaY: innerLeftDeltaY,
+          angleAbs: innerLeftAngleAbs,
+          straightness: innerLeftStraightness,
+        }),
+        createDiagonalStroke({
+          index: 3,
+          centerX: innerRightCenterX,
+          centerY: innerRightCenterY,
+          deltaX: innerRightDeltaX,
+          deltaY: innerRightDeltaY,
+          angleAbs: innerRightAngleAbs,
+          straightness: innerRightStraightness,
+        }),
+        {
+          index: 4,
+          angleAbs: bottomAngleAbs,
+          width: bottomMaxX - bottomMinX,
+          height: bottomHeight,
+          centerX: (bottomMinX + bottomMaxX) / 2,
+          centerY: bottomCenterY,
+          minX: bottomMinX,
+          maxX: bottomMaxX,
+          minY: bottomCenterY - bottomHeight / 2,
+          maxY: bottomCenterY + bottomHeight / 2,
+          straightness: bottomStraightness,
+          deltaX: bottomMaxX - bottomMinX,
+          deltaY: 0.01,
+        },
+      ],
+    },
+  };
+}
+
+test("四 descriptor should use declarative outer box and inner stroke roles", () => {
+  assert.ok(fourDescriptor);
+
+  assert.equal(fourDescriptor.pattern, "four_box_kanji");
+
+  assert.equal(fourDescriptor.strokeCount, 5);
+
+  assert.deepEqual(
+    fourDescriptor.strokes.map((stroke) => stroke.id),
+    [
+      "outerWrappingStroke",
+      "outerLeftStroke",
+      "innerLeftStroke",
+      "innerRightStroke",
+      "bottomStroke",
+    ],
+  );
+
+  assert.equal(fourDescriptor.rules, undefined);
+
+  assert.equal(fourDescriptor.expectedStrokeCount, undefined);
+});
+
+test("四 should pass with an outer box and two ordered inner strokes", () => {
+  const features = createFourFeatures();
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.strategy, "descriptor");
+
+  assert.equal(result.pattern, "four_box_kanji");
+
+  assert.equal(result.roleMatches.outerLeftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.outerWrappingStroke.matchedStrokeIndex, 1);
+
+  assert.equal(result.roleMatches.innerLeftStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.innerRightStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.bottomStroke.matchedStrokeIndex, 4);
+
+  assert.equal(
+    result.checks["leftOf.outerLeftStroke.outerWrappingStroke"],
+    true,
+  );
+
+  assert.equal(result.checks["leftOf.innerLeftStroke.innerRightStroke"], true);
+
+  assert.equal(result.checks["above.innerLeftStroke.bottomStroke"], true);
+
+  assert.equal(result.checks["above.innerRightStroke.bottomStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("四 should fail when its outer wrapping stroke is too straight", () => {
+  const features = createFourFeatures({
+    outerStraightness: 0.98,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks["outerWrappingStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("outerWrappingStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("四 should fail when its outer left stroke is too short", () => {
+  const features = createFourFeatures({
+    outerLeftHeight: 0.25,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks["outerLeftStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("outerLeftStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("四 should assign its inner roles according to horizontal position", () => {
+  const features = createFourFeatures({
+    innerLeftCenterX: 0.62,
+    innerRightCenterX: 0.4,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.roleMatches.innerLeftStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.roleMatches.innerRightStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.checks["leftOf.innerLeftStroke.innerRightStroke"], true);
+
+  assert.equal(result.checks["above.innerLeftStroke.bottomStroke"], true);
+
+  assert.equal(result.checks["above.innerRightStroke.bottomStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("四 should fail when an inner stroke is too close to the bottom closure", () => {
+  const features = createFourFeatures({
+    innerRightCenterY: 0.82,
+    bottomCenterY: 0.84,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks["above.innerRightStroke.bottomStroke"], false);
+
+  assert.ok(
+    result.hardFailedChecks.includes("above.innerRightStroke.bottomStroke"),
+  );
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("四 should fail when its bottom closure is extremely short", () => {
+  const features = createFourFeatures({
+    bottomMinX: 0.4,
+    bottomMaxX: 0.6,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks["bottomStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("bottomStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+});
+
+test("四 outer box connections should initially remain soft", () => {
+  const connectionCheckNames = [
+    "connects.outerLeftStroke.outerWrappingStroke",
+    "connects.outerLeftStroke.bottomStroke",
+    "connects.outerWrappingStroke.bottomStroke",
+  ];
+
+  for (const checkName of connectionCheckNames) {
+    assert.equal(fourDescriptor.hardChecks.includes(checkName), false);
+  }
+});
+
+test("四 inner stroke containment should initially remain soft", () => {
+  assert.ok(
+    fourDescriptor.relations.some(
+      (relation) => relation.id === "innerStrokesInsideOuterBox",
+    ),
+  );
+
+  assert.equal(
+    fourDescriptor.hardChecks.includes("innerStrokesInsideOuterBox"),
+    false,
+  );
+});
+
+test("四 should fail when the user stroke count is not five", () => {
+  const features = createFourFeatures({
+    strokeCountUser: 6,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks.strokeCount, false);
+
+  assert.ok(result.hardFailedChecks.includes("strokeCount"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("四 should reject an excessively long inner left stroke", () => {
+  const features = createFourFeatures({
+    innerLeftCenterX: 0.34,
+    innerLeftCenterY: 0.38,
+    innerLeftDeltaX: -0.28,
+    innerLeftDeltaY: 0.65,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.ok(Math.abs(features.geometry.perStroke[2].height - 0.65) < 1e-9);
+
+  assert.equal(result.checks["innerLeftStroke.matches"], false);
+
+  assert.ok(result.hardFailedChecks.includes("innerLeftStroke.matches"));
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
+});
+
+test("四 should accept a long but recognizable inner left stroke", () => {
+  const features = createFourFeatures({
+    innerLeftCenterX: 0.3,
+    innerLeftCenterY: 0.38,
+    innerLeftDeltaX: -0.22,
+    innerLeftDeltaY: 0.54,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.ok(Math.abs(features.geometry.perStroke[2].height - 0.54) < 1e-9);
+
+  assert.equal(result.checks["innerLeftStroke.matches"], true);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+});
+
+test("四 should accept a recognizable inner left stroke near the left side", () => {
+  const features = createFourFeatures({
+    innerLeftCenterX: 0.14,
+    innerLeftCenterY: 0.38,
+    innerLeftDeltaX: -0.08,
+    innerLeftDeltaY: 0.3,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks["innerLeftStroke.matches"], true);
+
+  assert.equal(result.checks["leftOf.innerLeftStroke.innerRightStroke"], true);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("四 should accept an inner right stroke positioned high in the box", () => {
+  const features = createFourFeatures({
+    innerRightCenterY: 0.22,
+    innerRightDeltaX: 0.14,
+    innerRightDeltaY: 0.18,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks["innerRightStroke.matches"], true);
+
+  assert.equal(result.checks["above.innerRightStroke.bottomStroke"], true);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("四 should accept a recognizable bottom closure slightly above the initial range", () => {
+  const features = createFourFeatures({
+    innerLeftCenterY: 0.25,
+    innerRightCenterY: 0.24,
+    bottomCenterY: 0.49,
+    bottomHeight: 0.06,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.checks.bottomStroke?.matches, undefined);
+
+  assert.equal(result.checks["bottomStroke.matches"], true);
+
+  assert.equal(result.checks["above.innerLeftStroke.bottomStroke"], true);
+
+  assert.equal(result.checks["above.innerRightStroke.bottomStroke"], true);
+
+  assert.equal(result.isCorrect, true);
+});
+
+test("四 should distinguish the outer left stroke from a nearby inner left stroke", () => {
+  const features = createFourFeatures({
+    outerLeftCenterX: 0.17,
+    outerLeftCenterY: 0.46,
+    outerLeftWidth: 0.34,
+    outerLeftHeight: 0.75,
+    outerLeftAngleAbs: 1.15,
+
+    innerLeftCenterX: 0.27,
+    innerLeftCenterY: 0.41,
+    innerLeftDeltaX: -0.22,
+    innerLeftDeltaY: 0.4,
+
+    innerRightCenterX: 0.74,
+    innerRightCenterY: 0.37,
+    innerRightDeltaX: 0.43,
+    innerRightDeltaY: 0.36,
+    innerRightAngleAbs: 0.7,
+
+    bottomCenterY: 0.7,
+    bottomMinX: 0.15,
+    bottomMaxX: 0.9,
+
+    bboxWidth: 1,
+    bboxHeight: 0.85,
+    aspectRatio: 1 / 0.85,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  assert.equal(result.roleMatches.outerLeftStroke.matchedStrokeIndex, 0);
+
+  assert.equal(result.roleMatches.innerLeftStroke.matchedStrokeIndex, 2);
+
+  assert.equal(result.roleMatches.innerRightStroke.matchedStrokeIndex, 3);
+
+  assert.equal(result.checks["outerLeftStroke.matches"], true);
+
+  assert.equal(result.checks["innerLeftStroke.matches"], true);
+
+  assert.equal(result.checks["innerRightStroke.matches"], true);
+
+  assert.equal(result.checks["leftOf.innerLeftStroke.innerRightStroke"], true);
+
+  assert.deepEqual(result.hardFailedChecks, []);
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.score, 0.5);
+});
+
+test("四 should reject an outer left stroke clearly displaced into the inner box", () => {
+  const features = createFourFeatures({
+    outerLeftCenterX: 0.3,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "四",
+    features,
+    descriptor: fourDescriptor,
+  });
+
+  const leftRoleCheckNames = [
+    "outerLeftStroke.matches",
+    "innerLeftStroke.matches",
+  ];
+
+  const failedLeftRoleChecks = leftRoleCheckNames.filter(
+    (checkName) => result.checks[checkName] === false,
+  );
+
+  assert.ok(
+    failedLeftRoleChecks.length >= 1,
+    "Expected a left-side role to reject the displaced outer stroke",
+  );
+
+  assert.ok(
+    result.hardFailedChecks.some((checkName) =>
+      failedLeftRoleChecks.includes(checkName),
+    ),
+    "Expected the failed left-side role check to be hard",
+  );
+
+  assert.equal(result.isCorrect, false);
+
+  assert.equal(result.score, 10);
 });

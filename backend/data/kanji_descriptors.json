@@ -296,6 +296,256 @@
         "notes": "Migración declarativa inicial de 三. Los tres horizontales deben conservar su orden y una separación mínima. La rectitud global y las proporciones relativas entre anchuras permanecen inicialmente como señales blandas o pendientes de calibración con muestras reales."
       }
     },
+    "四": {
+      "kanji": "四",
+      "enabled": true,
+      "source": "manual_migration",
+      "strokeCount": 5,
+      "pattern": "four_box_kanji",
+      "confidence": "medium",
+      "description": "Patrón declarativo de 四: caja exterior formada por vertical izquierdo, envolvente superior/derecha y cierre inferior, con dos trazos interiores descendentes y separados.",
+      "strokes": [
+        {
+          "id": "outerWrappingStroke",
+          "type": "wrapping_stroke",
+          "expected": {
+            "width": {
+              "min": 0.35
+            },
+            "height": {
+              "min": 0.4
+            },
+            "minY": {
+              "max": 0.35
+            },
+            "maxX": {
+              "min": 0.55
+            },
+            "maxY": {
+              "min": 0.45
+            },
+            "straightness": {
+              "max": 0.94
+            }
+          },
+          "weights": {
+            "width": 1.5,
+            "height": 1.5,
+            "minY": 1,
+            "maxX": 1.5,
+            "maxY": 1,
+            "straightness": 2.5
+          }
+        },
+        {
+          "id": "outerLeftStroke",
+          "type": "vertical",
+          "expected": {
+            "angleAbs": {
+              "min": 0.8
+            },
+            "height": {
+              "min": 0.4
+            },
+            "width": {
+              "max": 0.36
+            },
+            "centerX": {
+              "max": 0.22
+            },
+            "minX": {
+              "max": 0.12
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "height": 1.5,
+            "width": 1,
+            "centerX": 2,
+            "minX": 1.5
+          }
+        },
+        {
+          "id": "innerLeftStroke",
+          "type": "inner_left_diagonal",
+          "expected": {
+            "angleAbs": {
+              "min": 0.45,
+              "max": 1.45
+            },
+            "width": {
+              "min": 0.06
+            },
+            "height": {
+              "min": 0.12,
+              "max": 0.58
+            },
+            "centerX": {
+              "min": 0.1,
+              "max": 0.58
+            },
+            "centerY": {
+              "min": 0.18,
+              "max": 0.78
+            }
+          }
+        },
+        {
+          "id": "innerRightStroke",
+          "type": "inner_right_diagonal",
+          "expected": {
+            "angleAbs": {
+              "min": 0.35,
+              "max": 1.45
+            },
+            "width": {
+              "min": 0.06
+            },
+            "height": {
+              "min": 0.12
+            },
+            "centerX": {
+              "min": 0.42,
+              "max": 0.85
+            },
+            "centerY": {
+              "min": 0.18,
+              "max": 0.78
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1.5,
+            "centerX": 2,
+            "centerY": 1
+          }
+        },
+        {
+          "id": "bottomStroke",
+          "type": "horizontal",
+          "expected": {
+            "angleAbs": {
+              "max": 0.65
+            },
+            "width": {
+              "min": 0.28
+            },
+            "height": {
+              "max": 0.3
+            },
+            "centerY": {
+              "min": 0.45
+            },
+            "maxY": {
+              "min": 0.5
+            },
+            "deltaY": {
+              "min": -0.25
+            }
+          },
+          "weights": {
+            "angleAbs": 2,
+            "width": 1.5,
+            "height": 1,
+            "centerY": 2,
+            "maxY": 1.5,
+            "deltaY": 1
+          }
+        }
+      ],
+      "relations": [
+        {
+          "type": "leftOf",
+          "from": "outerLeftStroke",
+          "to": "outerWrappingStroke"
+        },
+        {
+          "type": "leftOf",
+          "from": "innerLeftStroke",
+          "to": "innerRightStroke"
+        },
+        {
+          "type": "above",
+          "from": "innerLeftStroke",
+          "to": "bottomStroke",
+          "minCenterYGap": 0.03
+        },
+        {
+          "type": "above",
+          "from": "innerRightStroke",
+          "to": "bottomStroke",
+          "minCenterYGap": 0.03
+        },
+        {
+          "id": "innerStrokesInsideOuterBox",
+          "type": "containsGroup",
+          "outer": ["outerWrappingStroke", "outerLeftStroke", "bottomStroke"],
+          "inner": ["innerLeftStroke", "innerRightStroke"],
+          "margin": {
+            "left": -0.02,
+            "top": -0.02,
+            "right": -0.02,
+            "bottom": -0.02
+          }
+        },
+        {
+          "type": "connects",
+          "from": "outerLeftStroke",
+          "to": "outerWrappingStroke"
+        },
+        {
+          "type": "connects",
+          "from": "outerLeftStroke",
+          "to": "bottomStroke"
+        },
+        {
+          "type": "connects",
+          "from": "outerWrappingStroke",
+          "to": "bottomStroke"
+        }
+      ],
+      "globalChecks": {
+        "bboxWidth": {
+          "min": 0.45
+        },
+        "bboxHeight": {
+          "min": 0.5
+        },
+        "aspectRatio": {
+          "min": 0.45,
+          "max": 1.9
+        },
+        "straightnessMean": {
+          "min": 0.5
+        }
+      },
+      "hardChecks": [
+        "strokeCount",
+        "referenceStrokeCount",
+        "outerWrappingStroke.matches",
+        "outerLeftStroke.matches",
+        "innerLeftStroke.matches",
+        "innerRightStroke.matches",
+        "bottomStroke.matches",
+        "leftOf.outerLeftStroke.outerWrappingStroke",
+        "leftOf.innerLeftStroke.innerRightStroke",
+        "above.innerLeftStroke.bottomStroke",
+        "above.innerRightStroke.bottomStroke",
+        "bboxWidth",
+        "bboxHeight",
+        "aspectRatio"
+      ],
+      "scoring": {
+        "validScore": 0.5,
+        "hardFailureScore": 10,
+        "softFailureMinScore": 0.75,
+        "softFailureMaxScore": 1.5
+      },
+      "debug": {
+        "notes": "Migración declarativa inicial de 四. La caja exterior y el orden de los dos trazos interiores son duros. La contención exacta y las conexiones de la caja permanecen inicialmente como checks blandos hasta calibrarlas con feedback manual."
+      }
+    },
     "六": {
       "kanji": "六",
       "enabled": true,
