@@ -1,9 +1,0 @@
-/*
-compareStrokeShape
-compareStrokes
-
-mas adelante...
-validateSimpleKanji
-validateComplexKanji
-validateOneStrokeKanji
-*/

@@ -20,7 +20,6 @@ const {
 } = require("./services/stroke_utils");
 
 const { extractAllFeatures } = require("./services/feature_extractor");
-const { validateSimpleKanji } = require("./services/simple_kanji_rules");
 const {
   loadKanjiDescriptors,
   getKanjiDescriptor,
@@ -442,61 +441,27 @@ app.post("/recognize", async (req, res) => {
       score: heuristicScore,
     });
 
-    const simpleValidation = validateSimpleKanji({
+    const descriptor = getKanjiDescriptor(kanjiDescriptors, targetKanji);
+
+    const descriptorValidation = validateByDescriptor({
       kanji: targetKanji,
       features,
+      descriptor,
     });
 
-    let descriptorValidation = null;
+    const validation = descriptorValidation;
 
-    if (!simpleValidation) {
-      const descriptor = getKanjiDescriptor(kanjiDescriptors, targetKanji);
-
-      descriptorValidation = validateByDescriptor({
-        kanji: targetKanji,
-        features,
-        descriptor,
-      });
-    }
-
-    const validation = simpleValidation ?? descriptorValidation;
-
-    const validationStrategy = validation
-      ? validation.strategy
+    const validationStrategy = descriptorValidation
+      ? descriptorValidation.strategy
       : "heuristic_score";
 
-    const validationResult = validation ? validation.isCorrect : null;
+    const validationResult = descriptorValidation
+      ? descriptorValidation.isCorrect
+      : null;
 
-    // Score final que verá frontend/test_screen.
-    // Para kanjis con regla simple, la regla simple manda.
-    let finalScore = heuristicScore;
-
-    if (simpleValidation) {
-      if (simpleValidation.isCorrect) {
-        finalScore = Math.min(heuristicScore, 0.5);
-      } else {
-        const hardFailedChecks = Array.isArray(
-          simpleValidation.hardFailedChecks,
-        )
-          ? simpleValidation.hardFailedChecks
-          : Object.entries(simpleValidation.checks ?? {})
-              .filter(([, value]) => value === false)
-              .map(([checkName]) => checkName);
-
-        const hasHardFailure =
-          hardFailedChecks.length > 0 ||
-          simpleValidation.reason === "missing_geometry_features" ||
-          simpleValidation.reason === "invalid_stroke_count";
-
-        if (hasHardFailure) {
-          finalScore = 10;
-        } else {
-          finalScore = Math.min(Math.max(heuristicScore, 0.75), 1.5);
-        }
-      }
-    } else if (descriptorValidation) {
-      finalScore = descriptorValidation.score;
-    }
+    const finalScore = descriptorValidation
+      ? descriptorValidation.score
+      : heuristicScore;
 
     // Guardamos también el score heurístico original para debug.
     features.heuristicScore = heuristicScore;
@@ -529,11 +494,8 @@ app.post("/recognize", async (req, res) => {
       heuristicScore,
       features: features,
       algorithmVersion: ALGORITHM_VERSION,
-
-      simpleValidation,
       descriptorValidation,
       validation,
-
       validationStrategy,
       validationResult,
       recognitionId,
@@ -560,8 +522,6 @@ app.post("/feedback", async (req, res) => {
       source,
       validationStrategy,
       validationResult,
-      simpleValidation,
-
       // Campos opcionales útiles para ML futuro
       sessionId,
       userId,
@@ -587,32 +547,23 @@ app.post("/feedback", async (req, res) => {
 
     const entry = {
       schemaVersion: TRAINING_DATA_SCHEMA_VERSION,
-
       recognitionId: recognitionId ?? crypto.randomUUID(),
-
       source: source ?? "unknown",
       algorithmVersion: ALGORITHM_VERSION,
-
       // Mantengo kanji por compatibilidad
       kanji,
-
       // Nombre más claro para ML futuro
       expectedKanji: expectedKanji ?? kanji,
-
       features,
       score,
-
       // Feedback manual del usuario/tester
       isCorrect,
-
       // Tipo de feedback, por si más adelante tienes varios
       // Ej: "manual_debug", "user_feedback", "auto_log"
       feedbackType: feedbackType ?? "manual_debug",
-
       // Resultado de la estrategia automática del backend
       validationStrategy: validationStrategy ?? "unknown",
       validationResult: validationResult ?? null,
-      simpleValidation: simpleValidation ?? null,
 
       // Contexto opcional
       sessionId: sessionId ?? null,

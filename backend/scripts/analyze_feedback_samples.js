@@ -820,7 +820,7 @@ function analyzeSamples(samples, options) {
     const descriptorValidationSamples = kanjiSamples.filter((sample) => {
       return (
         sample.descriptorValidation ||
-        sample.validationStrategy?.startsWith("descriptor_") ||
+        sample.validationStrategy?.startsWith("descriptor") ||
         sample.validationStrategy?.startsWith("descriptor_") ||
         sample.features?.descriptorPattern
       );
