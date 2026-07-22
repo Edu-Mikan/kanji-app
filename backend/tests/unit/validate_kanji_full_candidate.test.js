@@ -5,6 +5,7 @@ const assert = require("node:assert/strict");
 const {
   validateKanjiEntry,
   buildValidationReport,
+  parseArgs,
 } = require("../../scripts/validate_kanji_full_candidate");
 
 test("validateKanjiEntry should report missing kanji entries", () => {
@@ -45,4 +46,19 @@ test("buildValidationReport should summarize valid and invalid results", () => {
   assert.equal(report.invalidCount, 1);
 
   assert.equal(report.ok, false);
+});
+
+test("parseArgs should support from dataset mode", () => {
+  const options = parseArgs([
+    "--dataset",
+    "./kanji_full_candidate_all.json",
+    "--from-dataset",
+  ]);
+
+  assert.equal(options.fromDataset, true);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_full_candidate_all.json"),
+    true,
+  );
 });

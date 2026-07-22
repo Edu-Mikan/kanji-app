@@ -6,6 +6,8 @@ const {
   extractPathDataFromSvg,
   parsePathDataToPoints,
   convertSvgToStrokes,
+  getKanjiFromSvgFileName,
+  isCjkCharacter,
 } = require("../../scripts/generate_kanji_full_from_svg");
 
 test("extractPathDataFromSvg should not confuse id with d attribute", () => {
@@ -34,4 +36,27 @@ test("getTargetKanjis should prefer kanji list over single kanji", () => {
     }),
     ["一", "二", "田"],
   );
+});
+
+test("getKanjiFromSvgFileName should convert SVG file name to kanji", () => {
+  assert.equal(getKanjiFromSvgFileName("07530.svg"), "田");
+});
+
+test("getKanjiFromSvgFileName should ignore invalid file names", () => {
+  assert.equal(getKanjiFromSvgFileName("not-a-kanji.svg"), null);
+
+  assert.equal(getKanjiFromSvgFileName("07530.txt"), null);
+});
+
+test("isCjkCharacter should accept CJK ideographs", () => {
+  assert.equal(isCjkCharacter("田"), true);
+
+  assert.equal(isCjkCharacter("一"), true);
+});
+test("isCjkCharacter should reject ASCII characters", () => {
+  assert.equal(isCjkCharacter("A"), false);
+
+  assert.equal(isCjkCharacter("0"), false);
+
+  assert.equal(isCjkCharacter("?"), false);
 });

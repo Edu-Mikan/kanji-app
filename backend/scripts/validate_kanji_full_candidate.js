@@ -9,6 +9,7 @@ function parseArgs(argv) {
     datasetPath: null,
     kanjiList: null,
     outputPath: null,
+    fromDataset: false,
     help: false,
   };
 
@@ -34,6 +35,11 @@ function parseArgs(argv) {
         .filter(Boolean);
 
       index++;
+      continue;
+    }
+
+    if (argument === "--from-dataset") {
+      options.fromDataset = true;
       continue;
     }
 
@@ -96,8 +102,13 @@ function validateOptions(options) {
     throw new Error("Missing --dataset <path>");
   }
 
-  if (!Array.isArray(options.kanjiList) || options.kanjiList.length === 0) {
-    throw new Error("Missing --kanji-list <kanji1,kanji2,...>");
+  if (
+    !options.fromDataset &&
+    (!Array.isArray(options.kanjiList) || options.kanjiList.length === 0)
+  ) {
+    throw new Error(
+      "Missing --kanji-list <kanji1,kanji2,...> or --from-dataset",
+    );
   }
 }
 
@@ -208,7 +219,11 @@ function main() {
 
   const dataset = loadDataset(options.datasetPath);
 
-  const results = options.kanjiList.map((kanji) =>
+  const kanjiList = options.fromDataset
+    ? Object.keys(dataset)
+    : options.kanjiList;
+
+  const results = kanjiList.map((kanji) =>
     validateKanjiEntry({
       dataset,
       kanji,
@@ -217,7 +232,7 @@ function main() {
 
   const report = buildValidationReport({
     datasetPath: options.datasetPath,
-    kanjiList: options.kanjiList,
+    kanjiList,
     results,
   });
 

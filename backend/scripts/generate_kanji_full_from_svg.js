@@ -12,6 +12,7 @@ function parseArgs(argv) {
     svgDir: null,
     kanji: null,
     kanjiList: null,
+    all: false,
     outputPath: DEFAULT_OUTPUT_PATH,
     help: false,
   };
@@ -48,6 +49,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--all") {
+      options.all = true;
+      continue;
+    }
+
     if (argument === "--out-json") {
       options.outputPath = path.resolve(argv[index + 1]);
 
@@ -61,7 +67,36 @@ function parseArgs(argv) {
   return options;
 }
 
+function getKanjiFromSvgFileName(fileName) {
+  const match = fileName.match(/^([0-9a-fA-F]{5})\.svg$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const codePoint = Number.parseInt(match[1], 16);
+
+  if (!Number.isFinite(codePoint)) {
+    return null;
+  }
+
+  return String.fromCodePoint(codePoint);
+}
+
+function getAllKanjisFromSvgDir(svgDir) {
+  return fs
+    .readdirSync(svgDir)
+    .map(getKanjiFromSvgFileName)
+    .filter(Boolean)
+    .filter(isCjkCharacter)
+    .sort((left, right) => left.codePointAt(0) - right.codePointAt(0));
+}
+
 function getTargetKanjis(options) {
+  if (options.all) {
+    return getAllKanjisFromSvgDir(options.svgDir);
+  }
+
   if (Array.isArray(options.kanjiList) && options.kanjiList.length > 0) {
     return options.kanjiList;
   }
@@ -87,6 +122,7 @@ function printHelp() {
     node scripts/generate_kanji_full_from_svg.js \\
         --svg-dir ./kanji_svg \\
         --kanji-list 一,二,三,四,六,七,八,十,田 \\
+        --all \
         --out-json ./kanji_full_candidate.json
 
     Options:
@@ -98,6 +134,9 @@ function printHelp() {
 
     --kanji-list <kanji1,kanji2,...>
         Generate several kanjis into the same candidate file.
+
+    --all
+      Generate all SVG files found in the SVG directory.
 
     --out-json <path>
         Candidate output JSON file.
@@ -680,6 +719,25 @@ function buildKanjiDatasetEntry({ svgDir, kanji }) {
   return convertSvgToStrokes(svgContent);
 }
 
+function isCjkCharacter(value) {
+  if (!value) {
+    return false;
+  }
+
+  const codePoint = value.codePointAt(0);
+
+  return (
+    (codePoint >= 0x3400 && codePoint <= 0x4dbf) ||
+    (codePoint >= 0x4e00 && codePoint <= 0x9fff) ||
+    (codePoint >= 0x20000 && codePoint <= 0x2a6df) ||
+    (codePoint >= 0x2a700 && codePoint <= 0x2b73f) ||
+    (codePoint >= 0x2b740 && codePoint <= 0x2b81f) ||
+    (codePoint >= 0x2b820 && codePoint <= 0x2ceaf) ||
+    (codePoint >= 0x2ceb0 && codePoint <= 0x2ebef) ||
+    (codePoint >= 0x30000 && codePoint <= 0x3134f)
+  );
+}
+
 function validateOptions(options) {
   if (options.help) {
     return;
@@ -692,9 +750,7 @@ function validateOptions(options) {
   const targetKanjis = getTargetKanjis(options);
 
   if (targetKanjis.length === 0) {
-    throw new Error(
-      "Missing --kanji <kanji> or --kanji-list <kanji1,kanji2,...>",
-    );
+    throw new Error("Missing --kanji, --kanji-list or --all");
   }
 }
 
@@ -780,4 +836,7 @@ module.exports = {
   normalizeStrokesToUnitBox,
   convertSvgToStrokes,
   getTargetKanjis,
+  getKanjiFromSvgFileName,
+  getAllKanjisFromSvgDir,
+  isCjkCharacter,
 };
