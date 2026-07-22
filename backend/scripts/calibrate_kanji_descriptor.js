@@ -4,9 +4,20 @@ const path = require("node:path");
 
 const { validateByDescriptor } = require("../services/descriptor_validator");
 
+const { extractReferenceFeatures } = require("./extract_reference_features");
+
+const {
+  compareFeatureSetsByIndex,
+} = require("../services/reference_comparator");
+
 const DEFAULT_DESCRIPTOR_PATH = path.resolve(
   __dirname,
   "../data/kanji_descriptors.json",
+);
+
+const DEFAULT_KANJI_DATASET_PATH = path.resolve(
+  __dirname,
+  "../kanji_full.json",
 );
 
 const DEFAULT_NUMERIC_FEATURES = [
@@ -29,6 +40,7 @@ function parseArgs(argv) {
     filePath: null,
     kanji: null,
     descriptorPath: DEFAULT_DESCRIPTOR_PATH,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
     outputPath: null,
     help: false,
   };
@@ -69,6 +81,13 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--dataset") {
+      options.datasetPath = path.resolve(argv[index + 1]);
+
+      index++;
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${argument}`);
   }
 
@@ -94,6 +113,10 @@ Options:
   --descriptor-file <path>
       Descriptor catalog.
       Default: data/kanji_descriptors.json
+
+  --dataset <path>
+      Path to kanji_full.json.
+      Default: ./kanji_full.json
 
   --out-json <path>
       Save the calibration report as JSON.
@@ -238,8 +261,12 @@ function buildBaseReport({
   kanji,
   descriptorPath,
   sampleFilePath,
+  datasetPath,
   evaluations,
   distributions,
+  referenceFeatures,
+  referenceComparison,
+  perStrokeReferenceComparison,
 }) {
   const classifications = countClassifications(evaluations);
 
@@ -252,9 +279,23 @@ function buildBaseReport({
 
     sources: {
       descriptorPath: path.resolve(descriptorPath),
-
       sampleFilePath: path.resolve(sampleFilePath),
+      datasetPath: path.resolve(datasetPath),
     },
+
+    reference: {
+      kanji: referenceFeatures.kanji,
+
+      source: referenceFeatures.source,
+
+      strokeCount: referenceFeatures.strokeCount,
+
+      geometry: referenceFeatures.features?.geometry,
+    },
+
+    referenceComparison,
+
+    perStrokeReferenceComparison,
 
     sampleCount: evaluations.length,
 
@@ -310,6 +351,8 @@ function printBaseReport(report) {
   console.log(`True negatives: ${report.classifications.trueNegative}`);
 
   console.log(`False positives: ${report.classifications.falsePositive}`);
+
+  printReferenceComparisonSummary(report);
 
   printDistributionSummary({
     report,
@@ -581,6 +624,228 @@ function printDistributionSummary({ report, classification }) {
   }
 }
 
+function loadKanjiDataset(datasetPath) {
+  assertFileExists(datasetPath, "kanji dataset");
+
+  return JSON.parse(fs.readFileSync(datasetPath, "utf8"));
+}
+
+function buildReferenceFeaturesForKanji({ kanji, datasetPath }) {
+  const dataset = loadKanjiDataset(datasetPath);
+
+  const rawStrokes = dataset[kanji];
+
+  if (!Array.isArray(rawStrokes)) {
+    throw new Error(`Kanji not found in dataset: ${kanji}`);
+  }
+
+  return extractReferenceFeatures({
+    kanji,
+    rawStrokes,
+  });
+}
+
+function compareEvaluationsToReference({ evaluations, referenceFeatures }) {
+  return evaluations.map((evaluation) => {
+    const comparison = compareFeatureSetsByIndex({
+      userFeatures: evaluation.sample.features,
+
+      referenceFeatures: referenceFeatures.features,
+    });
+
+    return {
+      ...evaluation,
+      referenceComparison: comparison,
+    };
+  });
+}
+
+function createEmptyReferenceComparisonGroups() {
+  return {
+    truePositive: {
+      comparisonCost: [],
+      meanStrokeCost: [],
+      strokeCountDiff: [],
+    },
+    falseNegative: {
+      comparisonCost: [],
+      meanStrokeCost: [],
+      strokeCountDiff: [],
+    },
+    trueNegative: {
+      comparisonCost: [],
+      meanStrokeCost: [],
+      strokeCountDiff: [],
+    },
+    falsePositive: {
+      comparisonCost: [],
+      meanStrokeCost: [],
+      strokeCountDiff: [],
+    },
+  };
+}
+
+function collectReferenceComparisonValues(evaluations) {
+  const valuesByClassification = createEmptyReferenceComparisonGroups();
+
+  for (const evaluation of evaluations) {
+    const target = valuesByClassification[evaluation.classification];
+
+    const comparison = evaluation.referenceComparison;
+
+    if (!comparison) {
+      continue;
+    }
+
+    if (isFiniteNumber(comparison.comparisonCost)) {
+      target.comparisonCost.push(comparison.comparisonCost);
+    }
+
+    if (isFiniteNumber(comparison.meanStrokeCost)) {
+      target.meanStrokeCost.push(comparison.meanStrokeCost);
+    }
+
+    if (isFiniteNumber(comparison.strokeCountDiff)) {
+      target.strokeCountDiff.push(comparison.strokeCountDiff);
+    }
+  }
+
+  return valuesByClassification;
+}
+
+function summarizeReferenceComparisonValues(valuesByClassification) {
+  const result = {};
+
+  for (const [classification, values] of Object.entries(
+    valuesByClassification,
+  )) {
+    result[classification] = {};
+
+    for (const [metricName, metricValues] of Object.entries(values)) {
+      const summary = summarizeNumericValues(metricValues);
+
+      if (summary) {
+        result[classification][metricName] = summary;
+      }
+    }
+  }
+
+  return result;
+}
+
+function createPerStrokeComparisonGroups() {
+  return {
+    truePositive: {},
+    falseNegative: {},
+    trueNegative: {},
+    falsePositive: {},
+  };
+}
+
+function collectPerStrokeReferenceComparisonValues(evaluations) {
+  const valuesByClassification = createPerStrokeComparisonGroups();
+
+  for (const evaluation of evaluations) {
+    const target = valuesByClassification[evaluation.classification];
+
+    const comparisons =
+      evaluation.referenceComparison?.perStrokeComparisons ?? [];
+
+    for (const strokeComparison of comparisons) {
+      const referenceStrokeIndex = strokeComparison.referenceStrokeIndex;
+
+      const strokeKey = `referenceStroke_${referenceStrokeIndex}`;
+
+      target[strokeKey] ??= {
+        comparisonCost: [],
+        angleAbsDiff: [],
+        centerDistance: [],
+        widthRelativeDiff: [],
+        heightRelativeDiff: [],
+        deltaXRelativeDiff: [],
+        deltaYRelativeDiff: [],
+        straightnessDiff: [],
+      };
+
+      const metrics = strokeComparison.metrics ?? {};
+
+      if (isFiniteNumber(strokeComparison.comparisonCost)) {
+        target[strokeKey].comparisonCost.push(strokeComparison.comparisonCost);
+      }
+
+      for (const metricName of [
+        "angleAbsDiff",
+        "centerDistance",
+        "widthRelativeDiff",
+        "heightRelativeDiff",
+        "deltaXRelativeDiff",
+        "deltaYRelativeDiff",
+        "straightnessDiff",
+      ]) {
+        if (isFiniteNumber(metrics[metricName])) {
+          target[strokeKey][metricName].push(metrics[metricName]);
+        }
+      }
+    }
+  }
+
+  return valuesByClassification;
+}
+
+function summarizePerStrokeReferenceComparisonValues(valuesByClassification) {
+  const result = {};
+
+  for (const [classification, strokeValues] of Object.entries(
+    valuesByClassification,
+  )) {
+    result[classification] = {};
+
+    for (const [strokeKey, metricValues] of Object.entries(strokeValues)) {
+      result[classification][strokeKey] = {};
+
+      for (const [metricName, values] of Object.entries(metricValues)) {
+        const summary = summarizeNumericValues(values);
+
+        if (summary) {
+          result[classification][strokeKey][metricName] = summary;
+        }
+      }
+    }
+  }
+
+  return result;
+}
+
+function printReferenceComparisonSummary(report) {
+  console.log("");
+  console.log("Reference comparison summary");
+
+  for (const classification of [
+    "truePositive",
+    "falseNegative",
+    "trueNegative",
+    "falsePositive",
+  ]) {
+    const summary =
+      report.referenceComparison?.[classification]?.comparisonCost;
+
+    if (!summary) {
+      continue;
+    }
+
+    console.log(
+      [
+        `  ${classification}:`,
+        `count=${summary.count}`,
+        `min=${formatNumber(summary.min)}`,
+        `median=${formatNumber(summary.median)}`,
+        `p95=${formatNumber(summary.p95)}`,
+        `max=${formatNumber(summary.max)}`,
+      ].join(" "),
+    );
+  }
+}
+
 function main() {
   const options = parseArgs(process.argv.slice(2));
 
@@ -601,10 +866,22 @@ function main() {
     throw new Error(`Descriptor not found for kanji: ${options.kanji}`);
   }
 
-  const evaluations = revalidateSamples({
+  const baseEvaluations = revalidateSamples({
     samples,
     kanji: options.kanji,
     descriptor,
+  });
+
+  const referenceFeatures = buildReferenceFeaturesForKanji({
+    kanji: options.kanji,
+
+    datasetPath: options.datasetPath,
+  });
+
+  const evaluations = compareEvaluationsToReference({
+    evaluations: baseEvaluations,
+
+    referenceFeatures,
   });
 
   const roleFeatureValues = collectRoleFeatureValues({
@@ -614,6 +891,21 @@ function main() {
 
   const distributions = summarizeRoleFeatureValues(roleFeatureValues);
 
+  const referenceComparisonValues =
+    collectReferenceComparisonValues(evaluations);
+
+  const referenceComparison = summarizeReferenceComparisonValues(
+    referenceComparisonValues,
+  );
+
+  const perStrokeReferenceComparisonValues =
+    collectPerStrokeReferenceComparisonValues(evaluations);
+
+  const perStrokeReferenceComparison =
+    summarizePerStrokeReferenceComparisonValues(
+      perStrokeReferenceComparisonValues,
+    );
+
   const report = buildBaseReport({
     kanji: options.kanji,
 
@@ -621,9 +913,17 @@ function main() {
 
     sampleFilePath: options.filePath,
 
+    datasetPath: options.datasetPath,
+
     evaluations,
 
     distributions,
+
+    referenceFeatures,
+
+    referenceComparison,
+
+    perStrokeReferenceComparison,
   });
 
   printBaseReport(report);
@@ -663,4 +963,10 @@ module.exports = {
   getMatchedStroke,
   collectRoleFeatureValues,
   summarizeRoleFeatureValues,
+  buildReferenceFeaturesForKanji,
+  compareEvaluationsToReference,
+  collectReferenceComparisonValues,
+  summarizeReferenceComparisonValues,
+  collectPerStrokeReferenceComparisonValues,
+  summarizePerStrokeReferenceComparisonValues,
 };

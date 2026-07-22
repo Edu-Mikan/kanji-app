@@ -197,3 +197,11 @@ test("compareFeatureSetsByIndex should penalize stroke count differences", () =>
 
   assert.equal(result.comparisonCost, 1);
 });
+
+test("relativeDifference should avoid exploding when reference is zero", () => {
+  assert.equal(relativeDifference(0.01, 0), 0.2);
+});
+
+test("relativeDifference should cap very large differences", () => {
+  assert.equal(relativeDifference(0.5, 0), 2);
+});

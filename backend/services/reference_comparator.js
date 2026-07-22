@@ -1,4 +1,7 @@
 const EPSILON = 1e-9;
+const DEFAULT_MIN_RELATIVE_DENOMINATOR = 0.05;
+
+const DEFAULT_MAX_RELATIVE_DIFFERENCE = 2;
 
 const DEFAULT_STROKE_COMPARISON_WEIGHTS = {
   angleAbsDiff: 1.5,
@@ -22,14 +25,28 @@ function absoluteDifference(left, right) {
   return Math.abs(left - right);
 }
 
-function relativeDifference(value, reference) {
+function relativeDifference(
+  value,
+  reference,
+  {
+    minDenominator = DEFAULT_MIN_RELATIVE_DENOMINATOR,
+
+    maxDifference = DEFAULT_MAX_RELATIVE_DIFFERENCE,
+  } = {},
+) {
   if (!isFiniteNumber(value) || !isFiniteNumber(reference)) {
     return null;
   }
 
-  const denominator = Math.max(Math.abs(reference), EPSILON);
+  const denominator = Math.max(Math.abs(reference), minDenominator, EPSILON);
 
-  return Math.abs(value - reference) / denominator;
+  const difference = Math.abs(value - reference) / denominator;
+
+  if (isFiniteNumber(maxDifference)) {
+    return Math.min(difference, maxDifference);
+  }
+
+  return difference;
 }
 
 function centerDistance(userStroke, referenceStroke) {
