@@ -11,6 +11,7 @@ function parseArgs(argv) {
   const options = {
     svgDir: null,
     kanji: null,
+    kanjiList: null,
     outputPath: DEFAULT_OUTPUT_PATH,
     help: false,
   };
@@ -37,6 +38,16 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--kanji-list") {
+      options.kanjiList = argv[index + 1]
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      index++;
+      continue;
+    }
+
     if (argument === "--out-json") {
       options.outputPath = path.resolve(argv[index + 1]);
 
@@ -50,28 +61,49 @@ function parseArgs(argv) {
   return options;
 }
 
+function getTargetKanjis(options) {
+  if (Array.isArray(options.kanjiList) && options.kanjiList.length > 0) {
+    return options.kanjiList;
+  }
+
+  if (options.kanji) {
+    return [options.kanji];
+  }
+
+  return [];
+}
+
 function printHelp() {
   console.log(`
-Generate kanji_full.json from SVG files
+    Generate kanji_full.json from SVG files
 
-Usage:
-  node scripts/generate_kanji_full_from_svg.js \\
-    --svg-dir ./kanji_svg \\
-    --kanji 田 \\
-    --out-json ./kanji_full_candidate.json
+    Usage:
+    node scripts/generate_kanji_full_from_svg.js \\
+        --svg-dir ./kanji_svg \\
+        --kanji 田 \\
+        --out-json ./kanji_full_candidate.json
 
-Options:
-  --svg-dir <path>
-      Folder containing SVG files.
+    Alternative:
+    node scripts/generate_kanji_full_from_svg.js \\
+        --svg-dir ./kanji_svg \\
+        --kanji-list 一,二,三,四,六,七,八,十,田 \\
+        --out-json ./kanji_full_candidate.json
 
-  --kanji <kanji>
-      Generate only one kanji for now.
+    Options:
+    --svg-dir <path>
+        Folder containing SVG files.
 
-  --out-json <path>
-      Candidate output JSON file.
+    --kanji <kanji>
+        Generate only one kanji.
 
-  --help
-      Show this help.
+    --kanji-list <kanji1,kanji2,...>
+        Generate several kanjis into the same candidate file.
+
+    --out-json <path>
+        Candidate output JSON file.
+
+    --help
+        Show this help.
 `);
 }
 
@@ -657,8 +689,12 @@ function validateOptions(options) {
     throw new Error("Missing --svg-dir <path>");
   }
 
-  if (!options.kanji) {
-    throw new Error("Missing --kanji <kanji>");
+  const targetKanjis = getTargetKanjis(options);
+
+  if (targetKanjis.length === 0) {
+    throw new Error(
+      "Missing --kanji <kanji> or --kanji-list <kanji1,kanji2,...>",
+    );
   }
 }
 
@@ -674,31 +710,51 @@ function main() {
 
   assertDirectoryExists(options.svgDir);
 
-  const result = buildKanjiDatasetEntry({
-    svgDir: options.svgDir,
-    kanji: options.kanji,
-  });
+  const targetKanjis = getTargetKanjis(options);
 
-  const output = {
-    [options.kanji]: result.strokes,
-  };
+  const output = {};
+  const summaries = [];
+
+  for (const kanji of targetKanjis) {
+    const result = buildKanjiDatasetEntry({
+      svgDir: options.svgDir,
+      kanji,
+    });
+
+    output[kanji] = result.strokes;
+
+    summaries.push({
+      kanji,
+      originalPathCount: result.originalPathCount,
+      usefulStrokeCount: result.usefulStrokeCount,
+      warningCount: result.warnings.length,
+      warnings: result.warnings,
+    });
+  }
 
   fs.writeFileSync(options.outputPath, JSON.stringify(output, null, 2), "utf8");
 
   console.log("");
   console.log("KANJI FULL CANDIDATE GENERATED");
   console.log("==============================");
-  console.log(`Kanji: ${options.kanji}`);
-  console.log(`Original path count: ${result.originalPathCount}`);
-  console.log(`Useful stroke count: ${result.usefulStrokeCount}`);
+  console.log(`Kanji count: ${targetKanjis.length}`);
   console.log(`Output: ${options.outputPath}`);
 
-  if (result.warnings.length > 0) {
-    console.log("");
-    console.log("Warnings:");
+  console.log("");
+  console.log("Generated entries:");
 
-    for (const warning of result.warnings) {
-      console.log(`  stroke#${warning.strokeIndex}: ${warning.warning}`);
+  for (const summary of summaries) {
+    console.log(
+      [
+        `  ${summary.kanji}:`,
+        `paths=${summary.originalPathCount}`,
+        `strokes=${summary.usefulStrokeCount}`,
+        `warnings=${summary.warningCount}`,
+      ].join(" "),
+    );
+
+    for (const warning of summary.warnings) {
+      console.log(`    stroke#${warning.strokeIndex}: ${warning.warning}`);
     }
   }
 }
@@ -723,4 +779,5 @@ module.exports = {
   parsePathDataToPoints,
   normalizeStrokesToUnitBox,
   convertSvgToStrokes,
+  getTargetKanjis,
 };
