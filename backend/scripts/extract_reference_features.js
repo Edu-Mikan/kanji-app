@@ -1,0 +1,263 @@
+const fs = require("node:fs");
+
+const path = require("node:path");
+
+const {
+  normalizeStrokes,
+  resampleStroke,
+} = require("../services/stroke_utils");
+
+const { extractAllFeatures } = require("../services/feature_extractor");
+
+const DEFAULT_KANJI_DATASET_PATH = path.resolve(
+  __dirname,
+  "../kanji_full.json",
+);
+
+function parseArgs(argv) {
+  const options = {
+    kanji: null,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
+    outputPath: null,
+    help: false,
+  };
+
+  for (let index = 0; index < argv.length; index++) {
+    const argument = argv[index];
+
+    if (argument === "--help" || argument === "-h") {
+      options.help = true;
+      continue;
+    }
+
+    if (argument === "--kanji") {
+      options.kanji = argv[index + 1];
+
+      index++;
+      continue;
+    }
+
+    if (argument === "--dataset") {
+      options.datasetPath = path.resolve(argv[index + 1]);
+
+      index++;
+      continue;
+    }
+
+    if (argument === "--out-json") {
+      options.outputPath = path.resolve(argv[index + 1]);
+
+      index++;
+      continue;
+    }
+
+    throw new Error(`Unknown argument: ${argument}`);
+  }
+
+  return options;
+}
+
+function printHelp() {
+  console.log(`
+Reference feature extractor
+
+Usage:
+  node scripts/extract_reference_features.js \\
+    --kanji 四 \\
+    --out-json ./four_reference_features.json
+
+Options:
+  --kanji <kanji>
+      Kanji to extract from kanji_full.json.
+
+  --dataset <path>
+      Path to kanji_full.json.
+      Default: ./kanji_full.json
+
+  --out-json <path>
+      Save extracted reference features as JSON.
+
+  --help
+      Show this help.
+`);
+}
+
+function assertFileExists(filePath, label) {
+  if (!filePath) {
+    throw new Error(`Missing ${label}`);
+  }
+
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`${label} not found: ${filePath}`);
+  }
+}
+
+function loadKanjiDataset(datasetPath) {
+  assertFileExists(datasetPath, "kanji dataset");
+
+  return JSON.parse(fs.readFileSync(datasetPath, "utf8"));
+}
+
+function prepareReferenceStrokes(rawStrokes) {
+  const normalized = normalizeStrokes(rawStrokes);
+
+  const resampled = normalized.map((stroke) => resampleStroke(stroke, 20));
+
+  return {
+    raw: rawStrokes,
+
+    normalized,
+
+    resampled,
+  };
+}
+
+function extractReferenceFeatures({ kanji, rawStrokes }) {
+  const prepared = prepareReferenceStrokes(rawStrokes);
+
+  /*
+   * Reutilizamos extractAllFeatures con la referencia como usuario
+   * y como referencia. Esto no significa que estemos validando nada;
+   * sólo queremos obtener la geometría canónica con el mismo pipeline.
+   */
+  const features = extractAllFeatures({
+    userResampled: prepared.resampled,
+
+    referenceResampled: prepared.resampled,
+
+    userNormalized: prepared.normalized,
+
+    score: 0,
+  });
+
+  return {
+    kanji,
+
+    source: "kanji_full.json",
+
+    generatedAt: new Date().toISOString(),
+
+    strokeCount: rawStrokes.length,
+
+    reference: {
+      rawStrokeCount: prepared.raw.length,
+
+      normalizedStrokeCount: prepared.normalized.length,
+
+      resampledStrokeCount: prepared.resampled.length,
+    },
+
+    features,
+  };
+}
+
+function printSummary(result) {
+  console.log("");
+  console.log("REFERENCE FEATURE EXTRACTION");
+  console.log("============================");
+  console.log(`Kanji: ${result.kanji}`);
+  console.log(`Stroke count: ${result.strokeCount}`);
+
+  const geometry = result.features?.geometry;
+
+  if (!geometry) {
+    console.log("Geometry: not available");
+    return;
+  }
+
+  console.log("");
+  console.log("Global geometry:");
+
+  console.log(`  bboxWidth: ${geometry.bboxWidth}`);
+  console.log(`  bboxHeight: ${geometry.bboxHeight}`);
+  console.log(`  aspectRatio: ${geometry.aspectRatio}`);
+  console.log(`  straightnessMean: ${geometry.straightnessMean}`);
+
+  console.log("");
+  console.log("Per-stroke geometry:");
+
+  for (const stroke of geometry.perStroke ?? []) {
+    console.log(
+      [
+        `  #${stroke.index}`,
+        `angleAbs=${stroke.angleAbs}`,
+        `width=${stroke.width}`,
+        `height=${stroke.height}`,
+        `centerX=${stroke.centerX}`,
+        `centerY=${stroke.centerY}`,
+        `deltaX=${stroke.deltaX}`,
+        `deltaY=${stroke.deltaY}`,
+      ].join(" "),
+    );
+  }
+}
+
+function validateOptions(options) {
+  if (options.help) {
+    return;
+  }
+
+  if (!options.kanji) {
+    throw new Error("Missing --kanji <kanji>");
+  }
+}
+
+function main() {
+  const options = parseArgs(process.argv.slice(2));
+
+  validateOptions(options);
+
+  if (options.help) {
+    printHelp();
+    return;
+  }
+
+  const dataset = loadKanjiDataset(options.datasetPath);
+
+  const rawStrokes = dataset[options.kanji];
+
+  if (!rawStrokes) {
+    throw new Error(`Kanji not found in dataset: ${options.kanji}`);
+  }
+
+  if (!Array.isArray(rawStrokes)) {
+    throw new Error(`Invalid stroke data for kanji: ${options.kanji}`);
+  }
+
+  const result = extractReferenceFeatures({
+    kanji: options.kanji,
+
+    rawStrokes,
+  });
+
+  printSummary(result);
+
+  if (options.outputPath) {
+    fs.writeFileSync(
+      options.outputPath,
+      JSON.stringify(result, null, 2),
+      "utf8",
+    );
+
+    console.log("");
+    console.log(`JSON report saved to: ${options.outputPath}`);
+  }
+}
+
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error("");
+    console.error("ERROR");
+    console.error("-----");
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}
+
+module.exports = {
+  parseArgs,
+  prepareReferenceStrokes,
+  extractReferenceFeatures,
+};
