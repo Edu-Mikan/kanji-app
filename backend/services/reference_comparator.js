@@ -224,6 +224,156 @@ function compareFeatureSetsByIndex({
   };
 }
 
+function findStrokeByIndex(strokes, strokeIndex) {
+  if (!Array.isArray(strokes) || !Number.isInteger(strokeIndex)) {
+    return null;
+  }
+
+  return (
+    strokes.find((stroke) => stroke.index === strokeIndex) ??
+    strokes[strokeIndex] ??
+    null
+  );
+}
+
+function getReferenceStrokeIndexForRole({ descriptor, role, rolePosition }) {
+  if (Number.isInteger(role.sourceIndex)) {
+    return role.sourceIndex;
+  }
+
+  if (Number.isInteger(role.referenceIndex)) {
+    return role.referenceIndex;
+  }
+
+  if (Number.isInteger(role.canonicalIndex)) {
+    return role.canonicalIndex;
+  }
+
+  return rolePosition;
+}
+
+function compareFeatureSetsByDescriptorRoles({
+  userFeatures,
+  referenceFeatures,
+  descriptor,
+  descriptorValidation,
+  weights = DEFAULT_STROKE_COMPARISON_WEIGHTS,
+}) {
+  const userStrokes = getPerStroke(userFeatures);
+
+  const referenceStrokes = getPerStroke(referenceFeatures);
+
+  const roles = descriptor?.strokes ?? [];
+
+  const roleMatches = descriptorValidation?.roleMatches ?? {};
+
+  const perRoleComparisons = [];
+  const missingRoleComparisons = [];
+
+  for (let rolePosition = 0; rolePosition < roles.length; rolePosition++) {
+    const role = roles[rolePosition];
+
+    const roleId = role.id;
+
+    const matchedUserStrokeIndex = roleMatches[roleId]?.matchedStrokeIndex;
+
+    const referenceStrokeIndex = getReferenceStrokeIndexForRole({
+      descriptor,
+      role,
+      rolePosition,
+    });
+
+    const userStroke = findStrokeByIndex(userStrokes, matchedUserStrokeIndex);
+
+    const referenceStroke = findStrokeByIndex(
+      referenceStrokes,
+      referenceStrokeIndex,
+    );
+
+    if (!userStroke || !referenceStroke) {
+      missingRoleComparisons.push({
+        roleId,
+        matchedUserStrokeIndex: Number.isInteger(matchedUserStrokeIndex)
+          ? matchedUserStrokeIndex
+          : null,
+        referenceStrokeIndex: Number.isInteger(referenceStrokeIndex)
+          ? referenceStrokeIndex
+          : null,
+        hasUserStroke: Boolean(userStroke),
+        hasReferenceStroke: Boolean(referenceStroke),
+      });
+
+      continue;
+    }
+
+    const strokeComparison = compareStrokeFeatures({
+      userStroke,
+      referenceStroke,
+      weights,
+    });
+
+    perRoleComparisons.push({
+      roleId,
+
+      userStrokeIndex: strokeComparison.userStrokeIndex,
+
+      referenceStrokeIndex: strokeComparison.referenceStrokeIndex,
+
+      metrics: strokeComparison.metrics,
+
+      comparisonCost: strokeComparison.comparisonCost,
+    });
+  }
+
+  const roleCosts = perRoleComparisons.map(
+    (comparison) => comparison.comparisonCost,
+  );
+
+  const meanRoleCost = mean(roleCosts);
+
+  const maxRoleCost =
+    roleCosts.filter(isFiniteNumber).length > 0
+      ? Math.max(...roleCosts.filter(isFiniteNumber))
+      : null;
+
+  const missingRoleCount = missingRoleComparisons.length;
+
+  const strokeCountDiff = Math.abs(
+    userStrokes.length - referenceStrokes.length,
+  );
+
+  const comparisonCost =
+    meanRoleCost === null
+      ? strokeCountDiff + missingRoleCount
+      : meanRoleCost + strokeCountDiff + missingRoleCount;
+
+  return {
+    assignmentMode: "descriptorRole",
+
+    userStrokeCount: userStrokes.length,
+
+    referenceStrokeCount: referenceStrokes.length,
+
+    strokeCountDiff,
+
+    roleCount: roles.length,
+
+    comparedRoleCount: perRoleComparisons.length,
+
+    missingRoleCount,
+
+    perRoleComparisons,
+
+    missingRoleComparisons,
+
+    meanRoleCost,
+
+    maxRoleCost,
+
+    comparisonCost,
+  };
+}
+
 module.exports = {
   DEFAULT_STROKE_COMPARISON_WEIGHTS,
   isFiniteNumber,
@@ -233,4 +383,7 @@ module.exports = {
   weightedAverage,
   compareStrokeFeatures,
   compareFeatureSetsByIndex,
+  findStrokeByIndex,
+  getReferenceStrokeIndexForRole,
+  compareFeatureSetsByDescriptorRoles,
 };

@@ -8,6 +8,7 @@ const { extractReferenceFeatures } = require("./extract_reference_features");
 
 const {
   compareFeatureSetsByIndex,
+  compareFeatureSetsByDescriptorRoles,
 } = require("../services/reference_comparator");
 
 const DEFAULT_DESCRIPTOR_PATH = path.resolve(
@@ -291,6 +292,8 @@ function buildBaseReport({
       strokeCount: referenceFeatures.strokeCount,
 
       geometry: referenceFeatures.features?.geometry,
+
+      quality: referenceFeatures.quality,
     },
 
     referenceComparison,
@@ -351,6 +354,23 @@ function printBaseReport(report) {
   console.log(`True negatives: ${report.classifications.trueNegative}`);
 
   console.log(`False positives: ${report.classifications.falsePositive}`);
+
+  if (report.reference?.quality && !report.reference.quality.ok) {
+    console.log("");
+    console.log("Reference quality warnings:");
+
+    for (const warning of report.reference.quality.warnings) {
+      console.log(
+        [
+          `  stroke#${warning.strokeIndex}`,
+          warning.type,
+          `width=${warning.width}`,
+          `height=${warning.height}`,
+          `length=${warning.length}`,
+        ].join(" "),
+      );
+    }
+  }
 
   printReferenceComparisonSummary(report);
 
@@ -645,17 +665,38 @@ function buildReferenceFeaturesForKanji({ kanji, datasetPath }) {
   });
 }
 
-function compareEvaluationsToReference({ evaluations, referenceFeatures }) {
+function compareEvaluationsToReference({
+  evaluations,
+  referenceFeatures,
+  descriptor,
+}) {
   return evaluations.map((evaluation) => {
-    const comparison = compareFeatureSetsByIndex({
+    const indexComparison = compareFeatureSetsByIndex({
       userFeatures: evaluation.sample.features,
 
       referenceFeatures: referenceFeatures.features,
     });
 
+    const roleComparison = compareFeatureSetsByDescriptorRoles({
+      userFeatures: evaluation.sample.features,
+
+      referenceFeatures: referenceFeatures.features,
+
+      descriptor,
+
+      descriptorValidation: evaluation.validation,
+    });
+
     return {
       ...evaluation,
-      referenceComparison: comparison,
+
+      referenceComparison: roleComparison,
+
+      referenceComparisons: {
+        index: indexComparison,
+
+        descriptorRole: roleComparison,
+      },
     };
   });
 }
@@ -665,22 +706,38 @@ function createEmptyReferenceComparisonGroups() {
     truePositive: {
       comparisonCost: [],
       meanStrokeCost: [],
+      meanRoleCost: [],
+      maxRoleCost: [],
       strokeCountDiff: [],
+      comparedRoleCount: [],
+      missingRoleCount: [],
     },
     falseNegative: {
       comparisonCost: [],
       meanStrokeCost: [],
+      meanRoleCost: [],
+      maxRoleCost: [],
       strokeCountDiff: [],
+      comparedRoleCount: [],
+      missingRoleCount: [],
     },
     trueNegative: {
       comparisonCost: [],
       meanStrokeCost: [],
+      meanRoleCost: [],
+      maxRoleCost: [],
       strokeCountDiff: [],
+      comparedRoleCount: [],
+      missingRoleCount: [],
     },
     falsePositive: {
       comparisonCost: [],
       meanStrokeCost: [],
+      meanRoleCost: [],
+      maxRoleCost: [],
       strokeCountDiff: [],
+      comparedRoleCount: [],
+      missingRoleCount: [],
     },
   };
 }
@@ -697,16 +754,20 @@ function collectReferenceComparisonValues(evaluations) {
       continue;
     }
 
-    if (isFiniteNumber(comparison.comparisonCost)) {
-      target.comparisonCost.push(comparison.comparisonCost);
-    }
+    const metricNames = [
+      "comparisonCost",
+      "meanStrokeCost",
+      "meanRoleCost",
+      "maxRoleCost",
+      "strokeCountDiff",
+      "comparedRoleCount",
+      "missingRoleCount",
+    ];
 
-    if (isFiniteNumber(comparison.meanStrokeCost)) {
-      target.meanStrokeCost.push(comparison.meanStrokeCost);
-    }
-
-    if (isFiniteNumber(comparison.strokeCountDiff)) {
-      target.strokeCountDiff.push(comparison.strokeCountDiff);
+    for (const metricName of metricNames) {
+      if (isFiniteNumber(comparison[metricName])) {
+        target[metricName].push(comparison[metricName]);
+      }
     }
   }
 
@@ -749,14 +810,16 @@ function collectPerStrokeReferenceComparisonValues(evaluations) {
     const target = valuesByClassification[evaluation.classification];
 
     const comparisons =
-      evaluation.referenceComparison?.perStrokeComparisons ?? [];
+      evaluation.referenceComparison?.perRoleComparisons ??
+      evaluation.referenceComparison?.perStrokeComparisons ??
+      [];
 
     for (const strokeComparison of comparisons) {
-      const referenceStrokeIndex = strokeComparison.referenceStrokeIndex;
+      const comparisonKey = strokeComparison.roleId
+        ? `role_${strokeComparison.roleId}`
+        : `referenceStroke_${strokeComparison.referenceStrokeIndex}`;
 
-      const strokeKey = `referenceStroke_${referenceStrokeIndex}`;
-
-      target[strokeKey] ??= {
+      target[comparisonKey] ??= {
         comparisonCost: [],
         angleAbsDiff: [],
         centerDistance: [],
@@ -770,7 +833,9 @@ function collectPerStrokeReferenceComparisonValues(evaluations) {
       const metrics = strokeComparison.metrics ?? {};
 
       if (isFiniteNumber(strokeComparison.comparisonCost)) {
-        target[strokeKey].comparisonCost.push(strokeComparison.comparisonCost);
+        target[comparisonKey].comparisonCost.push(
+          strokeComparison.comparisonCost,
+        );
       }
 
       for (const metricName of [
@@ -783,7 +848,7 @@ function collectPerStrokeReferenceComparisonValues(evaluations) {
         "straightnessDiff",
       ]) {
         if (isFiniteNumber(metrics[metricName])) {
-          target[strokeKey][metricName].push(metrics[metricName]);
+          target[comparisonKey][metricName].push(metrics[metricName]);
         }
       }
     }
@@ -800,14 +865,14 @@ function summarizePerStrokeReferenceComparisonValues(valuesByClassification) {
   )) {
     result[classification] = {};
 
-    for (const [strokeKey, metricValues] of Object.entries(strokeValues)) {
-      result[classification][strokeKey] = {};
+    for (const [comparisonKey, metricValues] of Object.entries(strokeValues)) {
+      result[classification][comparisonKey] = {};
 
       for (const [metricName, values] of Object.entries(metricValues)) {
         const summary = summarizeNumericValues(values);
 
         if (summary) {
-          result[classification][strokeKey][metricName] = summary;
+          result[classification][comparisonKey][metricName] = summary;
         }
       }
     }
@@ -829,6 +894,9 @@ function printReferenceComparisonSummary(report) {
     const summary =
       report.referenceComparison?.[classification]?.comparisonCost;
 
+    const missingRoleSummary =
+      report.referenceComparison?.[classification]?.missingRoleCount;
+
     if (!summary) {
       continue;
     }
@@ -841,7 +909,12 @@ function printReferenceComparisonSummary(report) {
         `median=${formatNumber(summary.median)}`,
         `p95=${formatNumber(summary.p95)}`,
         `max=${formatNumber(summary.max)}`,
-      ].join(" "),
+        missingRoleSummary
+          ? `missingRolesMedian=${formatNumber(missingRoleSummary.median)}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
     );
   }
 }
@@ -882,6 +955,8 @@ function main() {
     evaluations: baseEvaluations,
 
     referenceFeatures,
+
+    descriptor,
   });
 
   const roleFeatureValues = collectRoleFeatureValues({

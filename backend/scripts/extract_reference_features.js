@@ -130,7 +130,7 @@ function extractReferenceFeatures({ kanji, rawStrokes }) {
     score: 0,
   });
 
-  return {
+  const result = {
     kanji,
 
     source: "kanji_full.json",
@@ -148,6 +148,75 @@ function extractReferenceFeatures({ kanji, rawStrokes }) {
     },
 
     features,
+  };
+
+  return {
+    ...result,
+    quality: analyzeReferenceGeometryQuality(result),
+  };
+}
+
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function analyzeReferenceGeometryQuality(
+  referenceFeatures,
+  { minLength = 0.001, minSpan = 0.001 } = {},
+) {
+  const warnings = [];
+
+  const perStroke = referenceFeatures?.features?.geometry?.perStroke ?? [];
+
+  for (const stroke of perStroke) {
+    const width = isFiniteNumber(stroke.width) ? stroke.width : 0;
+
+    const height = isFiniteNumber(stroke.height) ? stroke.height : 0;
+
+    const length = isFiniteNumber(stroke.length) ? stroke.length : 0;
+
+    const deltaX = isFiniteNumber(stroke.deltaX) ? stroke.deltaX : 0;
+
+    const deltaY = isFiniteNumber(stroke.deltaY) ? stroke.deltaY : 0;
+
+    const hasNoSpan = width <= minSpan && height <= minSpan;
+
+    const hasNoLength = length <= minLength;
+
+    const hasNoDelta =
+      Math.abs(deltaX) <= minSpan && Math.abs(deltaY) <= minSpan;
+
+    if (hasNoSpan || hasNoLength || hasNoDelta) {
+      warnings.push({
+        type: "degenerate_reference_stroke",
+
+        strokeIndex: stroke.index,
+
+        width: stroke.width,
+
+        height: stroke.height,
+
+        length: stroke.length,
+
+        deltaX: stroke.deltaX,
+
+        deltaY: stroke.deltaY,
+
+        reasons: {
+          hasNoSpan,
+          hasNoLength,
+          hasNoDelta,
+        },
+      });
+    }
+  }
+
+  return {
+    ok: warnings.length === 0,
+
+    warningCount: warnings.length,
+
+    warnings,
   };
 }
 
@@ -189,6 +258,25 @@ function printSummary(result) {
         `deltaY=${stroke.deltaY}`,
       ].join(" "),
     );
+  }
+
+  if (result.quality && !result.quality.ok) {
+    console.log("");
+    console.log("Reference quality warnings:");
+
+    for (const warning of result.quality.warnings) {
+      console.log(
+        [
+          `  stroke#${warning.strokeIndex}`,
+          warning.type,
+          `width=${warning.width}`,
+          `height=${warning.height}`,
+          `length=${warning.length}`,
+          `deltaX=${warning.deltaX}`,
+          `deltaY=${warning.deltaY}`,
+        ].join(" "),
+      );
+    }
   }
 }
 
@@ -260,4 +348,5 @@ module.exports = {
   parseArgs,
   prepareReferenceStrokes,
   extractReferenceFeatures,
+  analyzeReferenceGeometryQuality,
 };

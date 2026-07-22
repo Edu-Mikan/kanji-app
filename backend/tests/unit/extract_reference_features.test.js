@@ -5,6 +5,7 @@ const assert = require("node:assert/strict");
 const {
   prepareReferenceStrokes,
   extractReferenceFeatures,
+  analyzeReferenceGeometryQuality,
 } = require("../../scripts/extract_reference_features");
 
 function createSimpleStroke() {
@@ -45,4 +46,54 @@ test("extractReferenceFeatures should generate geometry for a reference kanji", 
   assert.ok(result.features.geometry);
 
   assert.equal(result.features.geometry.perStroke.length, 1);
+});
+
+test("analyzeReferenceGeometryQuality should report degenerate reference strokes", () => {
+  const quality = analyzeReferenceGeometryQuality({
+    features: {
+      geometry: {
+        perStroke: [
+          {
+            index: 0,
+            width: 0,
+            height: 0,
+            length: 0,
+            deltaX: 0,
+            deltaY: 0,
+          },
+        ],
+      },
+    },
+  });
+
+  assert.equal(quality.ok, false);
+
+  assert.equal(quality.warningCount, 1);
+
+  assert.equal(quality.warnings[0].type, "degenerate_reference_stroke");
+
+  assert.equal(quality.warnings[0].strokeIndex, 0);
+});
+
+test("analyzeReferenceGeometryQuality should accept non-degenerate reference strokes", () => {
+  const quality = analyzeReferenceGeometryQuality({
+    features: {
+      geometry: {
+        perStroke: [
+          {
+            index: 0,
+            width: 0.5,
+            height: 0.05,
+            length: 0.5,
+            deltaX: 0.5,
+            deltaY: 0,
+          },
+        ],
+      },
+    },
+  });
+
+  assert.equal(quality.ok, true);
+
+  assert.equal(quality.warningCount, 0);
 });

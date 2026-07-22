@@ -71,7 +71,11 @@ test("collectReferenceComparisonValues should group global comparison metrics by
       referenceComparison: {
         comparisonCost: 0.1,
         meanStrokeCost: 0.1,
+        meanRoleCost: 0.12,
+        maxRoleCost: 0.2,
         strokeCountDiff: 0,
+        comparedRoleCount: 5,
+        missingRoleCount: 0,
       },
     },
     {
@@ -87,6 +91,14 @@ test("collectReferenceComparisonValues should group global comparison metrics by
   assert.deepEqual(values.truePositive.comparisonCost, [0.1]);
 
   assert.deepEqual(values.falsePositive.comparisonCost, [0.8]);
+
+  assert.deepEqual(values.truePositive.meanRoleCost, [0.12]);
+
+  assert.deepEqual(values.truePositive.maxRoleCost, [0.2]);
+
+  assert.deepEqual(values.truePositive.comparedRoleCount, [5]);
+
+  assert.deepEqual(values.truePositive.missingRoleCount, [0]);
 });
 
 test("summarizeReferenceComparisonValues should summarize comparison metrics", () => {
@@ -94,7 +106,11 @@ test("summarizeReferenceComparisonValues should summarize comparison metrics", (
     truePositive: {
       comparisonCost: [0.1, 0.2],
       meanStrokeCost: [0.1, 0.2],
+      meanRoleCost: [0.1, 0.3],
+      maxRoleCost: [0.2, 0.4],
       strokeCountDiff: [0, 0],
+      comparedRoleCount: [5, 5],
+      missingRoleCount: [0, 1],
     },
     falseNegative: {
       comparisonCost: [],
@@ -116,6 +132,14 @@ test("summarizeReferenceComparisonValues should summarize comparison metrics", (
   assert.equal(summary.truePositive.comparisonCost.count, 2);
 
   assertApproximatelyEqual(summary.truePositive.comparisonCost.median, 0.15);
+
+  assertApproximatelyEqual(summary.truePositive.meanRoleCost.median, 0.2);
+
+  assertApproximatelyEqual(summary.truePositive.maxRoleCost.median, 0.3);
+
+  assert.equal(summary.truePositive.comparedRoleCount.median, 5);
+
+  assertApproximatelyEqual(summary.truePositive.missingRoleCount.median, 0.5);
 });
 
 test("collectPerStrokeReferenceComparisonValues should group metrics by reference stroke", () => {
@@ -167,4 +191,34 @@ test("summarizePerStrokeReferenceComparisonValues should summarize per-stroke me
   );
 
   assert.equal(summary.truePositive.referenceStroke_0.angleAbsDiff.max, 0.03);
+});
+test("collectPerStrokeReferenceComparisonValues should group descriptor role comparisons by role id", () => {
+  const values = collectPerStrokeReferenceComparisonValues([
+    {
+      classification: "truePositive",
+      referenceComparison: {
+        perRoleComparisons: [
+          {
+            roleId: "innerVerticalStroke",
+            referenceStrokeIndex: 2,
+            comparisonCost: 0.4,
+            metrics: {
+              angleAbsDiff: 0.01,
+              centerDistance: 0.02,
+            },
+          },
+        ],
+      },
+    },
+  ]);
+
+  assert.deepEqual(
+    values.truePositive.role_innerVerticalStroke.comparisonCost,
+    [0.4],
+  );
+
+  assert.deepEqual(
+    values.truePositive.role_innerVerticalStroke.angleAbsDiff,
+    [0.01],
+  );
 });

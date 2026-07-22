@@ -9,6 +9,7 @@ const {
   weightedAverage,
   compareStrokeFeatures,
   compareFeatureSetsByIndex,
+  compareFeatureSetsByDescriptorRoles,
 } = require("../../services/reference_comparator");
 
 function createStroke({
@@ -41,6 +42,13 @@ function createFeatures(strokes) {
       perStroke: strokes,
     },
   };
+}
+
+function assertApproximatelyEqual(actual, expected, epsilon = 1e-9) {
+  assert.ok(
+    Math.abs(actual - expected) < epsilon,
+    `Expected ${actual} to be approximately ${expected}`,
+  );
 }
 
 test("absoluteDifference should return null for invalid numbers", () => {
@@ -199,9 +207,169 @@ test("compareFeatureSetsByIndex should penalize stroke count differences", () =>
 });
 
 test("relativeDifference should avoid exploding when reference is zero", () => {
-  assert.equal(relativeDifference(0.01, 0), 0.2);
+  assertApproximatelyEqual(relativeDifference(0.01, 0), 0.2);
 });
 
 test("relativeDifference should cap very large differences", () => {
   assert.equal(relativeDifference(0.5, 0), 2);
+});
+
+test("compareFeatureSetsByDescriptorRoles should compare user strokes assigned to descriptor roles", () => {
+  const descriptor = {
+    strokes: [
+      {
+        id: "leftStroke",
+      },
+      {
+        id: "rightStroke",
+      },
+    ],
+  };
+
+  const descriptorValidation = {
+    roleMatches: {
+      leftStroke: {
+        matchedStrokeIndex: 1,
+      },
+      rightStroke: {
+        matchedStrokeIndex: 0,
+      },
+    },
+  };
+
+  const userFeatures = createFeatures([
+    createStroke({
+      index: 0,
+      centerX: 0.8,
+    }),
+    createStroke({
+      index: 1,
+      centerX: 0.2,
+    }),
+  ]);
+
+  const referenceFeatures = createFeatures([
+    createStroke({
+      index: 0,
+      centerX: 0.2,
+    }),
+    createStroke({
+      index: 1,
+      centerX: 0.8,
+    }),
+  ]);
+
+  const result = compareFeatureSetsByDescriptorRoles({
+    userFeatures,
+    referenceFeatures,
+    descriptor,
+    descriptorValidation,
+  });
+
+  assert.equal(result.assignmentMode, "descriptorRole");
+
+  assert.equal(result.comparedRoleCount, 2);
+
+  assert.equal(result.missingRoleCount, 0);
+
+  assert.equal(result.perRoleComparisons[0].roleId, "leftStroke");
+
+  assert.equal(result.perRoleComparisons[0].userStrokeIndex, 1);
+
+  assert.equal(result.perRoleComparisons[0].referenceStrokeIndex, 0);
+
+  assert.equal(result.perRoleComparisons[1].roleId, "rightStroke");
+
+  assert.equal(result.perRoleComparisons[1].userStrokeIndex, 0);
+
+  assert.equal(result.perRoleComparisons[1].referenceStrokeIndex, 1);
+});
+
+test("compareFeatureSetsByDescriptorRoles should respect explicit referenceIndex", () => {
+  const descriptor = {
+    strokes: [
+      {
+        id: "innerStroke",
+        referenceIndex: 2,
+      },
+    ],
+  };
+
+  const descriptorValidation = {
+    roleMatches: {
+      innerStroke: {
+        matchedStrokeIndex: 0,
+      },
+    },
+  };
+
+  const userFeatures = createFeatures([
+    createStroke({
+      index: 0,
+      centerX: 0.5,
+    }),
+  ]);
+
+  const referenceFeatures = createFeatures([
+    createStroke({
+      index: 0,
+      centerX: 0.1,
+    }),
+    createStroke({
+      index: 1,
+      centerX: 0.2,
+    }),
+    createStroke({
+      index: 2,
+      centerX: 0.5,
+    }),
+  ]);
+
+  const result = compareFeatureSetsByDescriptorRoles({
+    userFeatures,
+    referenceFeatures,
+    descriptor,
+    descriptorValidation,
+  });
+
+  assert.equal(result.perRoleComparisons[0].referenceStrokeIndex, 2);
+
+  assert.equal(result.perRoleComparisons[0].comparisonCost, 0);
+});
+
+test("compareFeatureSetsByDescriptorRoles should report missing role comparisons", () => {
+  const descriptor = {
+    strokes: [
+      {
+        id: "missingStroke",
+      },
+    ],
+  };
+
+  const descriptorValidation = {
+    roleMatches: {},
+  };
+
+  const userFeatures = createFeatures([]);
+
+  const referenceFeatures = createFeatures([
+    createStroke({
+      index: 0,
+    }),
+  ]);
+
+  const result = compareFeatureSetsByDescriptorRoles({
+    userFeatures,
+    referenceFeatures,
+    descriptor,
+    descriptorValidation,
+  });
+
+  assert.equal(result.comparedRoleCount, 0);
+
+  assert.equal(result.missingRoleCount, 1);
+
+  assert.equal(result.missingRoleComparisons[0].roleId, "missingStroke");
+
+  assert.equal(result.comparisonCost, 2);
 });
