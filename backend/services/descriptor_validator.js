@@ -2,6 +2,51 @@ const {
   compareFeatureSetsByDescriptorRoles,
 } = require("./reference_comparator");
 
+const DEGENERATE_STROKE_EPSILON = 1e-9;
+
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isNearZero(value, epsilon = DEGENERATE_STROKE_EPSILON) {
+  return isFiniteNumber(value) && Math.abs(value) <= epsilon;
+}
+
+function isDegenerateDescriptorStroke(stroke) {
+  if (!stroke || typeof stroke !== "object") {
+    return true;
+  }
+
+  const hasZeroBox = isNearZero(stroke.width) && isNearZero(stroke.height);
+
+  const hasZeroDelta = isNearZero(stroke.deltaX) && isNearZero(stroke.deltaY);
+
+  return hasZeroBox && hasZeroDelta;
+}
+
+function normalizeGeometryForDescriptorValidation(geometry) {
+  const perStroke = geometry?.perStroke ?? [];
+
+  if (!Array.isArray(perStroke)) {
+    return {
+      geometry,
+      ignoredDegenerateStrokeCount: 0,
+    };
+  }
+
+  const filteredPerStroke = perStroke.filter(
+    (stroke) => !isDegenerateDescriptorStroke(stroke),
+  );
+
+  return {
+    geometry: {
+      ...geometry,
+      perStroke: filteredPerStroke,
+    },
+    ignoredDegenerateStrokeCount: perStroke.length - filteredPerStroke.length,
+  };
+}
+
 function validateByDescriptor({
   kanji,
   features,
@@ -12,9 +57,9 @@ function validateByDescriptor({
     return null;
   }
 
-  const geometry = features?.geometry;
+  const rawGeometry = features?.geometry;
 
-  if (!geometry) {
+  if (!rawGeometry) {
     return {
       isCorrect: false,
       score: 10,
@@ -33,11 +78,25 @@ function validateByDescriptor({
     };
   }
 
+  const { geometry, ignoredDegenerateStrokeCount } =
+    normalizeGeometryForDescriptorValidation(rawGeometry);
+
   const perStroke = geometry.perStroke ?? [];
   const checks = {};
   const failedChecks = [];
 
-  checks.strokeCount = features.strokeCountUser === descriptor.strokeCount;
+  const effectiveStrokeCountFromGeometry = perStroke.length;
+
+  const effectiveStrokeCountFromMetadata = isFiniteNumber(
+    features.strokeCountUser,
+  )
+    ? features.strokeCountUser - ignoredDegenerateStrokeCount
+    : effectiveStrokeCountFromGeometry;
+
+  checks.strokeCount =
+    effectiveStrokeCountFromGeometry === descriptor.strokeCount &&
+    effectiveStrokeCountFromMetadata === descriptor.strokeCount;
+
   checks.referenceStrokeCount =
     features.strokeCountRef === descriptor.strokeCount;
 
@@ -58,6 +117,7 @@ function validateByDescriptor({
       roleMatches: {},
       geometry,
       forcedScore: 10,
+      ignoredDegenerateStrokeCount,
     });
   }
 
@@ -107,6 +167,7 @@ function validateByDescriptor({
     geometry,
     additionalHardFailedChecks: referenceConstraintHardFailedChecks,
     referenceConstraintResults,
+    ignoredDegenerateStrokeCount,
   });
 }
 
@@ -887,6 +948,7 @@ function buildDescriptorResult({
   forcedScore = null,
   additionalHardFailedChecks = [],
   referenceConstraintResults = [],
+  ignoredDegenerateStrokeCount = 0,
 }) {
   const hardChecks = descriptor.hardChecks ?? [];
 
@@ -928,6 +990,7 @@ function buildDescriptorResult({
     details: {
       kanji,
       strokeCount: descriptor.strokeCount,
+      ignoredDegenerateStrokeCount,
       geometrySummary: {
         bboxWidth: geometry?.bboxWidth,
         bboxHeight: geometry?.bboxHeight,
@@ -983,4 +1046,6 @@ module.exports = {
   evaluateReferenceMetricMaxConstraint,
   evaluateReferenceConstraint,
   validateReferenceConstraints,
+  isDegenerateDescriptorStroke,
+  normalizeGeometryForDescriptorValidation,
 };

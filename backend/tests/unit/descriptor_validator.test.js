@@ -22,6 +22,8 @@ const {
   validateContainsGroupRelation,
   getReferenceMetricValue,
   evaluateReferenceMetricMaxConstraint,
+  isDegenerateDescriptorStroke,
+  normalizeGeometryForDescriptorValidation,
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
@@ -7302,4 +7304,100 @@ test("validateByDescriptor should reject when hard reference constraint fails", 
   assert.equal(result.referenceConstraintResults.length, 1);
 
   assert.equal(result.referenceConstraintResults[0].passed, false);
+});
+
+test("isDegenerateDescriptorStroke should detect zero-length strokes", () => {
+  assert.equal(
+    isDegenerateDescriptorStroke({
+      index: 0,
+      width: 0,
+      height: 0,
+      deltaX: 0,
+      deltaY: 0,
+    }),
+    true,
+  );
+
+  assert.equal(
+    isDegenerateDescriptorStroke({
+      index: 1,
+      width: 0.05,
+      height: 0.7,
+      deltaX: 0,
+      deltaY: 0.7,
+    }),
+    false,
+  );
+});
+
+test("normalizeGeometryForDescriptorValidation should remove degenerate strokes", () => {
+  const normalized = normalizeGeometryForDescriptorValidation({
+    perStroke: [
+      {
+        index: 0,
+        width: 0,
+        height: 0,
+        deltaX: 0,
+        deltaY: 0,
+      },
+      {
+        index: 1,
+        width: 0.05,
+        height: 0.7,
+        deltaX: 0,
+        deltaY: 0.7,
+      },
+    ],
+  });
+
+  assert.equal(normalized.ignoredDegenerateStrokeCount, 1);
+
+  assert.equal(normalized.geometry.perStroke.length, 1);
+});
+
+test("用 should ignore a degenerate extra stroke when validating stroke count", () => {
+  const baseFeatures = createUseFeatures();
+
+  const features = {
+    ...baseFeatures,
+    strokeCountUser: baseFeatures.strokeCountUser + 1,
+    geometry: {
+      ...baseFeatures.geometry,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0,
+          width: 0,
+          height: 0,
+          centerX: 0,
+          centerY: 0,
+          minX: 0,
+          maxX: 0,
+          minY: 0,
+          maxY: 0,
+          straightness: 0,
+          deltaX: 0,
+          deltaY: 0,
+        },
+        ...baseFeatures.geometry.perStroke.map((stroke) => ({
+          ...stroke,
+          index: stroke.index + 1,
+        })),
+      ],
+    },
+  };
+
+  const result = validateByDescriptor({
+    kanji: "用",
+    features,
+    descriptor: useDescriptor,
+  });
+
+  assert.equal(result.isCorrect, true);
+
+  assert.equal(result.checks.strokeCount, true);
+
+  assert.equal(result.details.ignoredDegenerateStrokeCount, 1);
+
+  assert.deepEqual(result.hardFailedChecks, []);
 });
