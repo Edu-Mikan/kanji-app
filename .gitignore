@@ -29,3 +29,4 @@ Thumbs.db
 /frontend/windows/flutter/*.cmake
 /backend/feedback.jsonl
 /backend/training_data.jsonl
+/backend/kanji_full.json
