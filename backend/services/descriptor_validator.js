@@ -539,6 +539,9 @@ function validateRelation(relation, roleMatches, geometry = {}) {
     case "belowBBox":
       return Boolean(from && to && from.minY > to.maxY);
 
+    case "widthRatio":
+      return validateWidthRatioRelation(from, to, relation);
+
     case "direction":
       return validateDirectionRelation(stroke, relation);
 
@@ -683,6 +686,32 @@ function validateOrthogonalCrossRelation(
     horizontalStroke.centerY <= verticalStroke.maxY + toleranceY;
 
   return horizontalContainsVerticalCenter && verticalContainsHorizontalCenter;
+}
+
+function validateWidthRatioRelation(from, to, relation) {
+  if (!from || !to) {
+    return false;
+  }
+
+  if (!isFiniteNumber(from.width) || !isFiniteNumber(to.width)) {
+    return false;
+  }
+
+  if (to.width <= 0) {
+    return false;
+  }
+
+  const ratio = from.width / to.width;
+
+  if (relation.min != null && ratio < relation.min) {
+    return false;
+  }
+
+  if (relation.max != null && ratio > relation.max) {
+    return false;
+  }
+
+  return true;
 }
 
 function validateDirectionRelation(stroke, relation) {
@@ -1048,4 +1077,5 @@ module.exports = {
   validateReferenceConstraints,
   isDegenerateDescriptorStroke,
   normalizeGeometryForDescriptorValidation,
+  validateWidthRatioRelation,
 };

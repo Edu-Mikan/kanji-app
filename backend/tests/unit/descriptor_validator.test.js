@@ -24,6 +24,7 @@ const {
   evaluateReferenceMetricMaxConstraint,
   isDegenerateDescriptorStroke,
   normalizeGeometryForDescriptorValidation,
+  validateWidthRatioRelation,
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
@@ -4333,6 +4334,56 @@ test("末 should pass with two ordered horizontals and two outward diagonals", (
   );
 });
 
+test("末 should fail when upper horizontal is too short relative to lower horizontal", () => {
+  const descriptor = {
+    ...endDescriptor,
+    relations: [
+      ...endDescriptor.relations,
+      {
+        type: "widthRatio",
+        from: "upperHorizontalStroke",
+        to: "lowerHorizontalStroke",
+        min: 0.5,
+      },
+    ],
+    hardChecks: [
+      ...endDescriptor.hardChecks,
+      "widthRatio.upperHorizontalStroke.lowerHorizontalStroke",
+    ],
+  };
+
+  const features = createTwoHorizontalTreeFeatures({
+    upperMinX: 0.375,
+    upperMaxX: 0.625,
+    lowerMinX: 0.15,
+    lowerMaxX: 0.85,
+  });
+
+  const result = validateByDescriptor({
+    kanji: "末",
+    features,
+    descriptor,
+  });
+
+  assert.equal(result.checks["upperHorizontalStroke.matches"], true);
+
+  assert.equal(result.checks["lowerHorizontalStroke.matches"], true);
+
+  assert.equal(
+    result.checks["widthRatio.upperHorizontalStroke.lowerHorizontalStroke"],
+    false,
+  );
+
+  assert.ok(
+    result.hardFailedChecks.includes(
+      "widthRatio.upperHorizontalStroke.lowerHorizontalStroke",
+    ),
+  );
+
+  assert.equal(result.isCorrect, false);
+  assert.equal(result.score, 10);
+});
+
 test("未 should fail when its two horizontals are too close", () => {
   const features = createTwoHorizontalTreeFeatures({
     upperCenterY: 0.3,
@@ -7400,4 +7451,36 @@ test("用 should ignore a degenerate extra stroke when validating stroke count",
   assert.equal(result.details.ignoredDegenerateStrokeCount, 1);
 
   assert.deepEqual(result.hardFailedChecks, []);
+});
+
+test("widthRatio relation should pass when ratio is above minimum", () => {
+  const result = validateWidthRatioRelation(
+    {
+      width: 0.6,
+    },
+    {
+      width: 0.5,
+    },
+    {
+      min: 1.1,
+    },
+  );
+
+  assert.equal(result, true);
+});
+
+test("widthRatio relation should fail when ratio is below minimum", () => {
+  const result = validateWidthRatioRelation(
+    {
+      width: 0.3,
+    },
+    {
+      width: 0.8,
+    },
+    {
+      min: 0.5,
+    },
+  );
+
+  assert.equal(result, false);
 });

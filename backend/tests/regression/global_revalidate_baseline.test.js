@@ -10,7 +10,6 @@ const ACCEPTED_FALSE_POSITIVES_BY_KANJI = {
   田: 2,
   用: 1,
   未: 1,
-  末: 1,
 };
 
 function loadJsonl(filePath) {

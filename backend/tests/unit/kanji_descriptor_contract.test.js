@@ -17,6 +17,7 @@ const KNOWN_RELATION_TYPES = new Set([
   "centerXGap",
   "centerXDistance",
   "heightRatio",
+  "widthRatio",
   "centerYNotMuchHigher",
   "overlapsX",
   "orthogonalCross",

@@ -3741,6 +3741,12 @@
           "stroke": "rightDiagonalStroke",
           "deltaXMin": 0.02,
           "deltaYMin": 0.08
+        },
+        {
+          "type": "widthRatio",
+          "from": "upperHorizontalStroke",
+          "to": "lowerHorizontalStroke",
+          "min": 0.5
         }
       ],
       "globalChecks": {
@@ -3778,7 +3784,8 @@
         "direction.rightDiagonalStroke",
         "bboxWidth",
         "bboxHeight",
-        "aspectRatio"
+        "aspectRatio",
+        "widthRatio.upperHorizontalStroke.lowerHorizontalStroke"
       ],
       "scoring": {
         "validScore": 0.5,
@@ -3787,7 +3794,7 @@
         "softFailureMaxScore": 1.5
       },
       "debug": {
-        "notes": "Migración declarativa inicial de 末. Comparte la estructura de dos horizontales de 未, conservando una mayor tolerancia para la anchura del horizontal inferior y para el ángulo de la diagonal derecha."
+        "notes": "Added widthRatio relation for ? to reject false positives where the upper horizontal is extremely short relative to the lower horizontal while preserving zero false negatives on training data."
       }
     }
   }
