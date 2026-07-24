@@ -2902,6 +2902,38 @@
       },
       "debug": {
         "notes": "Migración declarativa inicial de 木. El horizontal y el vertical forman una cruz ortogonal. Las dos diagonales deben quedar debajo del horizontal, a lados opuestos del vertical y descender hacia fuera."
+      },
+      "referenceConstraints": [
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_horizontalStroke.straightnessDiff",
+          "max": 0.06730976484936113,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "medium",
+          "promotedAt": "2026-07-24T10:47:27.118Z",
+          "evidence": {
+            "falsePositiveReduction": 1,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 69,
+            "affectedSampleCount": 1
+          }
+        }
+      ],
+      "promotionMetadata": {
+        "promotedAt": "2026-07-24T10:47:27.119Z",
+        "sourcePatchMode": "descriptor_candidate_patch",
+        "sourcePatchStatus": "candidate",
+        "sourceEvaluationMode": "descriptor_candidate_patch_evaluation",
+        "ruleCount": 1,
+        "falsePositiveReduction": 1,
+        "falseNegativeIncrease": 0,
+        "truePositiveLoss": 0,
+        "safe": true
       }
     },
     "本": {
