@@ -480,8 +480,15 @@
         {
           "id": "innerStrokesInsideOuterBox",
           "type": "containsGroup",
-          "outer": ["outerWrappingStroke", "outerLeftStroke", "bottomStroke"],
-          "inner": ["innerLeftStroke", "innerRightStroke"],
+          "outer": [
+            "outerWrappingStroke",
+            "outerLeftStroke",
+            "bottomStroke"
+          ],
+          "inner": [
+            "innerLeftStroke",
+            "innerRightStroke"
+          ],
           "margin": {
             "left": -0.02,
             "top": -0.02,
@@ -1015,28 +1022,37 @@
     },
     "十": {
       "pattern": "cross",
-
       "strokeCount": 2,
-
       "strokes": [
         {
           "id": "horizontal",
           "expected": {
-            "angleAbs": { "max": 0.25 },
-            "width": { "min": 0.45 },
-            "height": { "max": 0.25 }
+            "angleAbs": {
+              "max": 0.25
+            },
+            "width": {
+              "min": 0.45
+            },
+            "height": {
+              "max": 0.25
+            }
           }
         },
         {
           "id": "vertical",
           "expected": {
-            "angleAbs": { "min": 1.2 },
-            "height": { "min": 0.45 },
-            "width": { "max": 0.25 }
+            "angleAbs": {
+              "min": 1.2
+            },
+            "height": {
+              "min": 0.45
+            },
+            "width": {
+              "max": 0.25
+            }
           }
         }
       ],
-
       "relations": [
         {
           "type": "intersects",
@@ -1044,7 +1060,6 @@
           "to": "vertical"
         }
       ],
-
       "hardChecks": [
         "strokeCount",
         "horizontal.matches",
@@ -2038,6 +2053,38 @@
       },
       "debug": {
         "notes": "Migración declarativa inicial de 田. La cruz interior se valida mediante solapamiento ortogonal de los spans del horizontal y el vertical. Las conexiones con la caja permanecen blandas para mantener una validación educativa permisiva."
+      },
+      "referenceConstraints": [
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_bottomStroke.centerDistance",
+          "max": 0.20261203542100034,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "medium",
+          "promotedAt": "2026-07-24T08:33:51.991Z",
+          "evidence": {
+            "falsePositiveReduction": 2,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 16,
+            "affectedSampleCount": 2
+          }
+        }
+      ],
+      "promotionMetadata": {
+        "promotedAt": "2026-07-24T08:33:51.992Z",
+        "sourcePatchMode": "descriptor_candidate_patch",
+        "sourcePatchStatus": "candidate",
+        "sourceEvaluationMode": "descriptor_candidate_patch_evaluation",
+        "ruleCount": 1,
+        "falsePositiveReduction": 2,
+        "falseNegativeIncrease": 0,
+        "truePositiveLoss": 0,
+        "safe": true
       }
     },
     "回": {
@@ -2522,7 +2569,10 @@
         {
           "id": "innerStructureInsideOuterBox",
           "type": "containsGroup",
-          "outer": ["leftStroke", "outerWrappingStroke"],
+          "outer": [
+            "leftStroke",
+            "outerWrappingStroke"
+          ],
           "inner": [
             "innerVerticalStroke",
             "upperInnerHorizontalStroke",
