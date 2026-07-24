@@ -1029,8 +1029,8 @@ test("山 should pass with a wide base and two separated vertical strokes", () =
 
 test("山 should fail when the two vertical strokes are too close", () => {
   const features = createMountainFeatures({
-    centerX: 0.4,
-    rightX: 0.52,
+    centerX: 0.5,
+    rightX: 0.58,
   });
 
   const result = validateByDescriptor({

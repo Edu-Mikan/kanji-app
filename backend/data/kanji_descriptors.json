@@ -1112,7 +1112,7 @@
             },
             "centerX": {
               "min": 0.25,
-              "max": 0.58
+              "max": 0.7
             }
           },
           "weights": {
@@ -1152,7 +1152,7 @@
           "type": "centerXGap",
           "from": "centerVerticalStroke",
           "to": "rightVerticalStroke",
-          "min": 0.18
+          "min": 0.1
         },
         {
           "type": "centerYNotMuchHigher",
@@ -1190,7 +1190,7 @@
         "softFailureMaxScore": 1.5
       },
       "debug": {
-        "notes": "Migración declarativa inicial del patrón three_vertical_zones."
+        "notes": "Relaxed ? center vertical position and center-right gap to avoid validated false negative while preserving zero false positives on training data."
       }
     },
     "口": {
