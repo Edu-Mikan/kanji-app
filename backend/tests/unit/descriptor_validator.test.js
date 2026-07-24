@@ -20,6 +20,8 @@ const {
   buildRelationCheckName,
   calculateCombinedBBox,
   validateContainsGroupRelation,
+  getReferenceMetricValue,
+  evaluateReferenceMetricMaxConstraint,
 } = require("../../services/descriptor_validator");
 
 const descriptorData = require("../../data/kanji_descriptors.json");
@@ -7140,4 +7142,164 @@ test("四 should reject an outer left stroke clearly displaced into the inner bo
   assert.equal(result.isCorrect, false);
 
   assert.equal(result.score, 10);
+});
+
+test("getReferenceMetricValue should read per-role comparison metrics", () => {
+  const value = getReferenceMetricValue(
+    {
+      perRoleComparisons: [
+        {
+          roleId: "bottomStroke",
+          metrics: {
+            centerDistance: 0.25,
+          },
+        },
+      ],
+    },
+    "perRole.role_bottomStroke.centerDistance",
+  );
+
+  assert.equal(value, 0.25);
+});
+
+test("evaluateReferenceMetricMaxConstraint should pass when metric is below max", () => {
+  const result = evaluateReferenceMetricMaxConstraint({
+    constraint: {
+      type: "referenceMetricMax",
+      metricPath: "perRole.role_bottomStroke.centerDistance",
+      max: 0.3,
+      severity: "hard",
+    },
+    referenceComparison: {
+      perRoleComparisons: [
+        {
+          roleId: "bottomStroke",
+          metrics: {
+            centerDistance: 0.2,
+          },
+        },
+      ],
+    },
+  });
+
+  assert.equal(result.passed, true);
+  assert.equal(result.metricValue, 0.2);
+  assert.equal(result.hasMetric, true);
+});
+
+test("evaluateReferenceMetricMaxConstraint should fail when metric is above max", () => {
+  const result = evaluateReferenceMetricMaxConstraint({
+    constraint: {
+      type: "referenceMetricMax",
+      metricPath: "perRole.role_bottomStroke.centerDistance",
+      max: 0.2,
+      severity: "hard",
+    },
+    referenceComparison: {
+      perRoleComparisons: [
+        {
+          roleId: "bottomStroke",
+          metrics: {
+            centerDistance: 0.3,
+          },
+        },
+      ],
+    },
+  });
+
+  assert.equal(result.passed, false);
+  assert.equal(result.metricValue, 0.3);
+  assert.equal(result.hasMetric, true);
+});
+
+test("validateByDescriptor should reject when hard reference constraint fails", () => {
+  const descriptor = {
+    pattern: "test",
+    enabled: true,
+    strokeCount: 1,
+    strokes: [
+      {
+        id: "bottomStroke",
+        expected: {},
+      },
+    ],
+    referenceConstraints: [
+      {
+        type: "referenceMetricMax",
+        metricPath: "perRole.role_bottomStroke.centerDistance",
+        max: 0.01,
+        severity: "hard",
+      },
+    ],
+  };
+
+  const features = {
+    strokeCountUser: 1,
+    strokeCountRef: 1,
+    geometry: {
+      bboxWidth: 1,
+      bboxHeight: 1,
+      aspectRatio: 1,
+      perStroke: [
+        {
+          index: 0,
+          angleAbs: 0,
+          width: 1,
+          height: 0.1,
+          centerX: 0.8,
+          centerY: 0.8,
+          minX: 0.3,
+          maxX: 1,
+          minY: 0.75,
+          maxY: 0.85,
+          straightness: 1,
+          deltaX: 1,
+          deltaY: 0,
+        },
+      ],
+    },
+  };
+
+  const referenceFeatures = {
+    features: {
+      geometry: {
+        perStroke: [
+          {
+            index: 0,
+            angleAbs: 0,
+            width: 1,
+            height: 0.1,
+            centerX: 0.1,
+            centerY: 0.1,
+            minX: 0,
+            maxX: 1,
+            minY: 0.05,
+            maxY: 0.15,
+            straightness: 1,
+            deltaX: 1,
+            deltaY: 0,
+          },
+        ],
+      },
+    },
+  };
+
+  const result = validateByDescriptor({
+    kanji: "田",
+    features,
+    descriptor,
+    referenceFeatures,
+  });
+
+  assert.equal(result.isCorrect, false);
+
+  assert.ok(
+    result.hardFailedChecks.some((checkName) =>
+      checkName.startsWith("referenceConstraints."),
+    ),
+  );
+
+  assert.equal(result.referenceConstraintResults.length, 1);
+
+  assert.equal(result.referenceConstraintResults[0].passed, false);
 });

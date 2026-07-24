@@ -1,4 +1,13 @@
-function validateByDescriptor({ kanji, features, descriptor }) {
+const {
+  compareFeatureSetsByDescriptorRoles,
+} = require("./reference_comparator");
+
+function validateByDescriptor({
+  kanji,
+  features,
+  descriptor,
+  referenceFeatures = null,
+}) {
   if (!descriptor || descriptor.enabled === false) {
     return null;
   }
@@ -16,6 +25,7 @@ function validateByDescriptor({ kanji, features, descriptor }) {
       failedChecks: ["missing_geometry_features"],
       hardFailedChecks: ["missing_geometry_features"],
       roleMatches: {},
+      referenceConstraintResults: [],
       descriptorMatchScore: 0,
       details: {
         kanji,
@@ -78,6 +88,16 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     failedChecks,
   });
 
+  const { referenceConstraintResults, referenceConstraintHardFailedChecks } =
+    validateReferenceConstraints({
+      descriptor,
+      features,
+      referenceFeatures,
+      roleMatches,
+      checks,
+      failedChecks,
+    });
+
   return buildDescriptorResult({
     kanji,
     descriptor,
@@ -85,6 +105,8 @@ function validateByDescriptor({ kanji, features, descriptor }) {
     failedChecks,
     roleMatches,
     geometry,
+    additionalHardFailedChecks: referenceConstraintHardFailedChecks,
+    referenceConstraintResults,
   });
 }
 
@@ -648,6 +670,213 @@ function validateGlobalChecks({ descriptor, geometry, checks, failedChecks }) {
   }
 }
 
+function hasReferenceConstraints(descriptor) {
+  return (
+    Array.isArray(descriptor?.referenceConstraints) &&
+    descriptor.referenceConstraints.length > 0
+  );
+}
+
+function getNestedValue(source, pathParts) {
+  let current = source;
+
+  for (const pathPart of pathParts) {
+    if (
+      current == null ||
+      typeof current !== "object" ||
+      !(pathPart in current)
+    ) {
+      return undefined;
+    }
+
+    current = current[pathPart];
+  }
+
+  return current;
+}
+
+function findRoleComparison(referenceComparison, roleKey) {
+  const comparisons =
+    referenceComparison?.perRoleComparisons ??
+    referenceComparison?.perStrokeComparisons ??
+    [];
+
+  return comparisons.find((comparison) => {
+    if (comparison.roleId) {
+      return `role_${comparison.roleId}` === roleKey;
+    }
+
+    return `referenceStroke_${comparison.referenceStrokeIndex}` === roleKey;
+  });
+}
+
+function getReferenceMetricValue(referenceComparison, metricPath) {
+  const parts = metricPath.split(".");
+
+  if (parts[0] === "referenceComparison") {
+    return getNestedValue(referenceComparison, parts.slice(1));
+  }
+
+  if (parts[0] === "perRole") {
+    const roleKey = parts[1];
+    const metricName = parts[2];
+
+    if (!roleKey || !metricName) {
+      return undefined;
+    }
+
+    const roleComparison = findRoleComparison(referenceComparison, roleKey);
+
+    if (!roleComparison) {
+      return undefined;
+    }
+
+    if (metricName === "comparisonCost") {
+      return roleComparison.comparisonCost;
+    }
+
+    return roleComparison.metrics?.[metricName];
+  }
+
+  return undefined;
+}
+
+function evaluateReferenceMetricMaxConstraint({
+  constraint,
+  referenceComparison,
+}) {
+  const metricValue = getReferenceMetricValue(
+    referenceComparison,
+    constraint.metricPath,
+  );
+
+  const hasMetric =
+    typeof metricValue === "number" && Number.isFinite(metricValue);
+
+  /*
+   * Si falta la métrica, no penalizamos.
+   * Esto conserva un comportamiento permisivo y evita falsos negativos accidentales.
+   */
+  const passed = !hasMetric || metricValue <= constraint.max;
+
+  return {
+    type: constraint.type,
+
+    metricPath: constraint.metricPath,
+
+    threshold: constraint.max,
+
+    metricValue: hasMetric ? metricValue : null,
+
+    hasMetric,
+
+    passed,
+
+    severity: constraint.severity ?? "soft",
+
+    status: constraint.status ?? null,
+
+    source: constraint.source ?? null,
+  };
+}
+
+function evaluateReferenceConstraint({ constraint, referenceComparison }) {
+  if (constraint.type === "referenceMetricMax") {
+    return evaluateReferenceMetricMaxConstraint({
+      constraint,
+      referenceComparison,
+    });
+  }
+
+  /*
+   * Tipo desconocido:
+   * no bloqueamos para no romper producción.
+   * Lo marcamos para diagnóstico.
+   */
+  return {
+    type: constraint.type,
+
+    metricPath: constraint.metricPath ?? null,
+
+    threshold: constraint.max ?? null,
+
+    metricValue: null,
+
+    hasMetric: false,
+
+    passed: true,
+
+    severity: constraint.severity ?? "soft",
+
+    status: constraint.status ?? null,
+
+    source: constraint.source ?? null,
+
+    unsupported: true,
+  };
+}
+
+function validateReferenceConstraints({
+  descriptor,
+  features,
+  referenceFeatures,
+  roleMatches,
+  checks,
+  failedChecks,
+}) {
+  if (!hasReferenceConstraints(descriptor) || !referenceFeatures?.features) {
+    return {
+      referenceConstraintResults: [],
+      referenceConstraintHardFailedChecks: [],
+    };
+  }
+
+  const descriptorValidation = {
+    roleMatches: simplifyRoleMatches(roleMatches),
+  };
+
+  const referenceComparison = compareFeatureSetsByDescriptorRoles({
+    userFeatures: features,
+    referenceFeatures: referenceFeatures.features,
+    descriptor,
+    descriptorValidation,
+  });
+
+  const referenceConstraintResults = [];
+  const referenceConstraintHardFailedChecks = [];
+
+  for (let index = 0; index < descriptor.referenceConstraints.length; index++) {
+    const constraint = descriptor.referenceConstraints[index];
+
+    const result = evaluateReferenceConstraint({
+      constraint,
+      referenceComparison,
+    });
+
+    const checkName = `referenceConstraints.${index}.${constraint.type}.${constraint.metricPath}`;
+
+    checks[checkName] = result.passed;
+
+    if (!result.passed) {
+      failedChecks.push(checkName);
+
+      if ((constraint.severity ?? "soft") === "hard") {
+        referenceConstraintHardFailedChecks.push(checkName);
+      }
+    }
+
+    referenceConstraintResults.push({
+      checkName,
+      ...result,
+    });
+  }
+
+  return {
+    referenceConstraintResults,
+    referenceConstraintHardFailedChecks,
+  };
+}
+
 function buildDescriptorResult({
   kanji,
   descriptor,
@@ -656,11 +885,15 @@ function buildDescriptorResult({
   roleMatches,
   geometry,
   forcedScore = null,
+  additionalHardFailedChecks = [],
+  referenceConstraintResults = [],
 }) {
   const hardChecks = descriptor.hardChecks ?? [];
-  const hardFailedChecks = failedChecks.filter((checkName) =>
-    hardChecks.includes(checkName),
-  );
+
+  const hardFailedChecks = [
+    ...failedChecks.filter((checkName) => hardChecks.includes(checkName)),
+    ...additionalHardFailedChecks,
+  ];
 
   const hasHardFailure =
     hardFailedChecks.length > 0 ||
@@ -690,6 +923,7 @@ function buildDescriptorResult({
     failedChecks,
     hardFailedChecks,
     roleMatches: simplifyRoleMatches(roleMatches),
+    referenceConstraintResults,
     descriptorMatchScore,
     details: {
       kanji,
@@ -720,7 +954,6 @@ function simplifyRoleMatches(roleMatches) {
 
 module.exports = {
   validateByDescriptor,
-
   // Exportado para debug/tests futuros.
   scoreStrokeAgainstRole,
   strokeMatchesExpected,
@@ -743,4 +976,11 @@ module.exports = {
   getMatchedStrokes,
   calculateCombinedBBox,
   validateContainsGroupRelation,
+  hasReferenceConstraints,
+  getNestedValue,
+  findRoleComparison,
+  getReferenceMetricValue,
+  evaluateReferenceMetricMaxConstraint,
+  evaluateReferenceConstraint,
+  validateReferenceConstraints,
 };

@@ -218,7 +218,12 @@ function classifySample({ sample, validation }) {
   return "trueNegative";
 }
 
-function revalidateSamples({ samples, kanji, descriptor }) {
+function revalidateSamples({
+  samples,
+  kanji,
+  descriptor,
+  referenceFeatures = null,
+}) {
   const relevantSamples = samples.filter(
     (sample) => getExpectedKanji(sample) === kanji,
   );
@@ -230,6 +235,7 @@ function revalidateSamples({ samples, kanji, descriptor }) {
         kanji,
         features: sample.features,
         descriptor,
+        referenceFeatures,
       });
 
       return {
@@ -1035,16 +1041,16 @@ function main() {
     throw new Error(`Descriptor not found for kanji: ${options.kanji}`);
   }
 
+  const referenceFeatures = buildReferenceFeaturesForKanji({
+    kanji: options.kanji,
+    datasetPath: options.datasetPath,
+  });
+
   const baseEvaluations = revalidateSamples({
     samples,
     kanji: options.kanji,
     descriptor,
-  });
-
-  const referenceFeatures = buildReferenceFeaturesForKanji({
-    kanji: options.kanji,
-
-    datasetPath: options.datasetPath,
+    referenceFeatures,
   });
 
   const evaluations = compareEvaluationsToReference({
