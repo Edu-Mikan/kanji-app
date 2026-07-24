@@ -2655,6 +2655,38 @@
       },
       "debug": {
         "notes": "Migración declarativa de 用. Los horizontales interiores deben mantener su orden y formar cruces ortogonales con el vertical interior. Las conexiones exactas y la contención completa de la estructura interior permanecen como checks blandos, ya que los horizontales y el vertical central pueden prolongarse ligeramente respecto al envolvente."
+      },
+      "referenceConstraints": [
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_outerWrappingStroke.angleAbsDiff",
+          "max": 0.5939388433559294,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "medium",
+          "promotedAt": "2026-07-24T10:40:08.977Z",
+          "evidence": {
+            "falsePositiveReduction": 1,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 61,
+            "affectedSampleCount": 1
+          }
+        }
+      ],
+      "promotionMetadata": {
+        "promotedAt": "2026-07-24T10:40:08.978Z",
+        "sourcePatchMode": "descriptor_candidate_patch",
+        "sourcePatchStatus": "candidate",
+        "sourceEvaluationMode": "descriptor_candidate_patch_evaluation",
+        "ruleCount": 1,
+        "falsePositiveReduction": 1,
+        "falseNegativeIncrease": 0,
+        "truePositiveLoss": 0,
+        "safe": true
       }
     },
     "木": {
