@@ -11,6 +11,9 @@ const {
   summarizeReferenceComparisonValues,
   collectPerStrokeReferenceComparisonValues,
   summarizePerStrokeReferenceComparisonValues,
+  buildPerRoleReferenceComparisonMap,
+  buildSampleEvaluationEntry,
+  buildSampleEvaluationEntries,
 } = require("../../scripts/calibrate_kanji_descriptor");
 
 function assertApproximatelyEqual(actual, expected, epsilon = 1e-9) {
@@ -221,4 +224,114 @@ test("collectPerStrokeReferenceComparisonValues should group descriptor role com
     values.truePositive.role_innerVerticalStroke.angleAbsDiff,
     [0.01],
   );
+});
+
+test("buildPerRoleReferenceComparisonMap should expose per-role metrics by role key", () => {
+  const result = buildPerRoleReferenceComparisonMap({
+    perRoleComparisons: [
+      {
+        roleId: "bottomStroke",
+        comparisonCost: 0.2,
+        metrics: {
+          centerDistance: 0.25,
+          angleAbsDiff: 0.03,
+        },
+      },
+    ],
+  });
+
+  assert.deepEqual(result, {
+    role_bottomStroke: {
+      comparisonCost: 0.2,
+      centerDistance: 0.25,
+      angleAbsDiff: 0.03,
+    },
+  });
+});
+
+test("buildSampleEvaluationEntry should include per-sample reference comparisons", () => {
+  const entry = buildSampleEvaluationEntry({
+    classification: "falsePositive",
+
+    sample: {
+      recognitionId: "sample-1",
+      expectedKanji: "田",
+      isCorrect: false,
+    },
+
+    validation: {
+      isCorrect: true,
+      hardFailedChecks: [],
+    },
+
+    referenceComparison: {
+      comparisonCost: 0.42,
+      meanRoleCost: 0.42,
+      maxRoleCost: 0.72,
+      strokeCountDiff: 0,
+      comparedRoleCount: 5,
+      missingRoleCount: 0,
+      perRoleComparisons: [
+        {
+          roleId: "bottomStroke",
+          comparisonCost: 0.2,
+          metrics: {
+            centerDistance: 0.25,
+          },
+        },
+      ],
+    },
+  });
+
+  assert.equal(entry.recognitionId, "sample-1");
+  assert.equal(entry.kanji, "田");
+  assert.equal(entry.classification, "falsePositive");
+  assert.equal(entry.expectedCorrect, false);
+  assert.equal(entry.actualAccepted, true);
+
+  assert.equal(entry.referenceComparison.comparisonCost, 0.42);
+
+  assert.equal(
+    entry.perRoleReferenceComparison.role_bottomStroke.centerDistance,
+    0.25,
+  );
+});
+
+test("buildSampleEvaluationEntries should preserve one entry per evaluation", () => {
+  const entries = buildSampleEvaluationEntries([
+    {
+      classification: "truePositive",
+      sample: {
+        recognitionId: "sample-1",
+        expectedKanji: "田",
+        isCorrect: true,
+      },
+      validation: {
+        isCorrect: true,
+      },
+      referenceComparison: {
+        comparisonCost: 0.1,
+        perRoleComparisons: [],
+      },
+    },
+    {
+      classification: "falsePositive",
+      sample: {
+        recognitionId: "sample-2",
+        expectedKanji: "田",
+        isCorrect: false,
+      },
+      validation: {
+        isCorrect: true,
+      },
+      referenceComparison: {
+        comparisonCost: 0.4,
+        perRoleComparisons: [],
+      },
+    },
+  ]);
+
+  assert.equal(entries.length, 2);
+  assert.equal(entries[0].classification, "truePositive");
+  assert.equal(entries[1].classification, "falsePositive");
 });

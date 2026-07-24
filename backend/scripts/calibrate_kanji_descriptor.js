@@ -258,6 +258,100 @@ function countClassifications(evaluations) {
   return counts;
 }
 
+function pickReferenceComparisonMetrics(comparison) {
+  if (!comparison) {
+    return {};
+  }
+
+  const metricNames = [
+    "comparisonCost",
+    "meanStrokeCost",
+    "meanRoleCost",
+    "maxRoleCost",
+    "strokeCountDiff",
+    "comparedRoleCount",
+    "missingRoleCount",
+  ];
+
+  const result = {};
+
+  for (const metricName of metricNames) {
+    if (isFiniteNumber(comparison[metricName])) {
+      result[metricName] = comparison[metricName];
+    }
+  }
+
+  return result;
+}
+
+function buildPerRoleReferenceComparisonMap(comparison) {
+  const result = {};
+
+  const comparisons =
+    comparison?.perRoleComparisons ?? comparison?.perStrokeComparisons ?? [];
+
+  for (const strokeComparison of comparisons) {
+    const comparisonKey = strokeComparison.roleId
+      ? `role_${strokeComparison.roleId}`
+      : `referenceStroke_${strokeComparison.referenceStrokeIndex}`;
+
+    result[comparisonKey] ??= {};
+
+    if (isFiniteNumber(strokeComparison.comparisonCost)) {
+      result[comparisonKey].comparisonCost = strokeComparison.comparisonCost;
+    }
+
+    const metrics = strokeComparison.metrics ?? {};
+
+    for (const metricName of [
+      "angleAbsDiff",
+      "centerDistance",
+      "widthRelativeDiff",
+      "heightRelativeDiff",
+      "deltaXRelativeDiff",
+      "deltaYRelativeDiff",
+      "straightnessDiff",
+    ]) {
+      if (isFiniteNumber(metrics[metricName])) {
+        result[comparisonKey][metricName] = metrics[metricName];
+      }
+    }
+  }
+
+  return result;
+}
+
+function buildSampleEvaluationEntry(evaluation) {
+  const sample = evaluation.sample ?? {};
+  const validation = evaluation.validation ?? {};
+
+  return {
+    recognitionId: sample.recognitionId ?? sample.id ?? null,
+
+    kanji: getExpectedKanji(sample),
+
+    classification: evaluation.classification,
+
+    expectedCorrect: sample.isCorrect === true,
+
+    actualAccepted: validation.isCorrect === true,
+
+    hardFailedChecks: validation.hardFailedChecks ?? [],
+
+    referenceComparison: pickReferenceComparisonMetrics(
+      evaluation.referenceComparison,
+    ),
+
+    perRoleReferenceComparison: buildPerRoleReferenceComparisonMap(
+      evaluation.referenceComparison,
+    ),
+  };
+}
+
+function buildSampleEvaluationEntries(evaluations) {
+  return evaluations.map(buildSampleEvaluationEntry);
+}
+
 function buildBaseReport({
   kanji,
   descriptorPath,
@@ -270,7 +364,7 @@ function buildBaseReport({
   perStrokeReferenceComparison,
 }) {
   const classifications = countClassifications(evaluations);
-
+  const sampleEvaluations = buildSampleEvaluationEntries(evaluations);
   return {
     generatedAt: new Date().toISOString(),
 
@@ -301,6 +395,8 @@ function buildBaseReport({
     perStrokeReferenceComparison,
 
     sampleCount: evaluations.length,
+
+    sampleEvaluations,
 
     classifications,
 
@@ -1044,4 +1140,8 @@ module.exports = {
   summarizeReferenceComparisonValues,
   collectPerStrokeReferenceComparisonValues,
   summarizePerStrokeReferenceComparisonValues,
+  pickReferenceComparisonMetrics,
+  buildPerRoleReferenceComparisonMap,
+  buildSampleEvaluationEntry,
+  buildSampleEvaluationEntries,
 };
