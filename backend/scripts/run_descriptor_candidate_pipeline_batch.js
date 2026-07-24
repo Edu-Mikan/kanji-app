@@ -9,6 +9,9 @@ function parseArgs(argv) {
     descriptorPath: null,
     datasetPath: null,
     outputDirectory: null,
+    acceptedFalsePositivesPath: path.resolve(
+      "./data/accepted_false_positives.json",
+    ),
     minGap: 0.05,
     comparisonGroup: "falsePositiveVsTruePositive",
     continueOnError: false,
@@ -74,6 +77,12 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--accepted-false-positives") {
+      options.acceptedFalsePositivesPath = path.resolve(argv[index + 1]);
+      index++;
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${argument}`);
   }
 
@@ -90,7 +99,10 @@ Usage:
     --file ./training_data.jsonl \\
     --descriptor-file ./data/kanji_descriptors.json \\
     --dataset ./kanji_full.json \\
-    --out-dir ./candidate_reports_training
+    --out-dir ./candidate_reports_training \\
+    --accepted-false-positives <path>
+      JSON file with accepted false positive recognition IDs.
+      Default: ./data/accepted_false_positives.json.
 
 Options:
   --min-gap <number>
@@ -200,6 +212,72 @@ function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
 }
 
+function loadAcceptedFalsePositives(filePath) {
+  if (!filePath || !fs.existsSync(filePath)) {
+    return {
+      acceptedFalsePositiveIds: new Set(),
+      acceptedFalsePositiveEntries: [],
+    };
+  }
+
+  const data = readJson(filePath);
+
+  const entries = Array.isArray(data.acceptedFalsePositives)
+    ? data.acceptedFalsePositives
+    : [];
+
+  const activeEntries = entries.filter(
+    (entry) =>
+      entry &&
+      typeof entry.recognitionId === "string" &&
+      entry.status !== "rejected",
+  );
+
+  return {
+    acceptedFalsePositiveIds: new Set(
+      activeEntries.map((entry) => entry.recognitionId),
+    ),
+
+    acceptedFalsePositiveEntries: activeEntries,
+  };
+}
+
+function getCalibrationReportPath({ kanji, outputDirectory }) {
+  return path.join(outputDirectory, `${kanji}_calibration_report.json`);
+}
+
+function getFalsePositiveRecognitionIdsFromCalibrationReport(
+  calibrationReport,
+) {
+  return (calibrationReport.sampleEvaluations ?? [])
+    .filter((entry) => entry.classification === "falsePositive")
+    .map((entry) => entry.recognitionId)
+    .filter(Boolean);
+}
+
+function buildFalsePositiveBreakdown({
+  falsePositiveRecognitionIds,
+  acceptedFalsePositiveIds,
+}) {
+  const acceptedFalsePositiveRecognitionIds =
+    falsePositiveRecognitionIds.filter((recognitionId) =>
+      acceptedFalsePositiveIds.has(recognitionId),
+    );
+
+  const unexpectedFalsePositiveRecognitionIds =
+    falsePositiveRecognitionIds.filter(
+      (recognitionId) => !acceptedFalsePositiveIds.has(recognitionId),
+    );
+
+  return {
+    falsePositiveRecognitionIds,
+    acceptedFalsePositiveRecognitionIds,
+    unexpectedFalsePositiveRecognitionIds,
+    acceptedFalsePositiveCount: acceptedFalsePositiveRecognitionIds.length,
+    unexpectedFalsePositiveCount: unexpectedFalsePositiveRecognitionIds.length,
+  };
+}
+
 function getPipelineSummaryPath({ kanji, outputDirectory }) {
   return path.join(outputDirectory, `${kanji}_pipeline_summary.json`);
 }
@@ -238,7 +316,12 @@ function buildBatchRowFromSummary(summary) {
   };
 }
 
-function buildBatchSummary({ kanjiList, outputDirectory, errors = [] }) {
+function buildBatchSummary({
+  kanjiList,
+  outputDirectory,
+  acceptedFalsePositiveIds = new Set(),
+  errors = [],
+}) {
   const rows = [];
 
   for (const kanji of kanjiList) {
@@ -259,10 +342,30 @@ function buildBatchSummary({ kanjiList, outputDirectory, errors = [] }) {
 
     const summary = readJson(summaryPath);
 
+    const calibrationReportPath = getCalibrationReportPath({
+      kanji,
+      outputDirectory,
+    });
+
+    const calibrationReport = fs.existsSync(calibrationReportPath)
+      ? readJson(calibrationReportPath)
+      : null;
+
+    const falsePositiveRecognitionIds = calibrationReport
+      ? getFalsePositiveRecognitionIdsFromCalibrationReport(calibrationReport)
+      : [];
+
+    const falsePositiveBreakdown = buildFalsePositiveBreakdown({
+      falsePositiveRecognitionIds,
+      acceptedFalsePositiveIds,
+    });
+
     rows.push({
       status: "ok",
       ...buildBatchRowFromSummary(summary),
+      ...falsePositiveBreakdown,
       summaryPath,
+      calibrationReportPath,
     });
   }
 
@@ -276,6 +379,20 @@ function buildBatchSummary({ kanjiList, outputDirectory, errors = [] }) {
 
   const withFalsePositives = rows.filter(
     (row) => row.status === "ok" && row.falsePositive > 0,
+  );
+
+  const withUnexpectedFalsePositives = rows.filter(
+    (row) => row.status === "ok" && row.unexpectedFalsePositiveCount > 0,
+  );
+
+  const acceptedFalsePositiveCount = rows.reduce(
+    (total, row) => total + (row.acceptedFalsePositiveCount ?? 0),
+    0,
+  );
+
+  const unexpectedFalsePositiveCount = rows.reduce(
+    (total, row) => total + (row.unexpectedFalsePositiveCount ?? 0),
+    0,
   );
 
   return {
@@ -295,6 +412,15 @@ function buildBatchSummary({ kanjiList, outputDirectory, errors = [] }) {
     falseNegativeKanjiCount: withFalseNegatives.length,
 
     falsePositiveKanjiCount: withFalsePositives.length,
+
+    acceptedFalsePositiveCount,
+    unexpectedFalsePositiveCount,
+
+    unexpectedFalsePositiveKanjiCount: withUnexpectedFalsePositives.length,
+
+    unexpectedFalsePositiveKanjis: withUnexpectedFalsePositives.map(
+      (row) => row.kanji,
+    ),
 
     readyForManualPromotion: readyForManualPromotion.map((row) => row.kanji),
 
@@ -326,6 +452,18 @@ function printBatchSummary(summary) {
     `Kanjis with false positives: ${summary.falsePositiveKanjiCount}`,
   );
 
+  console.log(
+    `Accepted false positives: ${summary.acceptedFalsePositiveCount}`,
+  );
+
+  console.log(
+    `Unexpected false positives: ${summary.unexpectedFalsePositiveCount}`,
+  );
+
+  console.log(
+    `Kanjis with unexpected false positives: ${summary.unexpectedFalsePositiveKanjiCount}`,
+  );
+
   console.log("");
 
   for (const row of summary.rows) {
@@ -341,6 +479,8 @@ function printBatchSummary(summary) {
         `FN=${row.falseNegative}`,
         `TN=${row.trueNegative}`,
         `FP=${row.falsePositive}`,
+        `acceptedFP=${row.acceptedFalsePositiveCount}`,
+        `unexpectedFP=${row.unexpectedFalsePositiveCount}`,
         `rules=${row.candidateRuleCount}`,
         `fpReduction=${row.falsePositiveReduction}`,
         `fnIncrease=${row.falseNegativeIncrease}`,
@@ -364,6 +504,10 @@ function main() {
   ensureDirectory(options.outputDirectory);
 
   const errors = [];
+
+  const { acceptedFalsePositiveIds } = loadAcceptedFalsePositives(
+    options.acceptedFalsePositivesPath,
+  );
 
   for (const kanji of options.kanjiList) {
     try {
@@ -397,6 +541,7 @@ function main() {
   const summary = buildBatchSummary({
     kanjiList: options.kanjiList,
     outputDirectory: options.outputDirectory,
+    acceptedFalsePositiveIds,
     errors,
   });
 
@@ -432,4 +577,8 @@ module.exports = {
   getPipelineSummaryPath,
   buildBatchRowFromSummary,
   buildBatchSummary,
+  loadAcceptedFalsePositives,
+  getCalibrationReportPath,
+  getFalsePositiveRecognitionIdsFromCalibrationReport,
+  buildFalsePositiveBreakdown,
 };

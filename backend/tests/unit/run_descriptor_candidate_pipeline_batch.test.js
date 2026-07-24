@@ -7,6 +7,8 @@ const {
   getPipelineSummaryPath,
   buildBatchRowFromSummary,
   buildBatchSummary,
+  buildFalsePositiveBreakdown,
+  getCalibrationReportPath,
 } = require("../../scripts/run_descriptor_candidate_pipeline_batch");
 
 test("parseArgs should parse batch arguments", () => {
@@ -133,4 +135,46 @@ test("buildBatchSummary should classify rows by readiness and errors", () => {
       message: "failure",
     },
   ]);
+});
+test("buildFalsePositiveBreakdown should separate accepted and unexpected false positives", () => {
+  const breakdown = buildFalsePositiveBreakdown({
+    falsePositiveRecognitionIds: ["accepted-1", "unexpected-1", "accepted-2"],
+    acceptedFalsePositiveIds: new Set(["accepted-1", "accepted-2"]),
+  });
+
+  assert.deepEqual(breakdown.acceptedFalsePositiveRecognitionIds, [
+    "accepted-1",
+    "accepted-2",
+  ]);
+
+  assert.deepEqual(breakdown.unexpectedFalsePositiveRecognitionIds, [
+    "unexpected-1",
+  ]);
+
+  assert.equal(breakdown.acceptedFalsePositiveCount, 2);
+
+  assert.equal(breakdown.unexpectedFalsePositiveCount, 1);
+});
+
+test("parseArgs should support accepted false positives path", () => {
+  const options = parseArgs([
+    "--kanji-list",
+    "日,本",
+    "--file",
+    "./training_data.jsonl",
+    "--descriptor-file",
+    "./data/kanji_descriptors.json",
+    "--dataset",
+    "./kanji_full.json",
+    "--out-dir",
+    "./candidate_reports_training",
+    "--accepted-false-positives",
+    "./custom_accepted_false_positives.json",
+  ]);
+
+  assert.ok(
+    options.acceptedFalsePositivesPath.endsWith(
+      "custom_accepted_false_positives.json",
+    ),
+  );
 });
