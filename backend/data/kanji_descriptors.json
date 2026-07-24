@@ -3458,6 +3458,76 @@
       },
       "debug": {
         "notes": "Migración declarativa inicial de 未. Los dos horizontales deben estar ordenados y suficientemente separados, ambos deben cruzar el vertical central y las diagonales deben quedar debajo del horizontal inferior."
+      },
+      "referenceConstraints": [
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_lowerHorizontalStroke.widthRelativeDiff",
+          "max": 0.5712796625307115,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "medium",
+          "promotedAt": "2026-07-24T10:53:36.413Z",
+          "evidence": {
+            "falsePositiveReduction": 1,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 36,
+            "affectedSampleCount": 1
+          }
+        },
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_lowerHorizontalStroke.deltaXRelativeDiff",
+          "max": 0.5712796625307115,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "medium",
+          "promotedAt": "2026-07-24T10:53:36.414Z",
+          "evidence": {
+            "falsePositiveReduction": 1,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 36,
+            "affectedSampleCount": 1
+          }
+        },
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_upperHorizontalStroke.heightRelativeDiff",
+          "max": 1.2656188142418858,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "medium",
+          "promotedAt": "2026-07-24T10:53:36.414Z",
+          "evidence": {
+            "falsePositiveReduction": 1,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 36,
+            "affectedSampleCount": 1
+          }
+        }
+      ],
+      "promotionMetadata": {
+        "promotedAt": "2026-07-24T10:53:36.414Z",
+        "sourcePatchMode": "descriptor_candidate_patch",
+        "sourcePatchStatus": "candidate",
+        "sourceEvaluationMode": "descriptor_candidate_patch_evaluation",
+        "ruleCount": 3,
+        "falsePositiveReduction": 1,
+        "falseNegativeIncrease": 0,
+        "truePositiveLoss": 0,
+        "safe": true
       }
     },
     "末": {
