@@ -1,0 +1,42 @@
+
+# Generated kanji reference datasets
+/kanji_full*.json
+
+# Generated descriptor/candidate reports
+/candidate_reports/
+/candidate_reports_training/
+
+# Temporary calibration and analysis outputs
+/*_candidate_features.json
+/*_reference_features.json
+/*_calibration_report.json
+/*_distribution_report.json
+/*_manual_revalidate_report.json
+/*_revalidate_report.json
+/*_comparison_report.json
+/*_validation_report.json
+/*_separation_report.json
+/*_threshold_recommendations.json
+/*_threshold_evaluation_report.json
+/*_descriptor_candidate_patch.json
+/*_descriptor_candidate_patch_evaluation_report.json
+/*_descriptor_candidate_calibration_report.json
+
+# Temporary descriptor candidates
+/kanji_descriptors_candidate.json
+/end_descriptor_candidate.json
+/mountain_descriptor_candidate.json
+
+# Temporary debug scripts
+/tmp_*.js
+
+# Temporary sample extracts
+/use_baseline_samples.json
+
+# Additional generated analysis artifacts
+/*_features.json
+/*_report.json
+/*_analysis.json
+/*_comparison.json
+/global_revalidate*.json
+/kanji_full*_kanji_list.txt

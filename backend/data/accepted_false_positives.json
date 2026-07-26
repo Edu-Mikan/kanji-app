@@ -1,0 +1,25 @@
+{
+  "acceptedFalsePositives": [
+    {
+      "recognitionId": "dcc21351-5275-49ab-9be5-872c082fae53",
+      "kanji": "日",
+      "dataset": "global_baseline_and_training",
+      "reason": "Accepted false positive documented in global regression baseline.",
+      "status": "accepted"
+    },
+    {
+      "recognitionId": "5e110a9a-d0f8-49aa-9c08-b377ea6c870c",
+      "kanji": "未",
+      "dataset": "global_baseline_and_training",
+      "reason": "Accepted false positive due to 未/末 ambiguity.",
+      "status": "accepted"
+    },
+    {
+      "recognitionId": "2173a2f1-d687-4ec9-b9b3-c46a5217ac9d",
+      "kanji": "本",
+      "dataset": "training_data",
+      "reason": "Accepted false positive due to high visual/structural similarity with valid 本 samples.",
+      "status": "accepted"
+    }
+  ]
+}
