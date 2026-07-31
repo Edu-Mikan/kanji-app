@@ -1,0 +1,125 @@
+const test = require("node:test");
+const assert = require("node:assert/strict");
+
+const {
+  parseArgs,
+  validateOptions,
+  getReferenceStrokes,
+  extractStrokeFeatures,
+  classifyStrokeType,
+  generateDescriptorCandidateFromReference,
+} = require("../../scripts/generate_descriptor_candidate_from_reference");
+
+test("parseArgs should parse descriptor generation arguments", () => {
+  const options = parseArgs([
+    "--kanji",
+    "一",
+    "--dataset",
+    "./kanji_full.json",
+    "--out-json",
+    "./candidate_reports_training/一_descriptor_candidate_from_reference.json",
+  ]);
+
+  assert.equal(options.kanji, "一");
+
+  assert.ok(options.datasetPath.endsWith("kanji_full.json"));
+
+  assert.ok(
+    options.outputPath.endsWith("一_descriptor_candidate_from_reference.json"),
+  );
+});
+
+test("validateOptions should reject missing kanji", () => {
+  assert.throws(
+    () =>
+      validateOptions({
+        datasetPath: "./kanji_full.json",
+        outputPath: "./out.json",
+      }),
+    /Missing --kanji/,
+  );
+});
+
+test("getReferenceStrokes should read root-level kanji entries", () => {
+  const strokes = getReferenceStrokes(
+    {
+      一: [
+        {
+          x: [0, 1],
+          y: [0, 0],
+        },
+      ],
+    },
+    "一",
+  );
+
+  assert.equal(strokes.length, 1);
+});
+
+test("extractStrokeFeatures should calculate horizontal stroke geometry", () => {
+  const features = extractStrokeFeatures(
+    {
+      x: [0, 1],
+      y: [0, 0],
+    },
+    0,
+  );
+
+  assert.equal(features.width, 1);
+
+  assert.equal(features.height, 0);
+
+  assert.equal(features.centerX, 0.5);
+
+  assert.equal(features.angleAbs, 0);
+});
+
+test("classifyStrokeType should classify horizontal and vertical strokes", () => {
+  assert.equal(
+    classifyStrokeType({
+      angleAbs: 0,
+      width: 1,
+      height: 0.05,
+      deltaX: 1,
+      deltaY: 0,
+    }),
+    "horizontal",
+  );
+
+  assert.equal(
+    classifyStrokeType({
+      angleAbs: 1.57,
+      width: 0.05,
+      height: 1,
+      deltaX: 0,
+      deltaY: 1,
+    }),
+    "vertical",
+  );
+});
+
+test("generateDescriptorCandidateFromReference should create candidate descriptor", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "一",
+    referenceStrokes: [
+      {
+        x: [0, 1],
+        y: [0, 0],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.kanji, "一");
+
+  assert.equal(descriptor.enabled, false);
+
+  assert.equal(descriptor.status, "candidate");
+
+  assert.equal(descriptor.source, "auto_generated_from_reference");
+
+  assert.equal(descriptor.strokeCount, 1);
+
+  assert.equal(descriptor.strokes.length, 1);
+
+  assert.ok(descriptor.hardChecks.includes("strokeCount"));
+});
