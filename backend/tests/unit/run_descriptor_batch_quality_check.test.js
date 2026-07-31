@@ -157,3 +157,22 @@ test("parseArgs should support all mode", () => {
 
   assert.equal(options.kanjiList, null);
 });
+
+test("buildBatchArgs should pass all flag to batch runner", () => {
+  const args = buildBatchArgs({
+    all: true,
+    kanjiList: null,
+    filePath: "training_data.jsonl",
+    descriptorPath: "data/kanji_descriptors.json",
+    datasetPath: "kanji_full.json",
+    outputDirectory: "candidate_reports_training",
+    acceptedFalsePositivesPath: "data/accepted_false_positives.json",
+    minGap: 0.05,
+    comparisonGroup: "falsePositiveVsTruePositive",
+    continueOnError: true,
+  });
+
+  assert.ok(args.includes("--all"));
+
+  assert.equal(args.includes("--kanji-list"), false);
+});
