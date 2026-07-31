@@ -240,12 +240,12 @@ function buildExpectedForStroke(type, features) {
         min: round(Math.max(0.05, features.height * 0.35)),
       },
       width: {
-        max: round(Math.min(0.5, Math.max(0.08, features.width + 0.2))),
+        max: round(Math.min(0.5, Math.max(0.08, features.width + 0.35))),
       },
       centerX: buildRangeFromReference({
         value: features.centerX,
-        minPadding: 0.25,
-        maxPadding: 0.25,
+        minPadding: 0.35,
+        maxPadding: 0.35,
       }),
     };
   }
@@ -257,15 +257,15 @@ function buildExpectedForStroke(type, features) {
         max: 1.45,
       },
       width: {
-        min: round(Math.max(0.05, features.width * 0.35)),
+        min: round(Math.max(0.05, features.width * 0.2)),
       },
       height: {
-        min: round(Math.max(0.05, features.height * 0.35)),
+        min: round(Math.max(0.05, features.height * 0.2)),
       },
       centerX: buildRangeFromReference({
         value: features.centerX,
-        minPadding: 0.3,
-        maxPadding: 0.3,
+        minPadding: 0.45,
+        maxPadding: 0.45,
       }),
       centerY: buildRangeFromReference({
         value: features.centerY,

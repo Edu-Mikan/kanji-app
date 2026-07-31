@@ -179,3 +179,61 @@ test("generateDescriptorCandidateFromReference should use permissive vertical he
 
   assert.equal(descriptor.strokes[0].expected.height.min, 0.35);
 });
+
+test("generateDescriptorCandidateFromReference should use permissive diagonal width and height minimums", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "木",
+    referenceStrokes: [
+      {
+        x: [0.8, 0.4],
+        y: [0.3, 0.8],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].type, "left_diagonal");
+
+  assert.equal(descriptor.strokes[0].expected.width.min, 0.08);
+
+  assert.equal(descriptor.strokes[0].expected.height.min, 0.1);
+});
+
+test("generateDescriptorCandidateFromReference should allow wider generated vertical strokes", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "丨",
+    referenceStrokes: [
+      {
+        x: [0.5, 0.55],
+        y: [0, 1],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].type, "vertical");
+
+  assert.equal(descriptor.strokes[0].expected.width.max, 0.4);
+
+  assert.deepEqual(descriptor.strokes[0].expected.centerX, {
+    min: 0.175,
+    max: 0.875,
+  });
+});
+
+test("generateDescriptorCandidateFromReference should use permissive diagonal centerX range", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "木",
+    referenceStrokes: [
+      {
+        x: [0.4, 0.8],
+        y: [0.3, 0.8],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].type, "right_diagonal");
+
+  assert.deepEqual(descriptor.strokes[0].expected.centerX, {
+    min: 0.15,
+    max: 1,
+  });
+});
