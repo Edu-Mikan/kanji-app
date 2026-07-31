@@ -8,6 +8,7 @@ const {
   getBatchSummaryPath,
   buildRowFromSummary,
   buildBatchSummary,
+  getExpectedKanjiFromSample,
 } = require("../../scripts/run_reference_descriptor_candidate_pipeline_batch");
 
 test("parseArgs should parse batch arguments", () => {
@@ -34,11 +35,12 @@ test("parseArgs should parse batch arguments", () => {
   assert.ok(options.descriptorPath.endsWith("kanji_descriptors.json"));
 });
 
-test("validateOptions should reject missing kanji list", () => {
+test("validateOptions should reject missing kanji list and all-covered flag", () => {
   assert.throws(
     () =>
       validateOptions({
         kanjiList: [],
+        allCovered: false,
         datasetPath: "./kanji_full.json",
         descriptorPath: "./data/kanji_descriptors.json",
         filePath: "./training_data.jsonl",
@@ -152,4 +154,56 @@ test("buildBatchSummary should classify clean, permissive and unsafe candidates"
   assert.deepEqual(summary.permissiveKanjis, ["一"]);
 
   assert.deepEqual(summary.unsafeKanjis, ["六"]);
+});
+
+test("parseArgs should support all-covered mode", () => {
+  const options = parseArgs([
+    "--all-covered",
+    "--dataset",
+    "./kanji_full.json",
+    "--descriptor-file",
+    "./data/kanji_descriptors.json",
+    "--file",
+    "./training_data.jsonl",
+    "--out-dir",
+    "./candidate_reports_training",
+  ]);
+
+  assert.equal(options.allCovered, true);
+
+  assert.deepEqual(options.kanjiList, []);
+});
+
+test("validateOptions should reject kanji list and all-covered together", () => {
+  assert.throws(
+    () =>
+      validateOptions({
+        kanjiList: ["一"],
+        allCovered: true,
+        datasetPath: "./kanji_full.json",
+        descriptorPath: "./data/kanji_descriptors.json",
+        filePath: "./training_data.jsonl",
+        outputDirectory: "./candidate_reports_training",
+      }),
+    /either --kanji-list or --all-covered/,
+  );
+});
+
+test("getExpectedKanjiFromSample should prefer expectedKanji", () => {
+  assert.equal(
+    getExpectedKanjiFromSample({
+      expectedKanji: "田",
+      kanji: "日",
+    }),
+    "田",
+  );
+});
+
+test("getExpectedKanjiFromSample should fall back to kanji", () => {
+  assert.equal(
+    getExpectedKanjiFromSample({
+      kanji: "日",
+    }),
+    "日",
+  );
 });

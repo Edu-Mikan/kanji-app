@@ -5,6 +5,7 @@ const childProcess = require("node:child_process");
 function parseArgs(argv) {
   const options = {
     kanjiList: [],
+    allCovered: false,
     datasetPath: null,
     descriptorPath: null,
     filePath: null,
@@ -60,6 +61,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--all-covered") {
+      options.allCovered = true;
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${argument}`);
   }
 
@@ -79,8 +85,16 @@ Usage:
     --out-dir ./candidate_reports_training \\
     --continue-on-error
 
-This script runs scripts/run_reference_descriptor_candidate_pipeline.js
-for each kanji and creates a global batch summary.
+Alternative:
+  node scripts/run_reference_descriptor_candidate_pipeline_batch.js \\
+    --all-covered \\
+    --dataset ./kanji_full.json \\
+    --descriptor-file ./data/kanji_descriptors.json \\
+    --file ./training_data.jsonl \\
+    --out-dir ./candidate_reports_training \\
+    --continue-on-error
+
+--all-covered processes all kanjis present in the training file that also have descriptors.
 `);
 }
 
@@ -89,8 +103,17 @@ function validateOptions(options) {
     return;
   }
 
-  if (!Array.isArray(options.kanjiList) || options.kanjiList.length === 0) {
-    throw new Error("Missing --kanji-list <kanji1,kanji2,...>");
+  const hasExplicitKanjiList =
+    Array.isArray(options.kanjiList) && options.kanjiList.length > 0;
+
+  if (!options.allCovered && !hasExplicitKanjiList) {
+    throw new Error(
+      "Missing --kanji-list <kanji1,kanji2,...> or --all-covered",
+    );
+  }
+
+  if (options.allCovered && hasExplicitKanjiList) {
+    throw new Error("Use either --kanji-list or --all-covered, not both");
   }
 
   if (!options.datasetPath) {
@@ -112,6 +135,47 @@ function validateOptions(options) {
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readJsonl(filePath) {
+  const content = fs.readFileSync(filePath, "utf8").trim();
+
+  if (!content) {
+    return [];
+  }
+
+  return content.split(/\r?\n/).filter(Boolean).map(JSON.parse);
+}
+
+function getDescriptorCatalog(descriptorFile) {
+  return descriptorFile.descriptors ?? descriptorFile;
+}
+
+function getExpectedKanjiFromSample(sample) {
+  return sample.expectedKanji ?? sample.kanji ?? null;
+}
+
+function resolveAllCoveredKanjis({ filePath, descriptorPath }) {
+  const samples = readJsonl(filePath);
+
+  const descriptorFile = readJson(descriptorPath);
+
+  const descriptors = getDescriptorCatalog(descriptorFile);
+
+  const sampleKanjis = [
+    ...new Set(samples.map(getExpectedKanjiFromSample).filter(Boolean)),
+  ].sort();
+
+  const targetKanjis = sampleKanjis.filter((kanji) => descriptors[kanji]);
+
+  const skippedNoDescriptorKanjis = sampleKanjis.filter(
+    (kanji) => !descriptors[kanji],
+  );
+
+  return {
+    targetKanjis,
+    skippedNoDescriptorKanjis,
+  };
 }
 
 function getSummaryPath({ kanji, outputDirectory }) {
@@ -198,7 +262,12 @@ function buildRowFromSummary(summary) {
   };
 }
 
-function buildBatchSummary({ kanjiList, rows, errors = [] }) {
+function buildBatchSummary({
+  kanjiList,
+  rows,
+  skippedNoDescriptorKanjis = [],
+  errors = [],
+}) {
   const okRows = rows.filter((row) => row.status === "ok");
 
   const cleanRows = okRows.filter((row) => row.clean);
@@ -218,6 +287,10 @@ function buildBatchSummary({ kanjiList, rows, errors = [] }) {
     mode: "reference_descriptor_candidate_pipeline_batch_summary",
 
     kanjiCount: kanjiList.length,
+
+    skippedNoDescriptorCount: skippedNoDescriptorKanjis.length,
+
+    skippedNoDescriptorKanjis,
 
     processedCount: okRows.length,
 
@@ -250,6 +323,9 @@ function printBatchSummary(summary) {
   console.log("=============================================");
   console.log(`Kanjis: ${summary.kanjiCount}`);
   console.log(`Processed: ${summary.processedCount}`);
+  console.log(
+    `Skipped without descriptor: ${summary.skippedNoDescriptorCount ?? 0}`,
+  );
   console.log(`Errors: ${summary.errorCount}`);
   console.log(`Clean candidates: ${summary.cleanCandidateCount}`);
   console.log(`Safe candidates: ${summary.safeCandidateCount}`);
@@ -284,10 +360,24 @@ function runBatch(options) {
     recursive: true,
   });
 
+  const resolvedTargets = options.allCovered
+    ? resolveAllCoveredKanjis({
+        filePath: options.filePath,
+        descriptorPath: options.descriptorPath,
+      })
+    : {
+        targetKanjis: options.kanjiList,
+        skippedNoDescriptorKanjis: [],
+      };
+
+  const targetKanjis = resolvedTargets.targetKanjis;
+
+  const skippedNoDescriptorKanjis = resolvedTargets.skippedNoDescriptorKanjis;
+
   const rows = [];
   const errors = [];
 
-  for (const kanji of options.kanjiList) {
+  for (const kanji of targetKanjis) {
     try {
       runSinglePipeline({
         kanji,
@@ -326,8 +416,9 @@ function runBatch(options) {
   }
 
   const batchSummary = buildBatchSummary({
-    kanjiList: options.kanjiList,
+    kanjiList: targetKanjis,
     rows,
+    skippedNoDescriptorKanjis,
     errors,
   });
 
@@ -380,4 +471,8 @@ module.exports = {
   getBatchSummaryPath,
   buildRowFromSummary,
   buildBatchSummary,
+  readJsonl,
+  getDescriptorCatalog,
+  getExpectedKanjiFromSample,
+  resolveAllCoveredKanjis,
 };
