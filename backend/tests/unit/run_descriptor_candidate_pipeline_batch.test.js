@@ -9,6 +9,8 @@ const {
   buildBatchSummary,
   buildFalsePositiveBreakdown,
   getCalibrationReportPath,
+  resolveAllTargetKanjis,
+  getExpectedKanjiFromSample,
 } = require("../../scripts/run_descriptor_candidate_pipeline_batch");
 
 test("parseArgs should parse batch arguments", () => {
@@ -52,11 +54,12 @@ test("parseArgs should support continue on error", () => {
   assert.equal(options.continueOnError, true);
 });
 
-test("validateOptions should reject empty kanji list", () => {
+test("validateOptions should reject missing kanji list and all flag", () => {
   assert.throws(
     () =>
       validateOptions({
         kanjiList: [],
+        all: false,
         filePath: "./training_data.jsonl",
         descriptorPath: "./data/kanji_descriptors.json",
         datasetPath: "./kanji_full.json",
@@ -176,5 +179,37 @@ test("parseArgs should support accepted false positives path", () => {
     options.acceptedFalsePositivesPath.endsWith(
       "custom_accepted_false_positives.json",
     ),
+  );
+});
+test("parseArgs should support all mode", () => {
+  const options = parseArgs([
+    "--all",
+    "--file",
+    "./training_data.jsonl",
+    "--descriptor-file",
+    "./data/kanji_descriptors.json",
+    "--dataset",
+    "./kanji_full.json",
+    "--out-dir",
+    "./candidate_reports_training",
+  ]);
+
+  assert.equal(options.all, true);
+
+  assert.deepEqual(options.kanjiList, []);
+});
+test("validateOptions should reject using all and kanji list together", () => {
+  assert.throws(
+    () =>
+      validateOptions({
+        kanjiList: ["田"],
+        all: true,
+        filePath: "./training_data.jsonl",
+        descriptorPath: "./data/kanji_descriptors.json",
+        datasetPath: "./kanji_full.json",
+        outputDirectory: "./candidate_reports_training",
+        minGap: 0.05,
+      }),
+    /either --kanji-list or --all/,
   );
 });

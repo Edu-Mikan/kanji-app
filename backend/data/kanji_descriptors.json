@@ -70,6 +70,57 @@
       },
       "debug": {
         "notes": "Migración declarativa inicial de 一. La horizontalidad, anchura, altura y proporción global son checks duros. La rectitud media permanece como señal blanda para mantener una validación educativa permisiva."
+      },
+      "referenceConstraints": [
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_horizontalStroke.heightRelativeDiff",
+          "max": 1.5,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "low",
+          "promotedAt": "2026-07-26T12:55:22.044Z",
+          "evidence": {
+            "falsePositiveReduction": 2,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 24,
+            "affectedSampleCount": 2
+          }
+        },
+        {
+          "type": "referenceMetricMax",
+          "metricPath": "perRole.role_horizontalStroke.straightnessDiff",
+          "max": 0.14092133271242518,
+          "severity": "hard",
+          "status": "approved",
+          "source": "descriptor_candidate_promotion",
+          "comparisonGroup": "falsePositiveVsTruePositive",
+          "risk": "low",
+          "promotedAt": "2026-07-26T12:55:22.045Z",
+          "evidence": {
+            "falsePositiveReduction": 2,
+            "falseNegativeIncrease": 0,
+            "truePositiveLoss": 0,
+            "safe": true,
+            "sampleCount": 24,
+            "affectedSampleCount": 2
+          }
+        }
+      ],
+      "promotionMetadata": {
+        "promotedAt": "2026-07-26T12:55:22.045Z",
+        "sourcePatchMode": "descriptor_candidate_patch",
+        "sourcePatchStatus": "candidate",
+        "sourceEvaluationMode": "descriptor_candidate_patch_evaluation",
+        "ruleCount": 2,
+        "falsePositiveReduction": 2,
+        "falseNegativeIncrease": 0,
+        "truePositiveLoss": 0,
+        "safe": true
       }
     },
     "二": {

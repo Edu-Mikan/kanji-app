@@ -4,6 +4,7 @@ const childProcess = require("node:child_process");
 function parseArgs(argv) {
   const options = {
     kanjiList: null,
+    all: false,
     filePath: null,
     descriptorPath: null,
     datasetPath: null,
@@ -78,6 +79,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--all") {
+      options.all = true;
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${argument}`);
   }
 
@@ -113,8 +119,12 @@ function validateOptions(options) {
     return;
   }
 
-  if (!options.kanjiList) {
-    throw new Error("Missing --kanji-list <kanji1,kanji2,...>");
+  if (!options.all && !options.kanjiList) {
+    throw new Error("Missing --kanji-list <kanji1,kanji2,...> or --all");
+  }
+
+  if (options.all && options.kanjiList) {
+    throw new Error("Use either --kanji-list or --all, not both");
   }
 
   if (!options.filePath) {
@@ -161,7 +171,7 @@ function runNodeScript(scriptPath, args) {
 }
 
 function buildBatchArgs(options) {
-  const args = [
+  /* const args = [
     "--kanji-list",
     options.kanjiList,
     "--file",
@@ -178,7 +188,32 @@ function buildBatchArgs(options) {
     String(options.minGap),
     "--comparison-group",
     options.comparisonGroup,
-  ];
+  ]; */
+
+  const args = [];
+
+  if (options.all) {
+    args.push("--all");
+  } else {
+    args.push("--kanji-list", options.kanjiList);
+  }
+
+  args.push(
+    "--file",
+    options.filePath,
+    "--descriptor-file",
+    options.descriptorPath,
+    "--dataset",
+    options.datasetPath,
+    "--out-dir",
+    options.outputDirectory,
+    "--accepted-false-positives",
+    options.acceptedFalsePositivesPath,
+    "--min-gap",
+    String(options.minGap),
+    "--comparison-group",
+    options.comparisonGroup,
+  );
 
   if (options.continueOnError) {
     args.push("--continue-on-error");

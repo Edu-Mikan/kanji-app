@@ -8,10 +8,11 @@
     "generate:kanji-full": "node scripts/generate_kanji_full_from_svg.js --svg-dir ./kanji_svg --all --out-json ./kanji_full.json",
     "check:kanji-full": "node scripts/check_kanji_full_exists.js",
     "pretest:descriptor-quality": "npm run check:kanji-full",
-    "test:descriptor-quality": "node scripts/run_descriptor_batch_quality_check.js --kanji-list 田,山,四,口,日,目,回,用,木,本,未,末,七,六 --file ./training_data.jsonl --descriptor-file ./data/kanji_descriptors.json --dataset ./kanji_full.json --out-dir ./candidate_reports_training --continue-on-error",
+    "test:descriptor-quality": "node scripts/run_descriptor_batch_quality_check.js --all --file ./training_data.jsonl --descriptor-file ./data/kanji_descriptors.json --dataset ./kanji_full.json --out-dir ./candidate_reports_training --continue-on-error",
     "test:unit": "node --test tests/unit/*.test.js",
     "test:regression": "node --test tests/regression/*.test.js",
     "test:integration": "node --test tests/integration/*.test.js",
+    "prestart": "npm run check:kanji-full",
     "start": "node server.js"
   },
   "keywords": [],

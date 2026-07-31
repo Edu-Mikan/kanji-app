@@ -5,6 +5,7 @@ const childProcess = require("node:child_process");
 function parseArgs(argv) {
   const options = {
     kanjiList: [],
+    all: false,
     filePath: null,
     descriptorPath: null,
     datasetPath: null,
@@ -83,6 +84,11 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--all") {
+      options.all = true;
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${argument}`);
   }
 
@@ -123,8 +129,15 @@ function validateOptions(options) {
     return;
   }
 
-  if (!Array.isArray(options.kanjiList) || options.kanjiList.length === 0) {
-    throw new Error("Missing --kanji-list <kanji1,kanji2,...>");
+  const hasExplicitKanjiList =
+    Array.isArray(options.kanjiList) && options.kanjiList.length > 0;
+
+  if (!options.all && !hasExplicitKanjiList) {
+    throw new Error("Missing --kanji-list <kanji1,kanji2,...> or --all");
+  }
+
+  if (options.all && hasExplicitKanjiList) {
+    throw new Error("Use either --kanji-list or --all, not both");
   }
 
   if (!options.filePath) {
@@ -210,6 +223,46 @@ function runPipelineForKanji({
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readJsonl(filePath) {
+  return fs
+    .readFileSync(filePath, "utf8")
+    .trim()
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map(JSON.parse);
+}
+
+function getExpectedKanjiFromSample(sample) {
+  return sample.expectedKanji ?? sample.kanji ?? null;
+}
+
+function getDescriptorCatalog(descriptorFile) {
+  return descriptorFile.descriptors ?? descriptorFile;
+}
+
+function resolveAllTargetKanjis({ filePath, descriptorPath }) {
+  const samples = readJsonl(filePath);
+
+  const descriptorFile = readJson(descriptorPath);
+
+  const descriptors = getDescriptorCatalog(descriptorFile);
+
+  const sampleKanjis = [
+    ...new Set(samples.map(getExpectedKanjiFromSample).filter(Boolean)),
+  ].sort();
+
+  const targetKanjis = sampleKanjis.filter((kanji) => descriptors[kanji]);
+
+  const skippedNoDescriptorKanjis = sampleKanjis.filter(
+    (kanji) => !descriptors[kanji],
+  );
+
+  return {
+    targetKanjis,
+    skippedNoDescriptorKanjis,
+  };
 }
 
 function loadAcceptedFalsePositives(filePath) {
@@ -320,6 +373,7 @@ function buildBatchSummary({
   kanjiList,
   outputDirectory,
   acceptedFalsePositiveIds = new Set(),
+  skippedNoDescriptorKanjis = [],
   errors = [],
 }) {
   const rows = [];
@@ -402,6 +456,10 @@ function buildBatchSummary({
 
     kanjiCount: kanjiList.length,
 
+    skippedNoDescriptorCount: skippedNoDescriptorKanjis.length,
+
+    skippedNoDescriptorKanjis,
+
     processedCount: rows.filter((row) => row.status === "ok").length,
 
     errorCount:
@@ -441,6 +499,9 @@ function printBatchSummary(summary) {
 
   console.log(`Kanjis: ${summary.kanjiCount}`);
   console.log(`Processed: ${summary.processedCount}`);
+  console.log(
+    `Skipped without descriptor: ${summary.skippedNoDescriptorCount ?? 0}`,
+  );
   console.log(`Errors: ${summary.errorCount}`);
   console.log(
     `Ready for manual promotion: ${summary.readyForManualPromotionCount}`,
@@ -509,7 +570,21 @@ function main() {
     options.acceptedFalsePositivesPath,
   );
 
-  for (const kanji of options.kanjiList) {
+  const resolvedTargets = options.all
+    ? resolveAllTargetKanjis({
+        filePath: options.filePath,
+        descriptorPath: options.descriptorPath,
+      })
+    : {
+        targetKanjis: options.kanjiList,
+        skippedNoDescriptorKanjis: [],
+      };
+
+  const targetKanjis = resolvedTargets.targetKanjis;
+
+  const skippedNoDescriptorKanjis = resolvedTargets.skippedNoDescriptorKanjis;
+
+  for (const kanji of targetKanjis) {
     try {
       runPipelineForKanji({
         kanji,
@@ -539,7 +614,8 @@ function main() {
   }
 
   const summary = buildBatchSummary({
-    kanjiList: options.kanjiList,
+    kanjiList: targetKanjis,
+    skippedNoDescriptorKanjis,
     outputDirectory: options.outputDirectory,
     acceptedFalsePositiveIds,
     errors,
@@ -581,4 +657,8 @@ module.exports = {
   getCalibrationReportPath,
   getFalsePositiveRecognitionIdsFromCalibrationReport,
   buildFalsePositiveBreakdown,
+  readJsonl,
+  getExpectedKanjiFromSample,
+  getDescriptorCatalog,
+  resolveAllTargetKanjis,
 };

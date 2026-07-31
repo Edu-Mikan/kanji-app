@@ -139,3 +139,21 @@ test("buildQualityGateArgs should point to pipeline batch summary", () => {
 
   assert.ok(args[1].includes("candidate_reports_training"));
 });
+
+test("parseArgs should support all mode", () => {
+  const options = parseArgs([
+    "--all",
+    "--file",
+    "./training_data.jsonl",
+    "--descriptor-file",
+    "./data/kanji_descriptors.json",
+    "--dataset",
+    "./kanji_full.json",
+    "--out-dir",
+    "./candidate_reports_training",
+  ]);
+
+  assert.equal(options.all, true);
+
+  assert.equal(options.kanjiList, null);
+});
