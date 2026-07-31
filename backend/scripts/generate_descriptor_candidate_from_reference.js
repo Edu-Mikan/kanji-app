@@ -300,6 +300,30 @@ function buildRoleId(type, index) {
 }
 
 function buildGlobalChecks(featuresByStroke) {
+  const strokeTypes = featuresByStroke.map(classifyStrokeType);
+
+  const isSingleHorizontal =
+    featuresByStroke.length === 1 && strokeTypes[0] === "horizontal";
+
+  if (isSingleHorizontal) {
+    const stroke = featuresByStroke[0];
+
+    return {
+      bboxWidth: {
+        min: round(Math.max(0.2, stroke.width * 0.45)),
+      },
+      bboxHeight: {
+        max: 0.25,
+      },
+      aspectRatio: {
+        min: 3,
+      },
+      straightnessMean: {
+        min: 0.65,
+      },
+    };
+  }
+
   const minX = Math.min(...featuresByStroke.map((stroke) => stroke.minX));
 
   const maxX = Math.max(...featuresByStroke.map((stroke) => stroke.maxX));

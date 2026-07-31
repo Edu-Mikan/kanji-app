@@ -123,3 +123,31 @@ test("generateDescriptorCandidateFromReference should create candidate descripto
 
   assert.ok(descriptor.hardChecks.includes("strokeCount"));
 });
+
+test("generateDescriptorCandidateFromReference should use horizontal global checks for single horizontal kanji", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "一",
+    referenceStrokes: [
+      {
+        x: [0, 1],
+        y: [0, 0],
+      },
+    ],
+  });
+
+  assert.deepEqual(descriptor.globalChecks.bboxHeight, {
+    max: 0.25,
+  });
+
+  assert.deepEqual(descriptor.globalChecks.aspectRatio, {
+    min: 3,
+  });
+
+  assert.deepEqual(descriptor.globalChecks.straightnessMean, {
+    min: 0.65,
+  });
+
+  assert.equal(descriptor.hardChecks.includes("bboxHeight"), true);
+
+  assert.equal(descriptor.hardChecks.includes("aspectRatio"), true);
+});
