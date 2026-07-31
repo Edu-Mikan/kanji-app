@@ -151,3 +151,31 @@ test("generateDescriptorCandidateFromReference should use horizontal global chec
 
   assert.equal(descriptor.hardChecks.includes("aspectRatio"), true);
 });
+
+test("generateDescriptorCandidateFromReference should use permissive horizontal width minimum for generated candidates", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "一",
+    referenceStrokes: [
+      {
+        x: [0, 1],
+        y: [0, 0],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].expected.width.min, 0.35);
+});
+
+test("generateDescriptorCandidateFromReference should use permissive vertical height minimum for generated candidates", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "丨",
+    referenceStrokes: [
+      {
+        x: [0.5, 0.5],
+        y: [0, 1],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].expected.height.min, 0.35);
+});

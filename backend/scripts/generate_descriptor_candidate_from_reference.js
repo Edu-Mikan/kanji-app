@@ -218,7 +218,7 @@ function buildExpectedForStroke(type, features) {
         max: 0.65,
       },
       width: {
-        min: round(Math.max(0.05, features.width * 0.45)),
+        min: round(Math.max(0.05, features.width * 0.35)),
       },
       height: {
         max: round(Math.min(0.45, Math.max(0.08, features.height + 0.2))),
@@ -237,7 +237,7 @@ function buildExpectedForStroke(type, features) {
         min: 0.75,
       },
       height: {
-        min: round(Math.max(0.05, features.height * 0.45)),
+        min: round(Math.max(0.05, features.height * 0.35)),
       },
       width: {
         max: round(Math.min(0.5, Math.max(0.08, features.width + 0.2))),
