@@ -163,7 +163,7 @@ test("generateDescriptorCandidateFromReference should use permissive horizontal 
     ],
   });
 
-  assert.equal(descriptor.strokes[0].expected.width.min, 0.3);
+  assert.equal(descriptor.strokes[0].expected.width.min, 0.25);
 });
 
 test("generateDescriptorCandidateFromReference should use permissive vertical height minimum for generated candidates", () => {
@@ -258,4 +258,23 @@ test("generateDescriptorCandidateFromReference should use permissive expected ra
   assert.equal(descriptor.strokes[0].expected.width.min, 0.08);
 
   assert.equal(descriptor.strokes[0].expected.height.max, 0.33);
+});
+
+test("generateDescriptorCandidateFromReference should use permissive horizontal centerY range", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "田",
+    referenceStrokes: [
+      {
+        x: [0, 1],
+        y: [0.4, 0.4],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].type, "horizontal");
+
+  assert.deepEqual(descriptor.strokes[0].expected.centerY, {
+    min: 0.1,
+    max: 0.7,
+  });
 });

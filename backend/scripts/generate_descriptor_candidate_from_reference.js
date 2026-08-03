@@ -239,15 +239,15 @@ function buildExpectedForStroke(type, features) {
         max: 0.65,
       },
       width: {
-        min: round(Math.max(0.05, features.width * 0.3)),
+        min: round(Math.max(0.05, features.width * 0.25)),
       },
       height: {
         max: round(Math.min(0.45, Math.max(0.08, features.height + 0.2))),
       },
       centerY: buildRangeFromReference({
         value: features.centerY,
-        minPadding: 0.25,
-        maxPadding: 0.25,
+        minPadding: 0.3,
+        maxPadding: 0.3,
       }),
     };
   }
