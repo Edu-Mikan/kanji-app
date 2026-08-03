@@ -20,6 +20,8 @@
     "test:reference-candidate-fp-suggestions": "node scripts/run_reference_candidate_fp_suggestion_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --continue-on-error",
     "pretest:reference-candidate-fp-patches": "npm run check:kanji-full",
     "test:reference-candidate-fp-patches": "node scripts/run_reference_candidate_fp_patch_proposal_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --continue-on-error",
+    "pretest:reference-candidate-ml-dataset": "npm run check:kanji-full",
+    "test:reference-candidate-ml-dataset": "node scripts/run_reference_candidate_ml_dataset_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --out-jsonl ./ml_datasets/reference_candidate_binary_dataset.jsonl --out-summary ./ml_datasets/reference_candidate_binary_dataset_summary.json --continue-on-error",
     "start": "node server.js"
   },
   "keywords": [],
