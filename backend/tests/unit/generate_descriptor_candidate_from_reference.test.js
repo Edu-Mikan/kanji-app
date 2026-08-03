@@ -163,7 +163,7 @@ test("generateDescriptorCandidateFromReference should use permissive horizontal 
     ],
   });
 
-  assert.equal(descriptor.strokes[0].expected.width.min, 0.35);
+  assert.equal(descriptor.strokes[0].expected.width.min, 0.3);
 });
 
 test("generateDescriptorCandidateFromReference should use permissive vertical height minimum for generated candidates", () => {
