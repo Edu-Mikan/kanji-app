@@ -237,3 +237,22 @@ test("generateDescriptorCandidateFromReference should use permissive diagonal ce
     max: 1,
   });
 });
+
+test("generateDescriptorCandidateFromReference should use permissive diagonal centerX range", () => {
+  const descriptor = generateDescriptorCandidateFromReference({
+    kanji: "木",
+    referenceStrokes: [
+      {
+        x: [0.4, 0.8],
+        y: [0.3, 0.8],
+      },
+    ],
+  });
+
+  assert.equal(descriptor.strokes[0].type, "right_diagonal");
+
+  assert.deepEqual(descriptor.strokes[0].expected.centerX, {
+    min: 0.15,
+    max: 1,
+  });
+});
