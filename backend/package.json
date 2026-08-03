@@ -16,6 +16,8 @@
     "prestart": "npm run check:kanji-full",
     "pretest:reference-candidate-quality": "npm run check:kanji-full",
     "test:reference-candidate-quality": "node scripts/run_reference_descriptor_candidate_quality_check.js --all-covered --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --continue-on-error",
+    "pretest:reference-candidate-fp-suggestions": "npm run check:kanji-full",
+    "test:reference-candidate-fp-suggestions": "node scripts/run_reference_candidate_fp_suggestion_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --continue-on-error",
     "start": "node server.js"
   },
   "keywords": [],
