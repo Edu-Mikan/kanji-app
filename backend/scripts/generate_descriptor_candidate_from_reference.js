@@ -213,6 +213,27 @@ function buildRangeFromReference({
 
 function buildExpectedForStroke(type, features) {
   if (type === "horizontal") {
+    const isShortHorizontal = features.width < 0.5;
+
+    if (isShortHorizontal) {
+      return {
+        angleAbs: {
+          max: 1.05,
+        },
+        width: {
+          min: round(Math.max(0.05, features.width * 0.2)),
+        },
+        height: {
+          max: round(Math.min(0.35, Math.max(0.08, features.height + 0.3))),
+        },
+        centerY: buildRangeFromReference({
+          value: features.centerY,
+          minPadding: 0.25,
+          maxPadding: 0.25,
+        }),
+      };
+    }
+
     return {
       angleAbs: {
         max: 0.65,
@@ -264,8 +285,8 @@ function buildExpectedForStroke(type, features) {
       },
       centerX: buildRangeFromReference({
         value: features.centerX,
-        minPadding: 0.45,
-        maxPadding: 0.45,
+        minPadding: 0.55,
+        maxPadding: 0.55,
       }),
       centerY: buildRangeFromReference({
         value: features.centerY,

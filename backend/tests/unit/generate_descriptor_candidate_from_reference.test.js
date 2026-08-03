@@ -233,26 +233,29 @@ test("generateDescriptorCandidateFromReference should use permissive diagonal ce
   assert.equal(descriptor.strokes[0].type, "right_diagonal");
 
   assert.deepEqual(descriptor.strokes[0].expected.centerX, {
-    min: 0.15,
+    min: 0.05,
     max: 1,
   });
 });
 
-test("generateDescriptorCandidateFromReference should use permissive diagonal centerX range", () => {
+test("generateDescriptorCandidateFromReference should use permissive expected ranges for short horizontal marks", () => {
   const descriptor = generateDescriptorCandidateFromReference({
-    kanji: "木",
+    kanji: "本",
     referenceStrokes: [
       {
-        x: [0.4, 0.8],
-        y: [0.3, 0.8],
+        x: [0.3, 0.7],
+        y: [0.7, 0.73],
       },
     ],
   });
 
-  assert.equal(descriptor.strokes[0].type, "right_diagonal");
+  assert.equal(descriptor.strokes[0].type, "horizontal");
 
-  assert.deepEqual(descriptor.strokes[0].expected.centerX, {
-    min: 0.15,
-    max: 1,
+  assert.deepEqual(descriptor.strokes[0].expected.angleAbs, {
+    max: 1.05,
   });
+
+  assert.equal(descriptor.strokes[0].expected.width.min, 0.08);
+
+  assert.equal(descriptor.strokes[0].expected.height.max, 0.33);
 });
