@@ -1,0 +1,4060 @@
+{
+  "schemaVersion": 1,
+  "purpose": "First interpretable logistic regression baseline for reference candidate validation",
+  "modelType": "binary_logistic_regression",
+  "evaluationScope": "Deterministic stratified row-level development split. Not evidence of generalization to unseen kanjis.",
+  "dataset": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_binary_dataset.jsonl",
+    "sha256": "cabb9bc2d97a003f4277e3f364969cbea3d3272d58ac06aff75a6dc4fc56bbe1",
+    "rowCount": 565
+  },
+  "split": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_baseline_split.json",
+    "sha256": "1d0ec9718c9fedbbf0882fc610a450cf21a6e582cf2324431ed2cd2dc815312a",
+    "strategy": "deterministic_stratified_by_target_kanji_and_label",
+    "seed": "reference-candidate-baseline-v1",
+    "validationRatio": 0.2
+  },
+  "vectorSummary": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_baseline_vector_summary.json",
+    "sha256": "3936e4e9e181e7c9ed43dd62068080eb62c899bf320e4188411330b265e47d9c"
+  },
+  "vectorization": {
+    "strategy": "standardized_present_values_plus_presence_indicator",
+    "fittingScope": "training_partition_only",
+    "originalFeatureCount": 131,
+    "dimensionCount": 262,
+    "dimensionNames": [
+      "value.perRole.role_stroke0_horizontal.angleAbsDiff",
+      "presence.perRole.role_stroke0_horizontal.angleAbsDiff",
+      "value.perRole.role_stroke0_horizontal.centerDistance",
+      "presence.perRole.role_stroke0_horizontal.centerDistance",
+      "value.perRole.role_stroke0_horizontal.comparisonCost",
+      "presence.perRole.role_stroke0_horizontal.comparisonCost",
+      "value.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+      "value.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+      "value.perRole.role_stroke0_horizontal.heightRelativeDiff",
+      "presence.perRole.role_stroke0_horizontal.heightRelativeDiff",
+      "value.perRole.role_stroke0_horizontal.straightnessDiff",
+      "presence.perRole.role_stroke0_horizontal.straightnessDiff",
+      "value.perRole.role_stroke0_horizontal.widthRelativeDiff",
+      "presence.perRole.role_stroke0_horizontal.widthRelativeDiff",
+      "value.perRole.role_stroke0_left_diagonal.angleAbsDiff",
+      "presence.perRole.role_stroke0_left_diagonal.angleAbsDiff",
+      "value.perRole.role_stroke0_left_diagonal.centerDistance",
+      "presence.perRole.role_stroke0_left_diagonal.centerDistance",
+      "value.perRole.role_stroke0_left_diagonal.comparisonCost",
+      "presence.perRole.role_stroke0_left_diagonal.comparisonCost",
+      "value.perRole.role_stroke0_left_diagonal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke0_left_diagonal.deltaXRelativeDiff",
+      "value.perRole.role_stroke0_left_diagonal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke0_left_diagonal.deltaYRelativeDiff",
+      "value.perRole.role_stroke0_left_diagonal.heightRelativeDiff",
+      "presence.perRole.role_stroke0_left_diagonal.heightRelativeDiff",
+      "value.perRole.role_stroke0_left_diagonal.straightnessDiff",
+      "presence.perRole.role_stroke0_left_diagonal.straightnessDiff",
+      "value.perRole.role_stroke0_left_diagonal.widthRelativeDiff",
+      "presence.perRole.role_stroke0_left_diagonal.widthRelativeDiff",
+      "value.perRole.role_stroke0_vertical.angleAbsDiff",
+      "presence.perRole.role_stroke0_vertical.angleAbsDiff",
+      "value.perRole.role_stroke0_vertical.centerDistance",
+      "presence.perRole.role_stroke0_vertical.centerDistance",
+      "value.perRole.role_stroke0_vertical.comparisonCost",
+      "presence.perRole.role_stroke0_vertical.comparisonCost",
+      "value.perRole.role_stroke0_vertical.deltaXRelativeDiff",
+      "presence.perRole.role_stroke0_vertical.deltaXRelativeDiff",
+      "value.perRole.role_stroke0_vertical.deltaYRelativeDiff",
+      "presence.perRole.role_stroke0_vertical.deltaYRelativeDiff",
+      "value.perRole.role_stroke0_vertical.heightRelativeDiff",
+      "presence.perRole.role_stroke0_vertical.heightRelativeDiff",
+      "value.perRole.role_stroke0_vertical.straightnessDiff",
+      "presence.perRole.role_stroke0_vertical.straightnessDiff",
+      "value.perRole.role_stroke0_vertical.widthRelativeDiff",
+      "presence.perRole.role_stroke0_vertical.widthRelativeDiff",
+      "value.perRole.role_stroke1_horizontal.angleAbsDiff",
+      "presence.perRole.role_stroke1_horizontal.angleAbsDiff",
+      "value.perRole.role_stroke1_horizontal.centerDistance",
+      "presence.perRole.role_stroke1_horizontal.centerDistance",
+      "value.perRole.role_stroke1_horizontal.comparisonCost",
+      "presence.perRole.role_stroke1_horizontal.comparisonCost",
+      "value.perRole.role_stroke1_horizontal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke1_horizontal.deltaXRelativeDiff",
+      "value.perRole.role_stroke1_horizontal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke1_horizontal.deltaYRelativeDiff",
+      "value.perRole.role_stroke1_horizontal.heightRelativeDiff",
+      "presence.perRole.role_stroke1_horizontal.heightRelativeDiff",
+      "value.perRole.role_stroke1_horizontal.straightnessDiff",
+      "presence.perRole.role_stroke1_horizontal.straightnessDiff",
+      "value.perRole.role_stroke1_horizontal.widthRelativeDiff",
+      "presence.perRole.role_stroke1_horizontal.widthRelativeDiff",
+      "value.perRole.role_stroke1_right_diagonal.angleAbsDiff",
+      "presence.perRole.role_stroke1_right_diagonal.angleAbsDiff",
+      "value.perRole.role_stroke1_right_diagonal.centerDistance",
+      "presence.perRole.role_stroke1_right_diagonal.centerDistance",
+      "value.perRole.role_stroke1_right_diagonal.comparisonCost",
+      "presence.perRole.role_stroke1_right_diagonal.comparisonCost",
+      "value.perRole.role_stroke1_right_diagonal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke1_right_diagonal.deltaXRelativeDiff",
+      "value.perRole.role_stroke1_right_diagonal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke1_right_diagonal.deltaYRelativeDiff",
+      "value.perRole.role_stroke1_right_diagonal.heightRelativeDiff",
+      "presence.perRole.role_stroke1_right_diagonal.heightRelativeDiff",
+      "value.perRole.role_stroke1_right_diagonal.straightnessDiff",
+      "presence.perRole.role_stroke1_right_diagonal.straightnessDiff",
+      "value.perRole.role_stroke1_right_diagonal.widthRelativeDiff",
+      "presence.perRole.role_stroke1_right_diagonal.widthRelativeDiff",
+      "value.perRole.role_stroke1_vertical.angleAbsDiff",
+      "presence.perRole.role_stroke1_vertical.angleAbsDiff",
+      "value.perRole.role_stroke1_vertical.centerDistance",
+      "presence.perRole.role_stroke1_vertical.centerDistance",
+      "value.perRole.role_stroke1_vertical.comparisonCost",
+      "presence.perRole.role_stroke1_vertical.comparisonCost",
+      "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+      "presence.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+      "value.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+      "presence.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+      "value.perRole.role_stroke1_vertical.heightRelativeDiff",
+      "presence.perRole.role_stroke1_vertical.heightRelativeDiff",
+      "value.perRole.role_stroke1_vertical.straightnessDiff",
+      "presence.perRole.role_stroke1_vertical.straightnessDiff",
+      "value.perRole.role_stroke1_vertical.widthRelativeDiff",
+      "presence.perRole.role_stroke1_vertical.widthRelativeDiff",
+      "value.perRole.role_stroke2_horizontal.angleAbsDiff",
+      "presence.perRole.role_stroke2_horizontal.angleAbsDiff",
+      "value.perRole.role_stroke2_horizontal.centerDistance",
+      "presence.perRole.role_stroke2_horizontal.centerDistance",
+      "value.perRole.role_stroke2_horizontal.comparisonCost",
+      "presence.perRole.role_stroke2_horizontal.comparisonCost",
+      "value.perRole.role_stroke2_horizontal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke2_horizontal.deltaXRelativeDiff",
+      "value.perRole.role_stroke2_horizontal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke2_horizontal.deltaYRelativeDiff",
+      "value.perRole.role_stroke2_horizontal.heightRelativeDiff",
+      "presence.perRole.role_stroke2_horizontal.heightRelativeDiff",
+      "value.perRole.role_stroke2_horizontal.straightnessDiff",
+      "presence.perRole.role_stroke2_horizontal.straightnessDiff",
+      "value.perRole.role_stroke2_horizontal.widthRelativeDiff",
+      "presence.perRole.role_stroke2_horizontal.widthRelativeDiff",
+      "value.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+      "presence.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+      "value.perRole.role_stroke2_left_diagonal.centerDistance",
+      "presence.perRole.role_stroke2_left_diagonal.centerDistance",
+      "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+      "presence.perRole.role_stroke2_left_diagonal.comparisonCost",
+      "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+      "value.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+      "value.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+      "presence.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+      "value.perRole.role_stroke2_left_diagonal.straightnessDiff",
+      "presence.perRole.role_stroke2_left_diagonal.straightnessDiff",
+      "value.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+      "presence.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+      "value.perRole.role_stroke2_vertical.angleAbsDiff",
+      "presence.perRole.role_stroke2_vertical.angleAbsDiff",
+      "value.perRole.role_stroke2_vertical.centerDistance",
+      "presence.perRole.role_stroke2_vertical.centerDistance",
+      "value.perRole.role_stroke2_vertical.comparisonCost",
+      "presence.perRole.role_stroke2_vertical.comparisonCost",
+      "value.perRole.role_stroke2_vertical.deltaXRelativeDiff",
+      "presence.perRole.role_stroke2_vertical.deltaXRelativeDiff",
+      "value.perRole.role_stroke2_vertical.deltaYRelativeDiff",
+      "presence.perRole.role_stroke2_vertical.deltaYRelativeDiff",
+      "value.perRole.role_stroke2_vertical.heightRelativeDiff",
+      "presence.perRole.role_stroke2_vertical.heightRelativeDiff",
+      "value.perRole.role_stroke2_vertical.straightnessDiff",
+      "presence.perRole.role_stroke2_vertical.straightnessDiff",
+      "value.perRole.role_stroke2_vertical.widthRelativeDiff",
+      "presence.perRole.role_stroke2_vertical.widthRelativeDiff",
+      "value.perRole.role_stroke3_horizontal.angleAbsDiff",
+      "presence.perRole.role_stroke3_horizontal.angleAbsDiff",
+      "value.perRole.role_stroke3_horizontal.centerDistance",
+      "presence.perRole.role_stroke3_horizontal.centerDistance",
+      "value.perRole.role_stroke3_horizontal.comparisonCost",
+      "presence.perRole.role_stroke3_horizontal.comparisonCost",
+      "value.perRole.role_stroke3_horizontal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke3_horizontal.deltaXRelativeDiff",
+      "value.perRole.role_stroke3_horizontal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke3_horizontal.deltaYRelativeDiff",
+      "value.perRole.role_stroke3_horizontal.heightRelativeDiff",
+      "presence.perRole.role_stroke3_horizontal.heightRelativeDiff",
+      "value.perRole.role_stroke3_horizontal.straightnessDiff",
+      "presence.perRole.role_stroke3_horizontal.straightnessDiff",
+      "value.perRole.role_stroke3_horizontal.widthRelativeDiff",
+      "presence.perRole.role_stroke3_horizontal.widthRelativeDiff",
+      "value.perRole.role_stroke3_left_diagonal.angleAbsDiff",
+      "presence.perRole.role_stroke3_left_diagonal.angleAbsDiff",
+      "value.perRole.role_stroke3_left_diagonal.centerDistance",
+      "presence.perRole.role_stroke3_left_diagonal.centerDistance",
+      "value.perRole.role_stroke3_left_diagonal.comparisonCost",
+      "presence.perRole.role_stroke3_left_diagonal.comparisonCost",
+      "value.perRole.role_stroke3_left_diagonal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke3_left_diagonal.deltaXRelativeDiff",
+      "value.perRole.role_stroke3_left_diagonal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke3_left_diagonal.deltaYRelativeDiff",
+      "value.perRole.role_stroke3_left_diagonal.heightRelativeDiff",
+      "presence.perRole.role_stroke3_left_diagonal.heightRelativeDiff",
+      "value.perRole.role_stroke3_left_diagonal.straightnessDiff",
+      "presence.perRole.role_stroke3_left_diagonal.straightnessDiff",
+      "value.perRole.role_stroke3_left_diagonal.widthRelativeDiff",
+      "presence.perRole.role_stroke3_left_diagonal.widthRelativeDiff",
+      "value.perRole.role_stroke3_right_diagonal.angleAbsDiff",
+      "presence.perRole.role_stroke3_right_diagonal.angleAbsDiff",
+      "value.perRole.role_stroke3_right_diagonal.centerDistance",
+      "presence.perRole.role_stroke3_right_diagonal.centerDistance",
+      "value.perRole.role_stroke3_right_diagonal.comparisonCost",
+      "presence.perRole.role_stroke3_right_diagonal.comparisonCost",
+      "value.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+      "value.perRole.role_stroke3_right_diagonal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke3_right_diagonal.deltaYRelativeDiff",
+      "value.perRole.role_stroke3_right_diagonal.heightRelativeDiff",
+      "presence.perRole.role_stroke3_right_diagonal.heightRelativeDiff",
+      "value.perRole.role_stroke3_right_diagonal.straightnessDiff",
+      "presence.perRole.role_stroke3_right_diagonal.straightnessDiff",
+      "value.perRole.role_stroke3_right_diagonal.widthRelativeDiff",
+      "presence.perRole.role_stroke3_right_diagonal.widthRelativeDiff",
+      "value.perRole.role_stroke4_horizontal.angleAbsDiff",
+      "presence.perRole.role_stroke4_horizontal.angleAbsDiff",
+      "value.perRole.role_stroke4_horizontal.centerDistance",
+      "presence.perRole.role_stroke4_horizontal.centerDistance",
+      "value.perRole.role_stroke4_horizontal.comparisonCost",
+      "presence.perRole.role_stroke4_horizontal.comparisonCost",
+      "value.perRole.role_stroke4_horizontal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke4_horizontal.deltaXRelativeDiff",
+      "value.perRole.role_stroke4_horizontal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke4_horizontal.deltaYRelativeDiff",
+      "value.perRole.role_stroke4_horizontal.heightRelativeDiff",
+      "presence.perRole.role_stroke4_horizontal.heightRelativeDiff",
+      "value.perRole.role_stroke4_horizontal.straightnessDiff",
+      "presence.perRole.role_stroke4_horizontal.straightnessDiff",
+      "value.perRole.role_stroke4_horizontal.widthRelativeDiff",
+      "presence.perRole.role_stroke4_horizontal.widthRelativeDiff",
+      "value.perRole.role_stroke4_right_diagonal.angleAbsDiff",
+      "presence.perRole.role_stroke4_right_diagonal.angleAbsDiff",
+      "value.perRole.role_stroke4_right_diagonal.centerDistance",
+      "presence.perRole.role_stroke4_right_diagonal.centerDistance",
+      "value.perRole.role_stroke4_right_diagonal.comparisonCost",
+      "presence.perRole.role_stroke4_right_diagonal.comparisonCost",
+      "value.perRole.role_stroke4_right_diagonal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke4_right_diagonal.deltaXRelativeDiff",
+      "value.perRole.role_stroke4_right_diagonal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke4_right_diagonal.deltaYRelativeDiff",
+      "value.perRole.role_stroke4_right_diagonal.heightRelativeDiff",
+      "presence.perRole.role_stroke4_right_diagonal.heightRelativeDiff",
+      "value.perRole.role_stroke4_right_diagonal.straightnessDiff",
+      "presence.perRole.role_stroke4_right_diagonal.straightnessDiff",
+      "value.perRole.role_stroke4_right_diagonal.widthRelativeDiff",
+      "presence.perRole.role_stroke4_right_diagonal.widthRelativeDiff",
+      "value.perRole.role_stroke4_vertical.angleAbsDiff",
+      "presence.perRole.role_stroke4_vertical.angleAbsDiff",
+      "value.perRole.role_stroke4_vertical.centerDistance",
+      "presence.perRole.role_stroke4_vertical.centerDistance",
+      "value.perRole.role_stroke4_vertical.comparisonCost",
+      "presence.perRole.role_stroke4_vertical.comparisonCost",
+      "value.perRole.role_stroke4_vertical.deltaXRelativeDiff",
+      "presence.perRole.role_stroke4_vertical.deltaXRelativeDiff",
+      "value.perRole.role_stroke4_vertical.deltaYRelativeDiff",
+      "presence.perRole.role_stroke4_vertical.deltaYRelativeDiff",
+      "value.perRole.role_stroke4_vertical.heightRelativeDiff",
+      "presence.perRole.role_stroke4_vertical.heightRelativeDiff",
+      "value.perRole.role_stroke4_vertical.straightnessDiff",
+      "presence.perRole.role_stroke4_vertical.straightnessDiff",
+      "value.perRole.role_stroke4_vertical.widthRelativeDiff",
+      "presence.perRole.role_stroke4_vertical.widthRelativeDiff",
+      "value.perRole.role_stroke5_horizontal.angleAbsDiff",
+      "presence.perRole.role_stroke5_horizontal.angleAbsDiff",
+      "value.perRole.role_stroke5_horizontal.centerDistance",
+      "presence.perRole.role_stroke5_horizontal.centerDistance",
+      "value.perRole.role_stroke5_horizontal.comparisonCost",
+      "presence.perRole.role_stroke5_horizontal.comparisonCost",
+      "value.perRole.role_stroke5_horizontal.deltaXRelativeDiff",
+      "presence.perRole.role_stroke5_horizontal.deltaXRelativeDiff",
+      "value.perRole.role_stroke5_horizontal.deltaYRelativeDiff",
+      "presence.perRole.role_stroke5_horizontal.deltaYRelativeDiff",
+      "value.perRole.role_stroke5_horizontal.heightRelativeDiff",
+      "presence.perRole.role_stroke5_horizontal.heightRelativeDiff",
+      "value.perRole.role_stroke5_horizontal.straightnessDiff",
+      "presence.perRole.role_stroke5_horizontal.straightnessDiff",
+      "value.perRole.role_stroke5_horizontal.widthRelativeDiff",
+      "presence.perRole.role_stroke5_horizontal.widthRelativeDiff",
+      "value.referenceComparison.comparisonCost",
+      "presence.referenceComparison.comparisonCost",
+      "value.referenceComparison.maxRoleCost",
+      "presence.referenceComparison.maxRoleCost",
+      "value.referenceComparison.meanRoleCost",
+      "presence.referenceComparison.meanRoleCost"
+    ],
+    "featureTransformers": [
+      {
+        "featureName": "perRole.role_stroke0_horizontal.angleAbsDiff",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.13122511185025287,
+        "standardDeviation": 0.22275201476350154,
+        "scale": 0.22275201476350154,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.centerDistance",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.1322660703600067,
+        "standardDeviation": 0.12033559325720652,
+        "scale": 0.12033559325720652,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.comparisonCost",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.3302854488688739,
+        "standardDeviation": 0.211948725254323,
+        "scale": 0.211948725254323,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.2566766402955501,
+        "standardDeviation": 0.2716143469706892,
+        "scale": 0.2716143469706892,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 1.02688281249599,
+        "standardDeviation": 0.6580482258231948,
+        "scale": 0.6580482258231948,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.heightRelativeDiff",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.8136203357618201,
+        "standardDeviation": 0.6579555598695266,
+        "scale": 0.6579555598695266,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.straightnessDiff",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.015661933769677706,
+        "standardDeviation": 0.06455985770931306,
+        "scale": 0.06455985770931306,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_horizontal.widthRelativeDiff",
+        "trainingPresentCount": 226,
+        "trainingMissingCount": 227,
+        "trainingPresenceRatio": 0.4988962472406181,
+        "mean": 0.23165016578084538,
+        "standardDeviation": 0.18962409677093792,
+        "scale": 0.18962409677093792,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.angleAbsDiff",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.22526984515927762,
+        "standardDeviation": 0.11574255067036235,
+        "scale": 0.11574255067036235,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.centerDistance",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.11452566382074354,
+        "standardDeviation": 0.025274608838282715,
+        "scale": 0.025274608838282715,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.comparisonCost",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.214597060119566,
+        "standardDeviation": 0.06742346389052944,
+        "scale": 0.06742346389052944,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.deltaXRelativeDiff",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.3104776891844996,
+        "standardDeviation": 0.25363363845584946,
+        "scale": 0.25363363845584946,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.deltaYRelativeDiff",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.28439448524905026,
+        "standardDeviation": 0.20351904308062502,
+        "scale": 0.20351904308062502,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.heightRelativeDiff",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.28439448524905026,
+        "standardDeviation": 0.20351904308062502,
+        "scale": 0.20351904308062502,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.straightnessDiff",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.0065075283018654435,
+        "standardDeviation": 0.005856305792229515,
+        "scale": 0.005856305792229515,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_left_diagonal.widthRelativeDiff",
+        "trainingPresentCount": 3,
+        "trainingMissingCount": 450,
+        "trainingPresenceRatio": 0.006622516556291391,
+        "mean": 0.3087194752911961,
+        "standardDeviation": 0.23476845821441134,
+        "scale": 0.23476845821441134,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.angleAbsDiff",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.11720917455811672,
+        "standardDeviation": 0.14214093617825002,
+        "scale": 0.14214093617825002,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.centerDistance",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.09829974769823165,
+        "standardDeviation": 0.10415604524710824,
+        "scale": 0.10415604524710824,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.comparisonCost",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.2737667084325488,
+        "standardDeviation": 0.1701823884055488,
+        "scale": 0.1701823884055488,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.deltaXRelativeDiff",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.864335217863845,
+        "standardDeviation": 0.6089810795613586,
+        "scale": 0.6089810795613586,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.deltaYRelativeDiff",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.16153960567825507,
+        "standardDeviation": 0.16764729565226213,
+        "scale": 0.16764729565226213,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.heightRelativeDiff",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.16103227929860223,
+        "standardDeviation": 0.16509860482360628,
+        "scale": 0.16509860482360628,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.straightnessDiff",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.007371977730951043,
+        "standardDeviation": 0.0070269714587008,
+        "scale": 0.0070269714587008,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke0_vertical.widthRelativeDiff",
+        "trainingPresentCount": 194,
+        "trainingMissingCount": 259,
+        "trainingPresenceRatio": 0.4282560706401766,
+        "mean": 0.7467126701898236,
+        "standardDeviation": 0.5776249570386728,
+        "scale": 0.5776249570386728,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.angleAbsDiff",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.16025081457130502,
+        "standardDeviation": 0.28355113991188696,
+        "scale": 0.28355113991188696,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.centerDistance",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.11516524319222689,
+        "standardDeviation": 0.06929444848232326,
+        "scale": 0.06929444848232326,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.comparisonCost",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.3376157128783653,
+        "standardDeviation": 0.2199976464550486,
+        "scale": 0.2199976464550486,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.deltaXRelativeDiff",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.28268085329306003,
+        "standardDeviation": 0.34001464716175167,
+        "scale": 0.34001464716175167,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.deltaYRelativeDiff",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 1.067431740350577,
+        "standardDeviation": 0.67251908411086,
+        "scale": 0.67251908411086,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.heightRelativeDiff",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.8064550501285095,
+        "standardDeviation": 0.6592853109540163,
+        "scale": 0.6592853109540163,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.straightnessDiff",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.00898371675499122,
+        "standardDeviation": 0.037394511627972325,
+        "scale": 0.037394511627972325,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_horizontal.widthRelativeDiff",
+        "trainingPresentCount": 104,
+        "trainingMissingCount": 349,
+        "trainingPresenceRatio": 0.22958057395143489,
+        "mean": 0.237879784607595,
+        "standardDeviation": 0.22774752885033941,
+        "scale": 0.22774752885033941,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.angleAbsDiff",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.1728967780750094,
+        "standardDeviation": 0.19693592999317777,
+        "scale": 0.19693592999317777,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.centerDistance",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.10947684474101389,
+        "standardDeviation": 0.10648124474218763,
+        "scale": 0.10648124474218763,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.comparisonCost",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.16165447640636457,
+        "standardDeviation": 0.14241440443057277,
+        "scale": 0.14241440443057277,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.deltaXRelativeDiff",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.2760075844371594,
+        "standardDeviation": 0.3127730716833693,
+        "scale": 0.3127730716833693,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.deltaYRelativeDiff",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.18730682663619036,
+        "standardDeviation": 0.24846699576184383,
+        "scale": 0.24846699576184383,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.heightRelativeDiff",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.1476815726799681,
+        "standardDeviation": 0.19936365463849126,
+        "scale": 0.19936365463849126,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.straightnessDiff",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.09049094753621827,
+        "standardDeviation": 0.09648267396091277,
+        "scale": 0.09648267396091277,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_right_diagonal.widthRelativeDiff",
+        "trainingPresentCount": 203,
+        "trainingMissingCount": 250,
+        "trainingPresenceRatio": 0.4481236203090508,
+        "mean": 0.19369686170010295,
+        "standardDeviation": 0.20615457095540957,
+        "scale": 0.20615457095540957,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.angleAbsDiff",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.0689715444342315,
+        "standardDeviation": 0.12640490250170175,
+        "scale": 0.12640490250170175,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.centerDistance",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.08838396062900461,
+        "standardDeviation": 0.08788201404690998,
+        "scale": 0.08788201404690998,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.comparisonCost",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.27735228528696404,
+        "standardDeviation": 0.17361292561705818,
+        "scale": 0.17361292561705818,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.deltaXRelativeDiff",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 1.1006645582461692,
+        "standardDeviation": 0.6293548811354656,
+        "scale": 0.6293548811354656,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.deltaYRelativeDiff",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.0864937975920338,
+        "standardDeviation": 0.14830773894946336,
+        "scale": 0.14830773894946336,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.heightRelativeDiff",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.0864937975920338,
+        "standardDeviation": 0.14830773894946336,
+        "scale": 0.14830773894946336,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.straightnessDiff",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.0038113664135108263,
+        "standardDeviation": 0.004551842152468904,
+        "scale": 0.004551842152468904,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke1_vertical.widthRelativeDiff",
+        "trainingPresentCount": 96,
+        "trainingMissingCount": 357,
+        "trainingPresenceRatio": 0.2119205298013245,
+        "mean": 0.8211486540654329,
+        "standardDeviation": 0.6027526952996514,
+        "scale": 0.6027526952996514,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.angleAbsDiff",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.11902066584987164,
+        "standardDeviation": 0.2730656739723965,
+        "scale": 0.2730656739723965,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.centerDistance",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.15571951643321624,
+        "standardDeviation": 0.1312214925307366,
+        "scale": 0.1312214925307366,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.comparisonCost",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.3511375823722369,
+        "standardDeviation": 0.1973991221466856,
+        "scale": 0.1973991221466856,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.deltaXRelativeDiff",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.3279023017726665,
+        "standardDeviation": 0.2833383868453361,
+        "scale": 0.2833383868453361,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.deltaYRelativeDiff",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 1.2077263003707073,
+        "standardDeviation": 0.6003317611465696,
+        "scale": 0.6003317611465696,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.heightRelativeDiff",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.6817533464131466,
+        "standardDeviation": 0.5824778172649733,
+        "scale": 0.5824778172649733,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.straightnessDiff",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.014596986718865416,
+        "standardDeviation": 0.0331613851619108,
+        "scale": 0.0331613851619108,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_horizontal.widthRelativeDiff",
+        "trainingPresentCount": 108,
+        "trainingMissingCount": 345,
+        "trainingPresenceRatio": 0.23841059602649006,
+        "mean": 0.30278854477042716,
+        "standardDeviation": 0.21607989555706655,
+        "scale": 0.21607989555706655,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.angleAbsDiff",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.10493560392337296,
+        "standardDeviation": 0.12232700341892941,
+        "scale": 0.12232700341892941,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.centerDistance",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.1326835957968286,
+        "standardDeviation": 0.10101870993130496,
+        "scale": 0.10101870993130496,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.comparisonCost",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.19962915366356146,
+        "standardDeviation": 0.1614944968593355,
+        "scale": 0.1614944968593355,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.39959691319690827,
+        "standardDeviation": 0.4912024703653207,
+        "scale": 0.4912024703653207,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.27259516765167713,
+        "standardDeviation": 0.3016669569539512,
+        "scale": 0.3016669569539512,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.26497783482987064,
+        "standardDeviation": 0.2807495157222883,
+        "scale": 0.2807495157222883,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.straightnessDiff",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.014277702803963633,
+        "standardDeviation": 0.022156858502349462,
+        "scale": 0.022156858502349462,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+        "trainingPresentCount": 132,
+        "trainingMissingCount": 321,
+        "trainingPresenceRatio": 0.2913907284768212,
+        "mean": 0.2981873081297026,
+        "standardDeviation": 0.3014442569282889,
+        "scale": 0.3014442569282889,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.angleAbsDiff",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.12472730234228097,
+        "standardDeviation": 0.22157978992370453,
+        "scale": 0.22157978992370453,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.centerDistance",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.13363269535212532,
+        "standardDeviation": 0.1449338199183099,
+        "scale": 0.1449338199183099,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.comparisonCost",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.29780765420133143,
+        "standardDeviation": 0.2051698012375959,
+        "scale": 0.2051698012375959,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.deltaXRelativeDiff",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.9194307109693953,
+        "standardDeviation": 0.6625374235607183,
+        "scale": 0.6625374235607183,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.deltaYRelativeDiff",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.15430438399275498,
+        "standardDeviation": 0.1838765490676651,
+        "scale": 0.1838765490676651,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.heightRelativeDiff",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.15399224504645612,
+        "standardDeviation": 0.1825505562853882,
+        "scale": 0.1825505562853882,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.straightnessDiff",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.006505904060741617,
+        "standardDeviation": 0.007814025570978825,
+        "scale": 0.007814025570978825,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke2_vertical.widthRelativeDiff",
+        "trainingPresentCount": 115,
+        "trainingMissingCount": 338,
+        "trainingPresenceRatio": 0.25386313465783666,
+        "mean": 0.8166545439938734,
+        "standardDeviation": 0.6514107482543555,
+        "scale": 0.6514107482543555,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.angleAbsDiff",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.0680728384861504,
+        "standardDeviation": 0.13764906950816583,
+        "scale": 0.13764906950816583,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.centerDistance",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.14954036858861414,
+        "standardDeviation": 0.15127177259042893,
+        "scale": 0.15127177259042893,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.comparisonCost",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.29845137071348765,
+        "standardDeviation": 0.1423363077457783,
+        "scale": 0.1423363077457783,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.deltaXRelativeDiff",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.35540892024177273,
+        "standardDeviation": 0.20168368883626533,
+        "scale": 0.20168368883626533,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.deltaYRelativeDiff",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.9169772678308593,
+        "standardDeviation": 0.6108032620749942,
+        "scale": 0.6108032620749942,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.heightRelativeDiff",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.5357990587064214,
+        "standardDeviation": 0.4785860500726799,
+        "scale": 0.4785860500726799,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.straightnessDiff",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.00850797974385033,
+        "standardDeviation": 0.00906414101341973,
+        "scale": 0.00906414101341973,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_horizontal.widthRelativeDiff",
+        "trainingPresentCount": 92,
+        "trainingMissingCount": 361,
+        "trainingPresenceRatio": 0.20309050772626933,
+        "mean": 0.34285259581188343,
+        "standardDeviation": 0.15598480571934262,
+        "scale": 0.15598480571934262,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.angleAbsDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.07745344469113258,
+        "standardDeviation": 0.055308317153023104,
+        "scale": 0.055308317153023104,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.centerDistance",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.11560672980814696,
+        "standardDeviation": 0.0828242394736228,
+        "scale": 0.0828242394736228,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.comparisonCost",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.16567703162963074,
+        "standardDeviation": 0.10812176658440682,
+        "scale": 0.10812176658440682,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.deltaXRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.3420412338928855,
+        "standardDeviation": 0.4211271449600684,
+        "scale": 0.4211271449600684,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.deltaYRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.22486630839597488,
+        "standardDeviation": 0.1632828302838505,
+        "scale": 0.1632828302838505,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.heightRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.22486630839597488,
+        "standardDeviation": 0.1632828302838505,
+        "scale": 0.1632828302838505,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.straightnessDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.012389088660075641,
+        "standardDeviation": 0.0035097864649553476,
+        "scale": 0.0035097864649553476,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_left_diagonal.widthRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.23894260112657972,
+        "standardDeviation": 0.1676901557285581,
+        "scale": 0.1676901557285581,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.angleAbsDiff",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.1845356771263111,
+        "standardDeviation": 0.14495008900360357,
+        "scale": 0.14495008900360357,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.centerDistance",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.15052217492047024,
+        "standardDeviation": 0.1068577726842371,
+        "scale": 0.1068577726842371,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.comparisonCost",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.2478906006993827,
+        "standardDeviation": 0.13432846188571054,
+        "scale": 0.13432846188571054,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.41021030469995057,
+        "standardDeviation": 0.454332163875162,
+        "scale": 0.454332163875162,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.deltaYRelativeDiff",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.3741498920798725,
+        "standardDeviation": 0.25593726438981257,
+        "scale": 0.25593726438981257,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.heightRelativeDiff",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.3628273023900691,
+        "standardDeviation": 0.22979598219573663,
+        "scale": 0.22979598219573663,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.straightnessDiff",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.043068677889806666,
+        "standardDeviation": 0.072900483902422,
+        "scale": 0.072900483902422,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke3_right_diagonal.widthRelativeDiff",
+        "trainingPresentCount": 157,
+        "trainingMissingCount": 296,
+        "trainingPresenceRatio": 0.3465783664459161,
+        "mean": 0.3086998507951232,
+        "standardDeviation": 0.25105352322352786,
+        "scale": 0.25105352322352786,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.angleAbsDiff",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.09803160848727224,
+        "standardDeviation": 0.1978478284751267,
+        "scale": 0.1978478284751267,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.centerDistance",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.13753234648231027,
+        "standardDeviation": 0.0905413837225167,
+        "scale": 0.0905413837225167,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.comparisonCost",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.31547459601655775,
+        "standardDeviation": 0.1928132243914511,
+        "scale": 0.1928132243914511,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.deltaXRelativeDiff",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.32878924759902534,
+        "standardDeviation": 0.3091425476401779,
+        "scale": 0.3091425476401779,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.deltaYRelativeDiff",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.9587394092176855,
+        "standardDeviation": 0.6114751888492733,
+        "scale": 0.6114751888492733,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.heightRelativeDiff",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.6788438311881023,
+        "standardDeviation": 0.6513335410193349,
+        "scale": 0.6513335410193349,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.straightnessDiff",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.010329493673165942,
+        "standardDeviation": 0.009996704122423166,
+        "scale": 0.009996704122423166,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_horizontal.widthRelativeDiff",
+        "trainingPresentCount": 122,
+        "trainingMissingCount": 331,
+        "trainingPresenceRatio": 0.2693156732891832,
+        "mean": 0.29429229379143557,
+        "standardDeviation": 0.2192688776670975,
+        "scale": 0.2192688776670975,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.angleAbsDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.2532163396070206,
+        "standardDeviation": 0.1748292085821081,
+        "scale": 0.1748292085821081,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.centerDistance",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.13689295233627521,
+        "standardDeviation": 0.09037077907598529,
+        "scale": 0.09037077907598529,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.comparisonCost",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.23877310582992356,
+        "standardDeviation": 0.11627319238939503,
+        "scale": 0.11627319238939503,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.deltaXRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.29778432933807364,
+        "standardDeviation": 0.37817379351182234,
+        "scale": 0.37817379351182234,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.deltaYRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.39604950220591245,
+        "standardDeviation": 0.23674881983843205,
+        "scale": 0.23674881983843205,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.heightRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.3878813791626242,
+        "standardDeviation": 0.2148132193449166,
+        "scale": 0.2148132193449166,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.straightnessDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.006100665520456779,
+        "standardDeviation": 0.008336952187183076,
+        "scale": 0.008336952187183076,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_right_diagonal.widthRelativeDiff",
+        "trainingPresentCount": 52,
+        "trainingMissingCount": 401,
+        "trainingPresenceRatio": 0.11479028697571744,
+        "mean": 0.22588079406050318,
+        "standardDeviation": 0.1920052663369805,
+        "scale": 0.1920052663369805,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.angleAbsDiff",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.14505518644629956,
+        "standardDeviation": 0.37611064379607223,
+        "scale": 0.37611064379607223,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.centerDistance",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.13991993912506187,
+        "standardDeviation": 0.08615688258042659,
+        "scale": 0.08615688258042659,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.comparisonCost",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.32316713487200555,
+        "standardDeviation": 0.2385743871854234,
+        "scale": 0.2385743871854234,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.deltaXRelativeDiff",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 1.151011577112734,
+        "standardDeviation": 0.6545723273970544,
+        "scale": 0.6545723273970544,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.deltaYRelativeDiff",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.21493468126630932,
+        "standardDeviation": 0.25460036975849715,
+        "scale": 0.25460036975849715,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.heightRelativeDiff",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.2090777609865232,
+        "standardDeviation": 0.23623031569592834,
+        "scale": 0.23623031569592834,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.straightnessDiff",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.005328512767746062,
+        "standardDeviation": 0.001699766351111372,
+        "scale": 0.001699766351111372,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke4_vertical.widthRelativeDiff",
+        "trainingPresentCount": 43,
+        "trainingMissingCount": 410,
+        "trainingPresenceRatio": 0.09492273730684327,
+        "mean": 0.6901291424657889,
+        "standardDeviation": 0.6508154380240793,
+        "scale": 0.6508154380240793,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.angleAbsDiff",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.040871087704883076,
+        "standardDeviation": 0.027318859017626675,
+        "scale": 0.027318859017626675,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.centerDistance",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.1174677763927643,
+        "standardDeviation": 0.09748517837787028,
+        "scale": 0.09748517837787028,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.comparisonCost",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.23379851464578116,
+        "standardDeviation": 0.08057306408734072,
+        "scale": 0.08057306408734072,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.deltaXRelativeDiff",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.2273234335425157,
+        "standardDeviation": 0.11473748622169865,
+        "scale": 0.11473748622169865,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.deltaYRelativeDiff",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.8046239961358408,
+        "standardDeviation": 0.4645592747294937,
+        "scale": 0.4645592747294937,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.heightRelativeDiff",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.45041405949027075,
+        "standardDeviation": 0.31843793732586123,
+        "scale": 0.31843793732586123,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.straightnessDiff",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.011097220417904072,
+        "standardDeviation": 0.008775066543738495,
+        "scale": 0.008775066543738495,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "perRole.role_stroke5_horizontal.widthRelativeDiff",
+        "trainingPresentCount": 25,
+        "trainingMissingCount": 428,
+        "trainingPresenceRatio": 0.05518763796909492,
+        "mean": 0.2273234335425157,
+        "standardDeviation": 0.11473748622169865,
+        "scale": 0.11473748622169865,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "referenceComparison.comparisonCost",
+        "trainingPresentCount": 453,
+        "trainingMissingCount": 0,
+        "trainingPresenceRatio": 1,
+        "mean": 0.7066248771663768,
+        "standardDeviation": 1.6100190476728942,
+        "scale": 1.6100190476728942,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "referenceComparison.maxRoleCost",
+        "trainingPresentCount": 423,
+        "trainingMissingCount": 30,
+        "trainingPresenceRatio": 0.9337748344370861,
+        "mean": 0.4385363456096049,
+        "standardDeviation": 0.20823933315544907,
+        "scale": 0.20823933315544907,
+        "isConstant": false,
+        "unseenInTraining": false
+      },
+      {
+        "featureName": "referenceComparison.meanRoleCost",
+        "trainingPresentCount": 423,
+        "trainingMissingCount": 30,
+        "trainingPresenceRatio": 0.9337748344370861,
+        "mean": 0.28392687791103655,
+        "standardDeviation": 0.15211092417212888,
+        "scale": 0.15211092417212888,
+        "isConstant": false,
+        "unseenInTraining": false
+      }
+    ]
+  },
+  "trainingConfiguration": {
+    "epochs": 2000,
+    "learningRate": 0.01,
+    "l2Strength": 0.001,
+    "reportEvery": 100,
+    "initialEvaluationThreshold": 0.5,
+    "initialization": "zero_bias_and_zero_weights",
+    "optimization": "full_batch_gradient_descent"
+  },
+  "partitions": {
+    "training": {
+      "rowCount": 453
+    },
+    "validation": {
+      "rowCount": 112
+    }
+  },
+  "training": {
+    "initialLoss": {
+      "totalLoss": 0.6931471805599468,
+      "meanCrossEntropy": 0.6931471805599468,
+      "l2Penalty": 0
+    },
+    "finalLoss": {
+      "totalLoss": 0.193407245759612,
+      "meanCrossEntropy": 0.19130521076841125,
+      "l2Penalty": 0.0021020349912007274
+    },
+    "history": [
+      {
+        "epoch": 0,
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      {
+        "epoch": 1,
+        "totalLoss": 0.6819733678337703,
+        "meanCrossEntropy": 0.6819733127373545,
+        "l2Penalty": 5.509641576063526e-8
+      },
+      {
+        "epoch": 100,
+        "totalLoss": 0.4025646593267529,
+        "meanCrossEntropy": 0.40244580210971714,
+        "l2Penalty": 0.00011885721703576541
+      },
+      {
+        "epoch": 200,
+        "totalLoss": 0.34275778828527226,
+        "meanCrossEntropy": 0.34250450802857435,
+        "l2Penalty": 0.00025328025669789844
+      },
+      {
+        "epoch": 300,
+        "totalLoss": 0.3110257809629669,
+        "meanCrossEntropy": 0.3106438956223935,
+        "l2Penalty": 0.0003818853405734407
+      },
+      {
+        "epoch": 400,
+        "totalLoss": 0.29001119978610124,
+        "meanCrossEntropy": 0.2895063657361217,
+        "l2Penalty": 0.0005048340499795082
+      },
+      {
+        "epoch": 500,
+        "totalLoss": 0.27452499126037766,
+        "meanCrossEntropy": 0.2739020066008523,
+        "l2Penalty": 0.0006229846595253624
+      },
+      {
+        "epoch": 600,
+        "totalLoss": 0.26237920130745035,
+        "meanCrossEntropy": 0.26164210460790915,
+        "l2Penalty": 0.0007370966995412095
+      },
+      {
+        "epoch": 700,
+        "totalLoss": 0.25245837522364073,
+        "meanCrossEntropy": 0.25161060568112137,
+        "l2Penalty": 0.0008477695425193513
+      },
+      {
+        "epoch": 800,
+        "totalLoss": 0.24412041418865,
+        "meanCrossEntropy": 0.2431649430696716,
+        "l2Penalty": 0.0009554711189783954
+      },
+      {
+        "epoch": 900,
+        "totalLoss": 0.23696309644439975,
+        "meanCrossEntropy": 0.23590252610680318,
+        "l2Penalty": 0.0010605703375965647
+      },
+      {
+        "epoch": 1000,
+        "totalLoss": 0.23071825467229562,
+        "meanCrossEntropy": 0.22955489247047806,
+        "l2Penalty": 0.001163362201817561
+      },
+      {
+        "epoch": 1100,
+        "totalLoss": 0.22519832086702818,
+        "meanCrossEntropy": 0.2239342347172658,
+        "l2Penalty": 0.0012640861497623583
+      },
+      {
+        "epoch": 1200,
+        "totalLoss": 0.22026702564592643,
+        "meanCrossEntropy": 0.21890408624422164,
+        "l2Penalty": 0.0013629394017048004
+      },
+      {
+        "epoch": 1300,
+        "totalLoss": 0.21582227893907177,
+        "meanCrossEntropy": 0.21436219217889516,
+        "l2Penalty": 0.0014600867601766154
+      },
+      {
+        "epoch": 1400,
+        "totalLoss": 0.2117856402696017,
+        "meanCrossEntropy": 0.21022997239606478,
+        "l2Penalty": 0.0015556678735369183
+      },
+      {
+        "epoch": 1500,
+        "totalLoss": 0.20809556071066312,
+        "meanCrossEntropy": 0.20644575805186668,
+        "l2Penalty": 0.0016498026587964535
+      },
+      {
+        "epoch": 1600,
+        "totalLoss": 0.2047028862173124,
+        "meanCrossEntropy": 0.20296029084548764,
+        "l2Penalty": 0.0017425953718247429
+      },
+      {
+        "epoch": 1700,
+        "totalLoss": 0.20156777083657884,
+        "meanCrossEntropy": 0.1997336331604225,
+        "l2Penalty": 0.0018341376761563254
+      },
+      {
+        "epoch": 1800,
+        "totalLoss": 0.1986574990460182,
+        "meanCrossEntropy": 0.19673298807786577,
+        "l2Penalty": 0.0019245109681524245
+      },
+      {
+        "epoch": 1900,
+        "totalLoss": 0.195944912000315,
+        "meanCrossEntropy": 0.19393112385055547,
+        "l2Penalty": 0.002013788149759522
+      },
+      {
+        "epoch": 2000,
+        "totalLoss": 0.193407245759612,
+        "meanCrossEntropy": 0.19130521076841125,
+        "l2Penalty": 0.0021020349912007274
+      }
+    ]
+  },
+  "model": {
+    "bias": -0.08059737735781075,
+    "weights": [
+      -0.052101352636849056,
+      0.04794798300077767,
+      -0.29556108681959786,
+      0.04794798300077767,
+      -0.03486657548127414,
+      0.04794798300077767,
+      -0.1043409471136182,
+      0.04794798300077767,
+      0.12003993386208964,
+      0.04794798300077767,
+      0.04040753491150128,
+      0.04794798300077767,
+      -0.4260861587890643,
+      0.04794798300077767,
+      -0.09336310352815064,
+      0.04794798300077767,
+      0.007508111308743458,
+      -0.007686129422468382,
+      0.03508904621992128,
+      -0.007686129422468382,
+      0.004173801845624796,
+      -0.007686129422468382,
+      0.03774884658730104,
+      -0.007686129422468382,
+      -0.04825145722723771,
+      -0.007686129422468382,
+      -0.04825145722723771,
+      -0.007686129422468382,
+      0.027803876681669663,
+      -0.007686129422468382,
+      0.03814957451525702,
+      -0.007686129422468382,
+      -0.13045671404669282,
+      0.07077337935811139,
+      -0.07475690268833796,
+      0.07077337935811139,
+      -0.041016528827323574,
+      0.07077337935811139,
+      0.019319080380742593,
+      0.07077337935811139,
+      -0.18813042427637575,
+      0.07077337935811139,
+      -0.19037021455411338,
+      0.07077337935811139,
+      -0.042338829483324965,
+      0.07077337935811139,
+      0.064825817584892,
+      0.07077337935811139,
+      -0.09645147023584781,
+      0.056656588429049706,
+      -0.2513510803819313,
+      0.056656588429049706,
+      -0.050464383866810104,
+      0.056656588429049706,
+      -0.19675302562153726,
+      0.056656588429049706,
+      0.14879286517303503,
+      0.056656588429049706,
+      0.034965278122836986,
+      0.056656588429049706,
+      -0.05383825947641598,
+      0.056656588429049706,
+      -0.23854617464894054,
+      0.056656588429049706,
+      -0.17776079567769024,
+      0.031721023280232144,
+      -0.2797690868165781,
+      0.031721023280232144,
+      -0.2795589560878617,
+      0.031721023280232144,
+      -0.22153946330187604,
+      0.031721023280232144,
+      -0.07123873170127767,
+      0.031721023280232144,
+      -0.22015674304366492,
+      0.031721023280232144,
+      -0.30720167670693344,
+      0.031721023280232144,
+      -0.30342525166232664,
+      0.031721023280232144,
+      0.08885188680396887,
+      0.033669442530830984,
+      -0.046444297092675745,
+      0.033669442530830984,
+      -0.01668771085645605,
+      0.033669442530830984,
+      -0.04511725432379606,
+      0.033669442530830984,
+      -0.015967931957192684,
+      0.033669442530830984,
+      -0.015967931957192684,
+      0.033669442530830984,
+      -0.2595246274058055,
+      0.033669442530830984,
+      -0.007269527228052491,
+      0.033669442530830984,
+      -0.13200989373024896,
+      0.03731883287226065,
+      -0.17926727171168536,
+      0.03731883287226065,
+      -0.1390910536176869,
+      0.03731883287226065,
+      -0.010899488393006503,
+      0.03731883287226065,
+      -0.10975219891494899,
+      0.03731883287226065,
+      -0.10796744848531879,
+      0.03731883287226065,
+      0.033099809871161255,
+      0.03731883287226065,
+      0.04288650441983674,
+      0.03731883287226065,
+      0.2111786596321181,
+      0.03749629110304558,
+      -0.23186721681666655,
+      0.03749629110304558,
+      -0.1217346319598506,
+      0.03749629110304558,
+      -0.28411991452820917,
+      0.03749629110304558,
+      0.06579525928750438,
+      0.03749629110304558,
+      -0.08054748331058506,
+      0.03749629110304558,
+      -0.08983537404204753,
+      0.03749629110304558,
+      -0.08610699883719712,
+      0.03749629110304558,
+      -0.03527326453137892,
+      0.05317060569796373,
+      -0.10787539902391823,
+      0.05317060569796373,
+      0.03515435925387195,
+      0.05317060569796373,
+      0.11049611761189235,
+      0.05317060569796373,
+      -0.10341252187203331,
+      0.05317060569796373,
+      -0.10237387444017494,
+      0.05317060569796373,
+      0.05801750469398337,
+      0.05317060569796373,
+      0.11498915870316105,
+      0.05317060569796373,
+      -0.17418917471451076,
+      -0.021716441252537255,
+      -0.2195598695915383,
+      -0.021716441252537255,
+      -0.07471227264347295,
+      -0.021716441252537255,
+      -0.037611358392885715,
+      -0.021716441252537255,
+      -0.04481707263433873,
+      -0.021716441252537255,
+      0.07510928836199345,
+      -0.021716441252537255,
+      0.07215492577845886,
+      -0.021716441252537255,
+      0.08065920366785616,
+      -0.021716441252537255,
+      0.11348323017181385,
+      -0.04019529400077786,
+      -0.07516385697402628,
+      -0.04019529400077786,
+      -0.11950448360138137,
+      -0.04019529400077786,
+      -0.1376854932722554,
+      -0.04019529400077786,
+      -0.17098160550571484,
+      -0.04019529400077786,
+      -0.17098160550571484,
+      -0.04019529400077786,
+      0.13791332953417693,
+      -0.04019529400077786,
+      -0.010551654518075779,
+      -0.04019529400077786,
+      -0.053396548247824534,
+      0.07445985528336141,
+      -0.2745348752456582,
+      0.07445985528336141,
+      -0.13867056112911488,
+      0.07445985528336141,
+      -0.2759636789610418,
+      0.07445985528336141,
+      0.06433924592254428,
+      0.07445985528336141,
+      0.050346857349461774,
+      0.07445985528336141,
+      -0.21017351633913,
+      0.07445985528336141,
+      0.03326877002861126,
+      0.07445985528336141,
+      0.07210424393153025,
+      -0.041503509079142645,
+      -0.5601551488472162,
+      -0.041503509079142645,
+      -0.020237111587683133,
+      -0.041503509079142645,
+      -0.19095980301871104,
+      -0.041503509079142645,
+      -0.003747355177421898,
+      -0.041503509079142645,
+      0.23732360592172988,
+      -0.041503509079142645,
+      0.09047432493444975,
+      -0.041503509079142645,
+      -0.2657197174167149,
+      -0.041503509079142645,
+      0.07353553858330644,
+      -0.04019529400077786,
+      -0.1523106353986756,
+      -0.04019529400077786,
+      -0.1086584767060229,
+      -0.04019529400077786,
+      -0.25346378885279064,
+      -0.04019529400077786,
+      0.0420688766752738,
+      -0.04019529400077786,
+      0.08532367472659229,
+      -0.04019529400077786,
+      -0.004190115841468864,
+      -0.04019529400077786,
+      -0.2104206389766941,
+      -0.04019529400077786,
+      -0.12018709407331817,
+      0.02117381541350548,
+      -0.22689840537471748,
+      0.02117381541350548,
+      -0.09745347823154149,
+      0.02117381541350548,
+      0.027635360490118156,
+      0.02117381541350548,
+      -0.21483912609813322,
+      0.02117381541350548,
+      -0.22070201593676655,
+      0.02117381541350548,
+      0.018206029926898338,
+      0.02117381541350548,
+      0.018602087311947853,
+      0.02117381541350548,
+      0.0038964031154242774,
+      0.03696356418031584,
+      -0.08687724563002261,
+      0.03696356418031584,
+      -0.030243640365716914,
+      0.03696356418031584,
+      -0.012002180918374206,
+      0.03696356418031584,
+      -0.02191163320064749,
+      0.03696356418031584,
+      0.02724313788764012,
+      0.03696356418031584,
+      -0.029227209262248505,
+      0.03696356418031584,
+      -0.012002180918374206,
+      0.03696356418031584,
+      -0.7505851848955875,
+      -0.07986413408446952,
+      -0.515849520119681,
+      0.1110352329364206,
+      -0.4985315442389724,
+      0.1110352329364206
+    ],
+    "modelPayloadSha256": "49d6f4cdee95b6b6fa3777f9305d5581c8b600bb76d87ed0fe7a5e93184e8ccf",
+    "weightCount": 262
+  },
+  "evaluationAtInitialThreshold": {
+    "threshold": 0.5,
+    "training": {
+      "metrics": {
+        "truePositive": 305,
+        "trueNegative": 123,
+        "falsePositive": 23,
+        "falseNegative": 2,
+        "rowCount": 453,
+        "positiveCount": 307,
+        "negativeCount": 146,
+        "predictedPositiveCount": 328,
+        "predictedNegativeCount": 125,
+        "accuracy": 0.9448123620309051,
+        "recall": 0.993485342019544,
+        "specificity": 0.8424657534246576,
+        "precision": 0.9298780487804879,
+        "falseNegativeRate": 0.006514657980456026,
+        "falsePositiveRate": 0.15753424657534246
+      },
+      "probabilitySummary": {
+        "minimum": 0.00013534856051058023,
+        "maximum": 0.995206740533089,
+        "average": 0.6803706962187016
+      }
+    },
+    "validation": {
+      "metrics": {
+        "truePositive": 75,
+        "trueNegative": 28,
+        "falsePositive": 8,
+        "falseNegative": 1,
+        "rowCount": 112,
+        "positiveCount": 76,
+        "negativeCount": 36,
+        "predictedPositiveCount": 83,
+        "predictedNegativeCount": 29,
+        "accuracy": 0.9196428571428571,
+        "recall": 0.9868421052631579,
+        "specificity": 0.7777777777777778,
+        "precision": 0.9036144578313253,
+        "falseNegativeRate": 0.013157894736842105,
+        "falsePositiveRate": 0.2222222222222222
+      },
+      "probabilitySummary": {
+        "minimum": 0.00006845995402901828,
+        "maximum": 0.996545640238171,
+        "average": 0.6849928164165876
+      }
+    }
+  },
+  "interpretation": {
+    "rankedWeights": [
+      {
+        "index": 256,
+        "dimensionName": "value.referenceComparison.comparisonCost",
+        "weight": -0.7505851848955875,
+        "absoluteWeight": 0.7505851848955875,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 194,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.centerDistance",
+        "weight": -0.5601551488472162,
+        "absoluteWeight": 0.5601551488472162,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 258,
+        "dimensionName": "value.referenceComparison.maxRoleCost",
+        "weight": -0.515849520119681,
+        "absoluteWeight": 0.515849520119681,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 260,
+        "dimensionName": "value.referenceComparison.meanRoleCost",
+        "weight": -0.4985315442389724,
+        "absoluteWeight": 0.4985315442389724,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 12,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.straightnessDiff",
+        "weight": -0.4260861587890643,
+        "absoluteWeight": 0.4260861587890643,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 76,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.straightnessDiff",
+        "weight": -0.30720167670693344,
+        "absoluteWeight": 0.30720167670693344,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 78,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.widthRelativeDiff",
+        "weight": -0.30342525166232664,
+        "absoluteWeight": 0.30342525166232664,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 2,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.centerDistance",
+        "weight": -0.29556108681959786,
+        "absoluteWeight": 0.29556108681959786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 118,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+        "weight": -0.28411991452820917,
+        "absoluteWeight": 0.28411991452820917,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 66,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.centerDistance",
+        "weight": -0.2797690868165781,
+        "absoluteWeight": 0.2797690868165781,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 68,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.comparisonCost",
+        "weight": -0.2795589560878617,
+        "absoluteWeight": 0.2795589560878617,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 182,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+        "weight": -0.2759636789610418,
+        "absoluteWeight": 0.2759636789610418,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 178,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+        "weight": -0.2745348752456582,
+        "absoluteWeight": 0.2745348752456582,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 206,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.widthRelativeDiff",
+        "weight": -0.2657197174167149,
+        "absoluteWeight": 0.2657197174167149,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 92,
+        "dimensionName": "value.perRole.role_stroke1_vertical.straightnessDiff",
+        "weight": -0.2595246274058055,
+        "absoluteWeight": 0.2595246274058055,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 214,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.deltaXRelativeDiff",
+        "weight": -0.25346378885279064,
+        "absoluteWeight": 0.25346378885279064,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 50,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.centerDistance",
+        "weight": -0.2513510803819313,
+        "absoluteWeight": 0.2513510803819313,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 62,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.widthRelativeDiff",
+        "weight": -0.23854617464894054,
+        "absoluteWeight": 0.23854617464894054,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 202,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.heightRelativeDiff",
+        "weight": 0.23732360592172988,
+        "absoluteWeight": 0.23732360592172988,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 114,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+        "weight": -0.23186721681666655,
+        "absoluteWeight": 0.23186721681666655,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 226,
+        "dimensionName": "value.perRole.role_stroke4_vertical.centerDistance",
+        "weight": -0.22689840537471748,
+        "absoluteWeight": 0.22689840537471748,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 70,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.deltaXRelativeDiff",
+        "weight": -0.22153946330187604,
+        "absoluteWeight": 0.22153946330187604,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 234,
+        "dimensionName": "value.perRole.role_stroke4_vertical.heightRelativeDiff",
+        "weight": -0.22070201593676655,
+        "absoluteWeight": 0.22070201593676655,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 74,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.heightRelativeDiff",
+        "weight": -0.22015674304366492,
+        "absoluteWeight": 0.22015674304366492,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 146,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.centerDistance",
+        "weight": -0.2195598695915383,
+        "absoluteWeight": 0.2195598695915383,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 232,
+        "dimensionName": "value.perRole.role_stroke4_vertical.deltaYRelativeDiff",
+        "weight": -0.21483912609813322,
+        "absoluteWeight": 0.21483912609813322,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 112,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+        "weight": 0.2111786596321181,
+        "absoluteWeight": 0.2111786596321181,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 222,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.widthRelativeDiff",
+        "weight": -0.2104206389766941,
+        "absoluteWeight": 0.2104206389766941,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 188,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.straightnessDiff",
+        "weight": -0.21017351633913,
+        "absoluteWeight": 0.21017351633913,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 54,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.deltaXRelativeDiff",
+        "weight": -0.19675302562153726,
+        "absoluteWeight": 0.19675302562153726,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 198,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.deltaXRelativeDiff",
+        "weight": -0.19095980301871104,
+        "absoluteWeight": 0.19095980301871104,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 42,
+        "dimensionName": "value.perRole.role_stroke0_vertical.heightRelativeDiff",
+        "weight": -0.19037021455411338,
+        "absoluteWeight": 0.19037021455411338,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 40,
+        "dimensionName": "value.perRole.role_stroke0_vertical.deltaYRelativeDiff",
+        "weight": -0.18813042427637575,
+        "absoluteWeight": 0.18813042427637575,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 98,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.centerDistance",
+        "weight": -0.17926727171168536,
+        "absoluteWeight": 0.17926727171168536,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 64,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.angleAbsDiff",
+        "weight": -0.17776079567769024,
+        "absoluteWeight": 0.17776079567769024,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 144,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.angleAbsDiff",
+        "weight": -0.17418917471451076,
+        "absoluteWeight": 0.17418917471451076,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 168,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.deltaYRelativeDiff",
+        "weight": -0.17098160550571484,
+        "absoluteWeight": 0.17098160550571484,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 170,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.heightRelativeDiff",
+        "weight": -0.17098160550571484,
+        "absoluteWeight": 0.17098160550571484,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 210,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.centerDistance",
+        "weight": -0.1523106353986756,
+        "absoluteWeight": 0.1523106353986756,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 56,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.deltaYRelativeDiff",
+        "weight": 0.14879286517303503,
+        "absoluteWeight": 0.14879286517303503,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 100,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.comparisonCost",
+        "weight": -0.1390910536176869,
+        "absoluteWeight": 0.1390910536176869,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 180,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.comparisonCost",
+        "weight": -0.13867056112911488,
+        "absoluteWeight": 0.13867056112911488,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 172,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.straightnessDiff",
+        "weight": 0.13791332953417693,
+        "absoluteWeight": 0.13791332953417693,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 166,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.deltaXRelativeDiff",
+        "weight": -0.1376854932722554,
+        "absoluteWeight": 0.1376854932722554,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 96,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.angleAbsDiff",
+        "weight": -0.13200989373024896,
+        "absoluteWeight": 0.13200989373024896,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 32,
+        "dimensionName": "value.perRole.role_stroke0_vertical.angleAbsDiff",
+        "weight": -0.13045671404669282,
+        "absoluteWeight": 0.13045671404669282,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 116,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+        "weight": -0.1217346319598506,
+        "absoluteWeight": 0.1217346319598506,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 224,
+        "dimensionName": "value.perRole.role_stroke4_vertical.angleAbsDiff",
+        "weight": -0.12018709407331817,
+        "absoluteWeight": 0.12018709407331817,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 8,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+        "weight": 0.12003993386208964,
+        "absoluteWeight": 0.12003993386208964,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 164,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.comparisonCost",
+        "weight": -0.11950448360138137,
+        "absoluteWeight": 0.11950448360138137,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 142,
+        "dimensionName": "value.perRole.role_stroke2_vertical.widthRelativeDiff",
+        "weight": 0.11498915870316105,
+        "absoluteWeight": 0.11498915870316105,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 160,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.angleAbsDiff",
+        "weight": 0.11348323017181385,
+        "absoluteWeight": 0.11348323017181385,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 259,
+        "dimensionName": "presence.referenceComparison.maxRoleCost",
+        "weight": 0.1110352329364206,
+        "absoluteWeight": 0.1110352329364206,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 261,
+        "dimensionName": "presence.referenceComparison.meanRoleCost",
+        "weight": 0.1110352329364206,
+        "absoluteWeight": 0.1110352329364206,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 134,
+        "dimensionName": "value.perRole.role_stroke2_vertical.deltaXRelativeDiff",
+        "weight": 0.11049611761189235,
+        "absoluteWeight": 0.11049611761189235,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 104,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.deltaYRelativeDiff",
+        "weight": -0.10975219891494899,
+        "absoluteWeight": 0.10975219891494899,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 212,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.comparisonCost",
+        "weight": -0.1086584767060229,
+        "absoluteWeight": 0.1086584767060229,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 106,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.heightRelativeDiff",
+        "weight": -0.10796744848531879,
+        "absoluteWeight": 0.10796744848531879,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 130,
+        "dimensionName": "value.perRole.role_stroke2_vertical.centerDistance",
+        "weight": -0.10787539902391823,
+        "absoluteWeight": 0.10787539902391823,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 6,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+        "weight": -0.1043409471136182,
+        "absoluteWeight": 0.1043409471136182,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 136,
+        "dimensionName": "value.perRole.role_stroke2_vertical.deltaYRelativeDiff",
+        "weight": -0.10341252187203331,
+        "absoluteWeight": 0.10341252187203331,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 138,
+        "dimensionName": "value.perRole.role_stroke2_vertical.heightRelativeDiff",
+        "weight": -0.10237387444017494,
+        "absoluteWeight": 0.10237387444017494,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 228,
+        "dimensionName": "value.perRole.role_stroke4_vertical.comparisonCost",
+        "weight": -0.09745347823154149,
+        "absoluteWeight": 0.09745347823154149,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 48,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.angleAbsDiff",
+        "weight": -0.09645147023584781,
+        "absoluteWeight": 0.09645147023584781,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 14,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.widthRelativeDiff",
+        "weight": -0.09336310352815064,
+        "absoluteWeight": 0.09336310352815064,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 204,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.straightnessDiff",
+        "weight": 0.09047432493444975,
+        "absoluteWeight": 0.09047432493444975,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 124,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.straightnessDiff",
+        "weight": -0.08983537404204753,
+        "absoluteWeight": 0.08983537404204753,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 80,
+        "dimensionName": "value.perRole.role_stroke1_vertical.angleAbsDiff",
+        "weight": 0.08885188680396887,
+        "absoluteWeight": 0.08885188680396887,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 242,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.centerDistance",
+        "weight": -0.08687724563002261,
+        "absoluteWeight": 0.08687724563002261,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 126,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+        "weight": -0.08610699883719712,
+        "absoluteWeight": 0.08610699883719712,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 218,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.heightRelativeDiff",
+        "weight": 0.08532367472659229,
+        "absoluteWeight": 0.08532367472659229,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 158,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.widthRelativeDiff",
+        "weight": 0.08065920366785616,
+        "absoluteWeight": 0.08065920366785616,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 122,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+        "weight": -0.08054748331058506,
+        "absoluteWeight": 0.08054748331058506,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 257,
+        "dimensionName": "presence.referenceComparison.comparisonCost",
+        "weight": -0.07986413408446952,
+        "absoluteWeight": 0.07986413408446952,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 162,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.centerDistance",
+        "weight": -0.07516385697402628,
+        "absoluteWeight": 0.07516385697402628,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 154,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.heightRelativeDiff",
+        "weight": 0.07510928836199345,
+        "absoluteWeight": 0.07510928836199345,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 34,
+        "dimensionName": "value.perRole.role_stroke0_vertical.centerDistance",
+        "weight": -0.07475690268833796,
+        "absoluteWeight": 0.07475690268833796,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 148,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.comparisonCost",
+        "weight": -0.07471227264347295,
+        "absoluteWeight": 0.07471227264347295,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 177,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.angleAbsDiff",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 179,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.centerDistance",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 181,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.comparisonCost",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 183,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 185,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.deltaYRelativeDiff",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 187,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.heightRelativeDiff",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 189,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.straightnessDiff",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 191,
+        "dimensionName": "presence.perRole.role_stroke3_right_diagonal.widthRelativeDiff",
+        "weight": 0.07445985528336141,
+        "absoluteWeight": 0.07445985528336141,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 208,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.angleAbsDiff",
+        "weight": 0.07353553858330644,
+        "absoluteWeight": 0.07353553858330644,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 156,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.straightnessDiff",
+        "weight": 0.07215492577845886,
+        "absoluteWeight": 0.07215492577845886,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 192,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.angleAbsDiff",
+        "weight": 0.07210424393153025,
+        "absoluteWeight": 0.07210424393153025,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 72,
+        "dimensionName": "value.perRole.role_stroke1_right_diagonal.deltaYRelativeDiff",
+        "weight": -0.07123873170127767,
+        "absoluteWeight": 0.07123873170127767,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 33,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.angleAbsDiff",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 35,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.centerDistance",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 37,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.comparisonCost",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 39,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.deltaXRelativeDiff",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 41,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.deltaYRelativeDiff",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 43,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.heightRelativeDiff",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 45,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.straightnessDiff",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 47,
+        "dimensionName": "presence.perRole.role_stroke0_vertical.widthRelativeDiff",
+        "weight": 0.07077337935811139,
+        "absoluteWeight": 0.07077337935811139,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 120,
+        "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+        "weight": 0.06579525928750438,
+        "absoluteWeight": 0.06579525928750438,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 46,
+        "dimensionName": "value.perRole.role_stroke0_vertical.widthRelativeDiff",
+        "weight": 0.064825817584892,
+        "absoluteWeight": 0.064825817584892,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 184,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.deltaYRelativeDiff",
+        "weight": 0.06433924592254428,
+        "absoluteWeight": 0.06433924592254428,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 140,
+        "dimensionName": "value.perRole.role_stroke2_vertical.straightnessDiff",
+        "weight": 0.05801750469398337,
+        "absoluteWeight": 0.05801750469398337,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 49,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.angleAbsDiff",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 51,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.centerDistance",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 53,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.comparisonCost",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 55,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.deltaXRelativeDiff",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 57,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.deltaYRelativeDiff",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 59,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.heightRelativeDiff",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 61,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.straightnessDiff",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 63,
+        "dimensionName": "presence.perRole.role_stroke1_horizontal.widthRelativeDiff",
+        "weight": 0.056656588429049706,
+        "absoluteWeight": 0.056656588429049706,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 60,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.straightnessDiff",
+        "weight": -0.05383825947641598,
+        "absoluteWeight": 0.05383825947641598,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 176,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.angleAbsDiff",
+        "weight": -0.053396548247824534,
+        "absoluteWeight": 0.053396548247824534,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 129,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.angleAbsDiff",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 131,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.centerDistance",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 133,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.comparisonCost",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 135,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.deltaXRelativeDiff",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 137,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.deltaYRelativeDiff",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 139,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.heightRelativeDiff",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 141,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.straightnessDiff",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 143,
+        "dimensionName": "presence.perRole.role_stroke2_vertical.widthRelativeDiff",
+        "weight": 0.05317060569796373,
+        "absoluteWeight": 0.05317060569796373,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 0,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.angleAbsDiff",
+        "weight": -0.052101352636849056,
+        "absoluteWeight": 0.052101352636849056,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 52,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.comparisonCost",
+        "weight": -0.050464383866810104,
+        "absoluteWeight": 0.050464383866810104,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 186,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.heightRelativeDiff",
+        "weight": 0.050346857349461774,
+        "absoluteWeight": 0.050346857349461774,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 24,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.deltaYRelativeDiff",
+        "weight": -0.04825145722723771,
+        "absoluteWeight": 0.04825145722723771,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 26,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.heightRelativeDiff",
+        "weight": -0.04825145722723771,
+        "absoluteWeight": 0.04825145722723771,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 1,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.angleAbsDiff",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 3,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.centerDistance",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 5,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.comparisonCost",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 7,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 9,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 11,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.heightRelativeDiff",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 13,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.straightnessDiff",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 15,
+        "dimensionName": "presence.perRole.role_stroke0_horizontal.widthRelativeDiff",
+        "weight": 0.04794798300077767,
+        "absoluteWeight": 0.04794798300077767,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 82,
+        "dimensionName": "value.perRole.role_stroke1_vertical.centerDistance",
+        "weight": -0.046444297092675745,
+        "absoluteWeight": 0.046444297092675745,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 86,
+        "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+        "weight": -0.04511725432379606,
+        "absoluteWeight": 0.04511725432379606,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 152,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.deltaYRelativeDiff",
+        "weight": -0.04481707263433873,
+        "absoluteWeight": 0.04481707263433873,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 110,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.widthRelativeDiff",
+        "weight": 0.04288650441983674,
+        "absoluteWeight": 0.04288650441983674,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 44,
+        "dimensionName": "value.perRole.role_stroke0_vertical.straightnessDiff",
+        "weight": -0.042338829483324965,
+        "absoluteWeight": 0.042338829483324965,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 216,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.deltaYRelativeDiff",
+        "weight": 0.0420688766752738,
+        "absoluteWeight": 0.0420688766752738,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 193,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.angleAbsDiff",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 195,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.centerDistance",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 197,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.comparisonCost",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 199,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.deltaXRelativeDiff",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 201,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.deltaYRelativeDiff",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 203,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.heightRelativeDiff",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 205,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.straightnessDiff",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 207,
+        "dimensionName": "presence.perRole.role_stroke4_horizontal.widthRelativeDiff",
+        "weight": -0.041503509079142645,
+        "absoluteWeight": 0.041503509079142645,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 36,
+        "dimensionName": "value.perRole.role_stroke0_vertical.comparisonCost",
+        "weight": -0.041016528827323574,
+        "absoluteWeight": 0.041016528827323574,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 10,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.heightRelativeDiff",
+        "weight": 0.04040753491150128,
+        "absoluteWeight": 0.04040753491150128,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 161,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.angleAbsDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 163,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.centerDistance",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 165,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.comparisonCost",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 167,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.deltaXRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 169,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.deltaYRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 171,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.heightRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 173,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.straightnessDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 175,
+        "dimensionName": "presence.perRole.role_stroke3_left_diagonal.widthRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 209,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.angleAbsDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 211,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.centerDistance",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 213,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.comparisonCost",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 215,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.deltaXRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 217,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.deltaYRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 219,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.heightRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 221,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.straightnessDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 223,
+        "dimensionName": "presence.perRole.role_stroke4_right_diagonal.widthRelativeDiff",
+        "weight": -0.04019529400077786,
+        "absoluteWeight": 0.04019529400077786,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 30,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.widthRelativeDiff",
+        "weight": 0.03814957451525702,
+        "absoluteWeight": 0.03814957451525702,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 22,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.deltaXRelativeDiff",
+        "weight": 0.03774884658730104,
+        "absoluteWeight": 0.03774884658730104,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 150,
+        "dimensionName": "value.perRole.role_stroke3_horizontal.deltaXRelativeDiff",
+        "weight": -0.037611358392885715,
+        "absoluteWeight": 0.037611358392885715,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 113,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 115,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.centerDistance",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 117,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.comparisonCost",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 119,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 121,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 123,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 125,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.straightnessDiff",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 127,
+        "dimensionName": "presence.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+        "weight": 0.03749629110304558,
+        "absoluteWeight": 0.03749629110304558,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 97,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.angleAbsDiff",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 99,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.centerDistance",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 101,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.comparisonCost",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 103,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.deltaXRelativeDiff",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 105,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.deltaYRelativeDiff",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 107,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.heightRelativeDiff",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 109,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.straightnessDiff",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 111,
+        "dimensionName": "presence.perRole.role_stroke2_horizontal.widthRelativeDiff",
+        "weight": 0.03731883287226065,
+        "absoluteWeight": 0.03731883287226065,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 241,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.angleAbsDiff",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 243,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.centerDistance",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 245,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.comparisonCost",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 247,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.deltaXRelativeDiff",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 249,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.deltaYRelativeDiff",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 251,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.heightRelativeDiff",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 253,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.straightnessDiff",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 255,
+        "dimensionName": "presence.perRole.role_stroke5_horizontal.widthRelativeDiff",
+        "weight": 0.03696356418031584,
+        "absoluteWeight": 0.03696356418031584,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 128,
+        "dimensionName": "value.perRole.role_stroke2_vertical.angleAbsDiff",
+        "weight": -0.03527326453137892,
+        "absoluteWeight": 0.03527326453137892,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 132,
+        "dimensionName": "value.perRole.role_stroke2_vertical.comparisonCost",
+        "weight": 0.03515435925387195,
+        "absoluteWeight": 0.03515435925387195,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 18,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.centerDistance",
+        "weight": 0.03508904621992128,
+        "absoluteWeight": 0.03508904621992128,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 58,
+        "dimensionName": "value.perRole.role_stroke1_horizontal.heightRelativeDiff",
+        "weight": 0.034965278122836986,
+        "absoluteWeight": 0.034965278122836986,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 4,
+        "dimensionName": "value.perRole.role_stroke0_horizontal.comparisonCost",
+        "weight": -0.03486657548127414,
+        "absoluteWeight": 0.03486657548127414,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 81,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.angleAbsDiff",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 83,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.centerDistance",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 85,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.comparisonCost",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 87,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 89,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 91,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.heightRelativeDiff",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 93,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.straightnessDiff",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 95,
+        "dimensionName": "presence.perRole.role_stroke1_vertical.widthRelativeDiff",
+        "weight": 0.033669442530830984,
+        "absoluteWeight": 0.033669442530830984,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 190,
+        "dimensionName": "value.perRole.role_stroke3_right_diagonal.widthRelativeDiff",
+        "weight": 0.03326877002861126,
+        "absoluteWeight": 0.03326877002861126,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 108,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.straightnessDiff",
+        "weight": 0.033099809871161255,
+        "absoluteWeight": 0.033099809871161255,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 65,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.angleAbsDiff",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 67,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.centerDistance",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 69,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.comparisonCost",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 71,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.deltaXRelativeDiff",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 73,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.deltaYRelativeDiff",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 75,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.heightRelativeDiff",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 77,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.straightnessDiff",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 79,
+        "dimensionName": "presence.perRole.role_stroke1_right_diagonal.widthRelativeDiff",
+        "weight": 0.031721023280232144,
+        "absoluteWeight": 0.031721023280232144,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 244,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.comparisonCost",
+        "weight": -0.030243640365716914,
+        "absoluteWeight": 0.030243640365716914,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 252,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.straightnessDiff",
+        "weight": -0.029227209262248505,
+        "absoluteWeight": 0.029227209262248505,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 28,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.straightnessDiff",
+        "weight": 0.027803876681669663,
+        "absoluteWeight": 0.027803876681669663,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 230,
+        "dimensionName": "value.perRole.role_stroke4_vertical.deltaXRelativeDiff",
+        "weight": 0.027635360490118156,
+        "absoluteWeight": 0.027635360490118156,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 250,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.heightRelativeDiff",
+        "weight": 0.02724313788764012,
+        "absoluteWeight": 0.02724313788764012,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 248,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.deltaYRelativeDiff",
+        "weight": -0.02191163320064749,
+        "absoluteWeight": 0.02191163320064749,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 145,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.angleAbsDiff",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 147,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.centerDistance",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 149,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.comparisonCost",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 151,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.deltaXRelativeDiff",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 153,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.deltaYRelativeDiff",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 155,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.heightRelativeDiff",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 157,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.straightnessDiff",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 159,
+        "dimensionName": "presence.perRole.role_stroke3_horizontal.widthRelativeDiff",
+        "weight": -0.021716441252537255,
+        "absoluteWeight": 0.021716441252537255,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 225,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.angleAbsDiff",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 227,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.centerDistance",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 229,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.comparisonCost",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 231,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.deltaXRelativeDiff",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 233,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.deltaYRelativeDiff",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 235,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.heightRelativeDiff",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 237,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.straightnessDiff",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 239,
+        "dimensionName": "presence.perRole.role_stroke4_vertical.widthRelativeDiff",
+        "weight": 0.02117381541350548,
+        "absoluteWeight": 0.02117381541350548,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 196,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.comparisonCost",
+        "weight": -0.020237111587683133,
+        "absoluteWeight": 0.020237111587683133,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 38,
+        "dimensionName": "value.perRole.role_stroke0_vertical.deltaXRelativeDiff",
+        "weight": 0.019319080380742593,
+        "absoluteWeight": 0.019319080380742593,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 238,
+        "dimensionName": "value.perRole.role_stroke4_vertical.widthRelativeDiff",
+        "weight": 0.018602087311947853,
+        "absoluteWeight": 0.018602087311947853,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 236,
+        "dimensionName": "value.perRole.role_stroke4_vertical.straightnessDiff",
+        "weight": 0.018206029926898338,
+        "absoluteWeight": 0.018206029926898338,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 84,
+        "dimensionName": "value.perRole.role_stroke1_vertical.comparisonCost",
+        "weight": -0.01668771085645605,
+        "absoluteWeight": 0.01668771085645605,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 88,
+        "dimensionName": "value.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+        "weight": -0.015967931957192684,
+        "absoluteWeight": 0.015967931957192684,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 90,
+        "dimensionName": "value.perRole.role_stroke1_vertical.heightRelativeDiff",
+        "weight": -0.015967931957192684,
+        "absoluteWeight": 0.015967931957192684,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 246,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.deltaXRelativeDiff",
+        "weight": -0.012002180918374206,
+        "absoluteWeight": 0.012002180918374206,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 254,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.widthRelativeDiff",
+        "weight": -0.012002180918374206,
+        "absoluteWeight": 0.012002180918374206,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 102,
+        "dimensionName": "value.perRole.role_stroke2_horizontal.deltaXRelativeDiff",
+        "weight": -0.010899488393006503,
+        "absoluteWeight": 0.010899488393006503,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 174,
+        "dimensionName": "value.perRole.role_stroke3_left_diagonal.widthRelativeDiff",
+        "weight": -0.010551654518075779,
+        "absoluteWeight": 0.010551654518075779,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 17,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.angleAbsDiff",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 19,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.centerDistance",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 21,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.comparisonCost",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 23,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.deltaXRelativeDiff",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 25,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.deltaYRelativeDiff",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 27,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.heightRelativeDiff",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 29,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.straightnessDiff",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 31,
+        "dimensionName": "presence.perRole.role_stroke0_left_diagonal.widthRelativeDiff",
+        "weight": -0.007686129422468382,
+        "absoluteWeight": 0.007686129422468382,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 16,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.angleAbsDiff",
+        "weight": 0.007508111308743458,
+        "absoluteWeight": 0.007508111308743458,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 94,
+        "dimensionName": "value.perRole.role_stroke1_vertical.widthRelativeDiff",
+        "weight": -0.007269527228052491,
+        "absoluteWeight": 0.007269527228052491,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 220,
+        "dimensionName": "value.perRole.role_stroke4_right_diagonal.straightnessDiff",
+        "weight": -0.004190115841468864,
+        "absoluteWeight": 0.004190115841468864,
+        "effect": "decreases_positive_probability"
+      },
+      {
+        "index": 20,
+        "dimensionName": "value.perRole.role_stroke0_left_diagonal.comparisonCost",
+        "weight": 0.004173801845624796,
+        "absoluteWeight": 0.004173801845624796,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 240,
+        "dimensionName": "value.perRole.role_stroke5_horizontal.angleAbsDiff",
+        "weight": 0.0038964031154242774,
+        "absoluteWeight": 0.0038964031154242774,
+        "effect": "increases_positive_probability"
+      },
+      {
+        "index": 200,
+        "dimensionName": "value.perRole.role_stroke4_horizontal.deltaYRelativeDiff",
+        "weight": -0.003747355177421898,
+        "absoluteWeight": 0.003747355177421898,
+        "effect": "decreases_positive_probability"
+      }
+    ]
+  },
+  "integrity": {
+    "passed": true,
+    "errors": []
+  }
+}
