@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Select the highest practical logistic threshold that preserves zero validation false negatives",
+  "evaluationScope": "Threshold calibrated on the deterministic row-level development validation partition. Not evidence of generalization to unseen kanjis.",
+  "dataset": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_binary_dataset.jsonl",
+    "sha256": "cabb9bc2d97a003f4277e3f364969cbea3d3272d58ac06aff75a6dc4fc56bbe1"
+  },
+  "split": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_baseline_split.json",
+    "sha256": "1d0ec9718c9fedbbf0882fc610a450cf21a6e582cf2324431ed2cd2dc815312a",
+    "strategy": "deterministic_stratified_by_target_kanji_and_label",
+    "seed": "reference-candidate-baseline-v1"
+  },
+  "model": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_models\\reference_candidate_logistic_baseline_model.json",
+    "fileSha256": "8d64d4ded3b9af29138346ce5f3de68c20dab4b4234f45710daec86735921ab4",
+    "modelPayloadSha256": "49d6f4cdee95b6b6fa3777f9305d5581c8b600bb76d87ed0fe7a5e93184e8ccf",
+    "modelType": "binary_logistic_regression"
+  },
+  "partitions": {
+    "trainingRowCount": 453,
+    "validationRowCount": 112
+  },
+  "referenceThreshold": {
+    "threshold": 0.5,
+    "trainingMetrics": {
+      "truePositive": 305,
+      "trueNegative": 123,
+      "falsePositive": 23,
+      "falseNegative": 2,
+      "rowCount": 453,
+      "positiveCount": 307,
+      "negativeCount": 146,
+      "predictedPositiveCount": 328,
+      "predictedNegativeCount": 125,
+      "accuracy": 0.9448123620309051,
+      "recall": 0.993485342019544,
+      "specificity": 0.8424657534246576,
+      "precision": 0.9298780487804879,
+      "falseNegativeRate": 0.006514657980456026,
+      "falsePositiveRate": 0.15753424657534246
+    },
+    "validationMetrics": {
+      "truePositive": 75,
+      "trueNegative": 28,
+      "falsePositive": 8,
+      "falseNegative": 1,
+      "rowCount": 112,
+      "positiveCount": 76,
+      "negativeCount": 36,
+      "predictedPositiveCount": 83,
+      "predictedNegativeCount": 29,
+      "accuracy": 0.9196428571428571,
+      "recall": 0.9868421052631579,
+      "specificity": 0.7777777777777778,
+      "precision": 0.9036144578313253,
+      "falseNegativeRate": 0.013157894736842105,
+      "falsePositiveRate": 0.2222222222222222
+    }
+  },
+  "fnSafeThreshold": {
+    "selectionRule": [
+      "require_false_negative_count_zero",
+      "minimize_false_positive_count",
+      "maximize_threshold_on_tie"
+    ],
+    "candidateThresholdCount": 109,
+    "safeCandidateCount": 10,
+    "threshold": 0.029109293774331055,
+    "probabilityBoundaries": {
+      "minimumPositiveProbability": 0.029109293774331055,
+      "maximumNegativeProbability": 0.8549273451253682,
+      "positiveNegativeMargin": -0.8258180513510371
+    },
+    "trainingMetrics": {
+      "truePositive": 307,
+      "trueNegative": 39,
+      "falsePositive": 107,
+      "falseNegative": 0,
+      "rowCount": 453,
+      "positiveCount": 307,
+      "negativeCount": 146,
+      "predictedPositiveCount": 414,
+      "predictedNegativeCount": 39,
+      "accuracy": 0.7637969094922737,
+      "recall": 1,
+      "specificity": 0.2671232876712329,
+      "precision": 0.7415458937198067,
+      "falseNegativeRate": 0,
+      "falsePositiveRate": 0.7328767123287672
+    },
+    "validationMetrics": {
+      "truePositive": 76,
+      "trueNegative": 8,
+      "falsePositive": 28,
+      "falseNegative": 0,
+      "rowCount": 112,
+      "positiveCount": 76,
+      "negativeCount": 36,
+      "predictedPositiveCount": 104,
+      "predictedNegativeCount": 8,
+      "accuracy": 0.75,
+      "recall": 1,
+      "specificity": 0.2222222222222222,
+      "precision": 0.7307692307692307,
+      "falseNegativeRate": 0,
+      "falsePositiveRate": 0.7777777777777778
+    }
+  },
+  "descriptorBaseline": {
+    "trainingMetrics": {
+      "truePositive": 307,
+      "trueNegative": 104,
+      "falsePositive": 42,
+      "falseNegative": 0,
+      "positiveCount": 307,
+      "negativeCount": 146,
+      "predictedPositiveCount": 349,
+      "predictedNegativeCount": 104,
+      "accuracy": 0.9072847682119205,
+      "recall": 1,
+      "specificity": 0.7123287671232876,
+      "precision": 0.8796561604584527,
+      "falseNegativeRate": 0,
+      "falsePositiveRate": 0.2876712328767123
+    },
+    "validationMetrics": {
+      "truePositive": 76,
+      "trueNegative": 22,
+      "falsePositive": 14,
+      "falseNegative": 0,
+      "positiveCount": 76,
+      "negativeCount": 36,
+      "predictedPositiveCount": 90,
+      "predictedNegativeCount": 22,
+      "accuracy": 0.875,
+      "recall": 1,
+      "specificity": 0.6111111111111112,
+      "precision": 0.8444444444444444,
+      "falseNegativeRate": 0,
+      "falsePositiveRate": 0.3888888888888889
+    }
+  },
+  "comparisons": {
+    "fnSafeVsDescriptorValidation": {
+      "truePositive": 0,
+      "trueNegative": -14,
+      "falsePositive": 14,
+      "falseNegative": 0,
+      "accuracy": -0.125,
+      "recall": 0,
+      "specificity": -0.38888888888888895,
+      "precision": -0.11367521367521372
+    },
+    "fnSafeVsReferenceThresholdValidation": {
+      "truePositive": 1,
+      "trueNegative": -20,
+      "falsePositive": 20,
+      "falseNegative": -1,
+      "accuracy": -0.1696428571428571,
+      "recall": 0.013157894736842146,
+      "specificity": -0.5555555555555556,
+      "precision": -0.1728452270620946
+    }
+  },
+  "changedPredictions": {
+    "changedPredictionCount": 21,
+    "recoveredPositiveCount": 1,
+    "newlyAcceptedNegativeCount": 20,
+    "changedPredictions": [
+      {
+        "recognitionId": "4f6b0109-24d1-4c39-bac5-d7a7856f04be",
+        "targetKanji": "木",
+        "label": 1,
+        "probability": 0.029109293774331055,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "1f51d892-0124-4958-8ece-3a11294ee75a",
+        "targetKanji": "用",
+        "label": 0,
+        "probability": 0.0433383964244361,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "2d26fcf1-223f-4077-a3a6-13c88bec87f6",
+        "targetKanji": "用",
+        "label": 0,
+        "probability": 0.0433383964244361,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "de9fd891-b80d-42dc-9290-199e102658bb",
+        "targetKanji": "回",
+        "label": 0,
+        "probability": 0.0433383964244361,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "60cea3d5-c9fa-4508-b69a-f2105e95ef3c",
+        "targetKanji": "本",
+        "label": 0,
+        "probability": 0.05029223580070977,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "2278f99d-d3ed-4e4b-b3f3-777571ef5476",
+        "targetKanji": "本",
+        "label": 0,
+        "probability": 0.06734452434858762,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "56a929c3-fd47-474a-8706-a954191ff5ba",
+        "targetKanji": "目",
+        "label": 0,
+        "probability": 0.06734452434858762,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "696beb58-3854-47e2-95dd-4cdf3a6d2b3c",
+        "targetKanji": "未",
+        "label": 0,
+        "probability": 0.06734452434858762,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "c19f0c86-d48a-4849-ac5f-e1051083e6a2",
+        "targetKanji": "七",
+        "label": 0,
+        "probability": 0.09794418099005309,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "65706fe4-f828-40da-a6af-74c4324f30f4",
+        "targetKanji": "日",
+        "label": 0,
+        "probability": 0.103213532669069,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "177eaec3-2f97-4814-873e-36ffbce159b5",
+        "targetKanji": "一",
+        "label": 0,
+        "probability": 0.1366977030343836,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "67f6cfb4-bdb0-479a-9c51-d6efb787f669",
+        "targetKanji": "八",
+        "label": 0,
+        "probability": 0.14983633690648177,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "20cd448a-bb0f-463a-b522-256c93031308",
+        "targetKanji": "口",
+        "label": 0,
+        "probability": 0.15501180991227928,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "b55767b7-5506-49a8-95a3-4bd619d0cae3",
+        "targetKanji": "口",
+        "label": 0,
+        "probability": 0.15501180991227928,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "1c30ebe8-a24a-4f4a-af40-91d531994970",
+        "targetKanji": "四",
+        "label": 0,
+        "probability": 0.17088957695262696,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "eb2d7047-5551-4748-bc6e-2c284d5a1d69",
+        "targetKanji": "七",
+        "label": 0,
+        "probability": 0.19275096058456156,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "9c539bec-a261-4acc-bc9a-619251a753d8",
+        "targetKanji": "一",
+        "label": 0,
+        "probability": 0.2630161842355556,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "19b23994-2cf9-4bcc-93b4-b203a321d1cf",
+        "targetKanji": "末",
+        "label": 0,
+        "probability": 0.2888913262324652,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "5d5a646b-442f-4daa-9e64-915db80fc64a",
+        "targetKanji": "未",
+        "label": 0,
+        "probability": 0.3331986317321599,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "d64ba54c-6b24-48eb-b6f6-5a80c54dbb19",
+        "targetKanji": "用",
+        "label": 0,
+        "probability": 0.41075429601499613,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      },
+      {
+        "recognitionId": "da5bdf7f-47be-4818-a50c-7c438b0a6062",
+        "targetKanji": "四",
+        "label": 0,
+        "probability": 0.41669988288932897,
+        "referencePredictedLabel": 0,
+        "selectedPredictedLabel": 1
+      }
+    ]
+  },
+  "integrity": {
+    "passed": true,
+    "errors": []
+  }
+}
