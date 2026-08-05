@@ -15,6 +15,12 @@ const {
   determineFeatureNames,
   detectPotentialLeakageFeatures,
   calculateFeaturePresence,
+  groupDatasetEntriesByTargetKanji,
+  buildFeatureNamesByTargetKanji,
+  calculateFeatureTargetKanjiPresence,
+  calculateLabelCounts,
+  buildTargetKanjiFeatureCoverage,
+  findLowFeatureRows,
   calculateDescriptorMetrics,
   compareArrays,
   compareInspectionWithSummary,
@@ -466,4 +472,273 @@ test("validateDatasetRows aggregates errors from multiple rows", () => {
 test("safeDivide returns null when denominator is zero", () => {
   assert.equal(safeDivide(10, 0), null);
   assert.equal(safeDivide(1, 2), 0.5);
+});
+
+test("groupDatasetEntriesByTargetKanji groups rows by target kanji", () => {
+  const datasetEntries = [
+    {
+      lineNumber: 1,
+      row: createValidRow({
+        recognitionId: "wood-1",
+        targetKanji: "木",
+        expectedKanji: "木",
+      }),
+    },
+    {
+      lineNumber: 2,
+      row: createValidRow({
+        recognitionId: "book-1",
+        targetKanji: "本",
+        expectedKanji: "本",
+      }),
+    },
+    {
+      lineNumber: 3,
+      row: createValidRow({
+        recognitionId: "wood-2",
+        targetKanji: "木",
+        expectedKanji: "木",
+      }),
+    },
+  ];
+
+  const grouped = groupDatasetEntriesByTargetKanji(datasetEntries);
+
+  assert.equal(grouped.size, 2);
+  assert.equal(grouped.get("木").length, 2);
+  assert.equal(grouped.get("本").length, 1);
+});
+
+test("buildFeatureNamesByTargetKanji builds feature unions per kanji", () => {
+  const datasetEntries = [
+    {
+      lineNumber: 1,
+      row: createValidRow({
+        targetKanji: "木",
+        expectedKanji: "木",
+        features: {
+          "feature.shared": 0.1,
+          "feature.wood": 0.2,
+        },
+      }),
+    },
+    {
+      lineNumber: 2,
+      row: createValidRow({
+        recognitionId: "book-1",
+        targetKanji: "本",
+        expectedKanji: "本",
+        features: {
+          "feature.shared": 0.3,
+          "feature.book": 0.4,
+        },
+      }),
+    },
+  ];
+
+  const result = buildFeatureNamesByTargetKanji(datasetEntries);
+
+  assert.deepEqual([...result.get("木")].sort(), [
+    "feature.shared",
+    "feature.wood",
+  ]);
+
+  assert.deepEqual([...result.get("本")].sort(), [
+    "feature.book",
+    "feature.shared",
+  ]);
+});
+
+test("calculateFeatureTargetKanjiPresence counts kanji presence per feature", () => {
+  const featureNamesByTargetKanji = new Map([
+    ["木", new Set(["feature.shared", "feature.wood"])],
+    ["本", new Set(["feature.shared", "feature.book"])],
+  ]);
+
+  const result = calculateFeatureTargetKanjiPresence(featureNamesByTargetKanji);
+
+  assert.deepEqual(
+    [...result.get("feature.shared")].sort(),
+    ["木", "本"].sort(),
+  );
+
+  assert.deepEqual([...result.get("feature.wood")], ["木"]);
+
+  assert.deepEqual([...result.get("feature.book")], ["本"]);
+});
+
+test("calculateLabelCounts counts positive and negative rows", () => {
+  const datasetEntries = [
+    {
+      lineNumber: 1,
+      row: createValidRow({
+        recognitionId: "positive-1",
+        label: 1,
+      }),
+    },
+    {
+      lineNumber: 2,
+      row: createValidRow({
+        recognitionId: "positive-2",
+        label: 1,
+      }),
+    },
+    {
+      lineNumber: 3,
+      row: createValidRow({
+        recognitionId: "negative-1",
+        sampleIsCorrect: false,
+        classification: "trueNegative",
+        label: 0,
+      }),
+    },
+  ];
+
+  assert.deepEqual(calculateLabelCounts(datasetEntries), {
+    positiveCount: 2,
+    negativeCount: 1,
+  });
+});
+
+test("buildTargetKanjiFeatureCoverage identifies shared and exclusive features", () => {
+  const datasetEntries = [
+    {
+      lineNumber: 1,
+      row: createValidRow({
+        recognitionId: "wood-positive",
+        targetKanji: "木",
+        expectedKanji: "木",
+        features: {
+          "feature.global": 0.1,
+          "feature.partial": 0.2,
+          "feature.wood": 0.3,
+        },
+      }),
+    },
+    {
+      lineNumber: 2,
+      row: createValidRow({
+        recognitionId: "wood-negative",
+        targetKanji: "木",
+        expectedKanji: "木",
+        sampleIsCorrect: false,
+        classification: "trueNegative",
+        label: 0,
+        features: {
+          "feature.global": 0.4,
+          "feature.wood": 0.5,
+        },
+      }),
+    },
+    {
+      lineNumber: 3,
+      row: createValidRow({
+        recognitionId: "book-positive",
+        targetKanji: "本",
+        expectedKanji: "本",
+        features: {
+          "feature.global": 0.6,
+          "feature.partial": 0.7,
+          "feature.book": 0.8,
+        },
+      }),
+    },
+    {
+      lineNumber: 4,
+      row: createValidRow({
+        recognitionId: "one-positive",
+        targetKanji: "一",
+        expectedKanji: "一",
+        features: {
+          "feature.global": 0.9,
+          "feature.one": 1.0,
+        },
+      }),
+    },
+  ];
+
+  const featureNames = determineFeatureNames(datasetEntries);
+
+  const coverage = buildTargetKanjiFeatureCoverage(
+    datasetEntries,
+    featureNames,
+  );
+
+  assert.equal(coverage.targetKanjiCount, 3);
+  assert.equal(coverage.featureCount, 5);
+  assert.equal(coverage.sharedByAllTargetKanjisCount, 1);
+
+  assert.deepEqual(coverage.sharedByAllTargetKanjis, ["feature.global"]);
+
+  assert.equal(coverage.sharedByMultipleTargetKanjisCount, 1);
+
+  assert.equal(coverage.exclusiveFeatureCount, 3);
+
+  assert.deepEqual(coverage.exclusiveFeatures, [
+    "feature.book",
+    "feature.one",
+    "feature.wood",
+  ]);
+
+  const woodCoverage = coverage.rows.find((row) => row.targetKanji === "木");
+
+  assert.equal(woodCoverage.rowCount, 2);
+  assert.equal(woodCoverage.positiveCount, 1);
+  assert.equal(woodCoverage.negativeCount, 1);
+  assert.equal(woodCoverage.featureCount, 3);
+  assert.equal(woodCoverage.featuresSeenInOtherTargetKanjisCount, 2);
+  assert.equal(woodCoverage.featuresUnseenOutsideTargetKanjiCount, 1);
+  assert.equal(woodCoverage.featureCoverageFromOtherTargetKanjis, 2 / 3);
+  assert.deepEqual(woodCoverage.featuresUnseenOutsideTargetKanji, [
+    "feature.wood",
+  ]);
+});
+
+test("findLowFeatureRows returns rows under the configured limit", () => {
+  const datasetEntries = [
+    {
+      lineNumber: 1,
+      row: createValidRow({
+        recognitionId: "one-feature",
+        features: {
+          "feature.a": 0.1,
+        },
+      }),
+    },
+    {
+      lineNumber: 2,
+      row: createValidRow({
+        recognitionId: "three-features",
+        features: {
+          "feature.a": 0.1,
+          "feature.b": 0.2,
+          "feature.c": 0.3,
+        },
+      }),
+    },
+    {
+      lineNumber: 3,
+      row: createValidRow({
+        recognitionId: "four-features",
+        features: {
+          "feature.a": 0.1,
+          "feature.b": 0.2,
+          "feature.c": 0.3,
+          "feature.d": 0.4,
+        },
+      }),
+    },
+  ];
+
+  const result = findLowFeatureRows(datasetEntries, 3);
+
+  assert.equal(result.length, 2);
+
+  assert.deepEqual(
+    result.map((row) => row.recognitionId),
+    ["one-feature", "three-features"],
+  );
+
+  assert.equal(result[0].featureCount, 1);
+  assert.deepEqual(result[0].featureNames, ["feature.a"]);
 });

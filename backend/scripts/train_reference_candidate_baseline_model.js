@@ -411,6 +411,201 @@ function calculateFeaturePresence(datasetEntries, featureNames) {
   return presenceByFeature;
 }
 
+function groupDatasetEntriesByTargetKanji(datasetEntries) {
+  const entriesByTargetKanji = new Map();
+
+  for (const datasetEntry of datasetEntries) {
+    const targetKanji = datasetEntry.row?.targetKanji;
+
+    if (!entriesByTargetKanji.has(targetKanji)) {
+      entriesByTargetKanji.set(targetKanji, []);
+    }
+
+    entriesByTargetKanji.get(targetKanji).push(datasetEntry);
+  }
+
+  return entriesByTargetKanji;
+}
+
+function buildFeatureNamesByTargetKanji(datasetEntries) {
+  const entriesByTargetKanji = groupDatasetEntriesByTargetKanji(datasetEntries);
+
+  const featureNamesByTargetKanji = new Map();
+
+  for (const [targetKanji, entries] of entriesByTargetKanji) {
+    featureNamesByTargetKanji.set(
+      targetKanji,
+      new Set(determineFeatureNames(entries)),
+    );
+  }
+
+  return featureNamesByTargetKanji;
+}
+
+function calculateFeatureTargetKanjiPresence(featureNamesByTargetKanji) {
+  const targetKanjiPresenceByFeature = new Map();
+
+  for (const [targetKanji, featureNames] of featureNamesByTargetKanji) {
+    for (const featureName of featureNames) {
+      if (!targetKanjiPresenceByFeature.has(featureName)) {
+        targetKanjiPresenceByFeature.set(featureName, new Set());
+      }
+
+      targetKanjiPresenceByFeature.get(featureName).add(targetKanji);
+    }
+  }
+
+  return targetKanjiPresenceByFeature;
+}
+
+function calculateLabelCounts(datasetEntries) {
+  let positiveCount = 0;
+  let negativeCount = 0;
+
+  for (const { row } of datasetEntries) {
+    if (row.label === 1) {
+      positiveCount++;
+    }
+
+    if (row.label === 0) {
+      negativeCount++;
+    }
+  }
+
+  return {
+    positiveCount,
+    negativeCount,
+  };
+}
+
+function buildTargetKanjiFeatureCoverage(datasetEntries, featureNames) {
+  const entriesByTargetKanji = groupDatasetEntriesByTargetKanji(datasetEntries);
+
+  const featureNamesByTargetKanji =
+    buildFeatureNamesByTargetKanji(datasetEntries);
+
+  const targetKanjiPresenceByFeature = calculateFeatureTargetKanjiPresence(
+    featureNamesByTargetKanji,
+  );
+
+  const targetKanjiCount = featureNamesByTargetKanji.size;
+
+  const sharedByAllTargetKanjis = featureNames.filter(
+    (featureName) =>
+      targetKanjiPresenceByFeature.get(featureName)?.size === targetKanjiCount,
+  );
+
+  const exclusiveFeatures = featureNames.filter(
+    (featureName) => targetKanjiPresenceByFeature.get(featureName)?.size === 1,
+  );
+
+  const sharedByMultipleTargetKanjis = featureNames.filter((featureName) => {
+    const presenceCount =
+      targetKanjiPresenceByFeature.get(featureName)?.size ?? 0;
+
+    return presenceCount > 1 && presenceCount < targetKanjiCount;
+  });
+
+  const rows = [];
+
+  for (const [targetKanji, entries] of entriesByTargetKanji) {
+    const targetFeatureNames = featureNamesByTargetKanji.get(targetKanji);
+
+    const otherTargetFeatureNames = new Set();
+
+    for (const [
+      otherTargetKanji,
+      otherFeatureNames,
+    ] of featureNamesByTargetKanji) {
+      if (otherTargetKanji === targetKanji) {
+        continue;
+      }
+
+      for (const featureName of otherFeatureNames) {
+        otherTargetFeatureNames.add(featureName);
+      }
+    }
+
+    const featuresSeenInOtherTargetKanjis = [...targetFeatureNames].filter(
+      (featureName) => otherTargetFeatureNames.has(featureName),
+    );
+
+    const featuresUnseenOutsideTargetKanji = [...targetFeatureNames].filter(
+      (featureName) => !otherTargetFeatureNames.has(featureName),
+    );
+
+    const { positiveCount, negativeCount } = calculateLabelCounts(entries);
+
+    const featuresPerRow = entries.map(
+      ({ row }) => Object.keys(row.features ?? {}).length,
+    );
+
+    rows.push({
+      targetKanji,
+      rowCount: entries.length,
+      positiveCount,
+      negativeCount,
+      featureCount: targetFeatureNames.size,
+      featuresSeenInOtherTargetKanjisCount:
+        featuresSeenInOtherTargetKanjis.length,
+      featuresUnseenOutsideTargetKanjiCount:
+        featuresUnseenOutsideTargetKanji.length,
+      featureCoverageFromOtherTargetKanjis: safeDivide(
+        featuresSeenInOtherTargetKanjis.length,
+        targetFeatureNames.size,
+      ),
+      minimumFeaturesPerRow: Math.min(...featuresPerRow),
+      maximumFeaturesPerRow: Math.max(...featuresPerRow),
+      averageFeaturesPerRow:
+        featuresPerRow.reduce((total, count) => total + count, 0) /
+        featuresPerRow.length,
+      featuresUnseenOutsideTargetKanji: featuresUnseenOutsideTargetKanji.sort(
+        (left, right) => left.localeCompare(right),
+      ),
+    });
+  }
+
+  rows.sort((left, right) => left.targetKanji.localeCompare(right.targetKanji));
+
+  return {
+    targetKanjiCount,
+    featureCount: featureNames.length,
+    sharedByAllTargetKanjisCount: sharedByAllTargetKanjis.length,
+    sharedByMultipleTargetKanjisCount: sharedByMultipleTargetKanjis.length,
+    exclusiveFeatureCount: exclusiveFeatures.length,
+    sharedByAllTargetKanjis: sharedByAllTargetKanjis.sort((left, right) =>
+      left.localeCompare(right),
+    ),
+    exclusiveFeatures: exclusiveFeatures.sort((left, right) =>
+      left.localeCompare(right),
+    ),
+    rows,
+  };
+}
+
+function findLowFeatureRows(datasetEntries, maximumFeatureCount = 3) {
+  return datasetEntries
+    .map(({ row, lineNumber }) => ({
+      lineNumber,
+      recognitionId: row.recognitionId,
+      targetKanji: row.targetKanji,
+      label: row.label,
+      classification: row.classification,
+      featureCount: Object.keys(row.features ?? {}).length,
+      featureNames: Object.keys(row.features ?? {}).sort((left, right) =>
+        left.localeCompare(right),
+      ),
+    }))
+    .filter((row) => row.featureCount <= maximumFeatureCount)
+    .sort((left, right) => {
+      if (left.featureCount !== right.featureCount) {
+        return left.featureCount - right.featureCount;
+      }
+
+      return left.lineNumber - right.lineNumber;
+    });
+}
+
 function calculateDescriptorMetrics(datasetEntries) {
   const metrics = {
     truePositive: 0,
@@ -487,6 +682,13 @@ function buildDatasetInspection({ datasetPath, datasetEntries, featureNames }) {
     featureNames,
   );
 
+  const targetKanjiFeatureCoverage = buildTargetKanjiFeatureCoverage(
+    datasetEntries,
+    featureNames,
+  );
+
+  const lowFeatureRows = findLowFeatureRows(datasetEntries);
+
   const alwaysPresentFeatures = featureNames.filter(
     (featureName) => featurePresence[featureName] === rows.length,
   );
@@ -519,6 +721,9 @@ function buildDatasetInspection({ datasetPath, datasetEntries, featureNames }) {
     sparseFeatureCount: sparseFeatures.length,
     alwaysPresentFeatures,
     potentialLeakageFeatures: detectPotentialLeakageFeatures(featureNames),
+    targetKanjiFeatureCoverage,
+    lowFeatureRowCount: lowFeatureRows.length,
+    lowFeatureRows,
     descriptorBaselineMetrics: calculateDescriptorMetrics(datasetEntries),
   };
 }
@@ -684,6 +889,59 @@ function printInspection({ inspection, validation, summaryMismatches }) {
     `False positive rate: ${formatMetric(metrics.falsePositiveRate)}`,
   );
 
+  const targetCoverage = inspection.targetKanjiFeatureCoverage;
+
+  console.log("");
+  console.log("Feature coverage across target kanjis");
+  console.log("-------------------------------------");
+  console.log(
+    `Features shared by all target kanjis: ` +
+      `${targetCoverage.sharedByAllTargetKanjisCount}`,
+  );
+  console.log(
+    `Features shared by multiple target kanjis: ` +
+      `${targetCoverage.sharedByMultipleTargetKanjisCount}`,
+  );
+  console.log(
+    `Features exclusive to one target kanji: ` +
+      `${targetCoverage.exclusiveFeatureCount}`,
+  );
+
+  console.log("");
+  console.log("Leave-one-kanji-out feature coverage");
+  console.log("------------------------------------");
+
+  for (const row of targetCoverage.rows) {
+    console.log(
+      `${row.targetKanji}: ` +
+        `rows=${row.rowCount}, ` +
+        `positive=${row.positiveCount}, ` +
+        `negative=${row.negativeCount}, ` +
+        `features=${row.featureCount}, ` +
+        `seenElsewhere=${row.featuresSeenInOtherTargetKanjisCount}, ` +
+        `unseen=${row.featuresUnseenOutsideTargetKanjiCount}, ` +
+        `coverage=${formatMetric(row.featureCoverageFromOtherTargetKanjis)}`,
+    );
+  }
+
+  console.log("");
+  console.log("Low-feature rows");
+  console.log("----------------");
+  console.log(
+    `Rows with 3 or fewer features: ` + `${inspection.lowFeatureRowCount}`,
+  );
+
+  for (const row of inspection.lowFeatureRows) {
+    console.log(
+      `- line=${row.lineNumber}, ` +
+        `recognitionId=${row.recognitionId}, ` +
+        `targetKanji=${row.targetKanji}, ` +
+        `label=${row.label}, ` +
+        `classification=${row.classification}, ` +
+        `features=${row.featureCount}`,
+    );
+  }
+
   console.log("");
   console.log("Potential leakage");
   console.log("-----------------");
@@ -822,6 +1080,12 @@ module.exports = {
   determineFeatureNames,
   detectPotentialLeakageFeatures,
   calculateFeaturePresence,
+  groupDatasetEntriesByTargetKanji,
+  buildFeatureNamesByTargetKanji,
+  calculateFeatureTargetKanjiPresence,
+  calculateLabelCounts,
+  buildTargetKanjiFeatureCoverage,
+  findLowFeatureRows,
   calculateDescriptorMetrics,
   buildDatasetInspection,
   compareArrays,
