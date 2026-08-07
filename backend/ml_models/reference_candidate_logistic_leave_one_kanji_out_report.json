@@ -1,0 +1,3457 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Leave-one-kanji-out evaluation of the descriptor, logistic model and conservative hybrid validator",
+  "strategy": "leave_one_target_kanji_out",
+  "evaluationScope": "Each model is evaluated on one target kanji completely absent from training and threshold calibration.",
+  "dataset": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_binary_dataset.jsonl",
+    "sha256": "cabb9bc2d97a003f4277e3f364969cbea3d3272d58ac06aff75a6dc4fc56bbe1",
+    "rowCount": 565
+  },
+  "foldsManifest": {
+    "path": "D:\\projects\\kanji_app\\backend\\ml_datasets\\reference_candidate_leave_one_kanji_out_folds.json",
+    "sha256": "911e061930a914c5ee165ae0ef7165fa6a87636b79f5ed7fc7c5807f0c02d399",
+    "foldCount": 19
+  },
+  "trainingConfiguration": {
+    "epochs": 2000,
+    "learningRate": 0.01,
+    "l2Strength": 0.001,
+    "reportEvery": 100,
+    "initialization": "zero_bias_and_zero_weights",
+    "optimization": "full_batch_gradient_descent",
+    "thresholdCalibrationScope": "outer_fold_training_partition"
+  },
+  "executedFoldCount": 19,
+  "partialExecution": false,
+  "onlyKanji": null,
+  "folds": [
+    {
+      "foldId": "held_out_4e00",
+      "heldOutKanji": "一",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 541,
+      "evaluationRowCount": 24,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 11,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 371,
+        "negativeCount": 170
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 12,
+        "negativeCount": 12
+      },
+      "selectedThreshold": 0.10461815027024716,
+      "thresholdCandidateCount": 510,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.10461815027024716,
+        "maximumNegativeProbability": 0.9455946840002369,
+        "positiveNegativeMargin": -0.8409765337299898
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.1934362435861322,
+        "meanCrossEntropy": 0.19133635587076572,
+        "l2Penalty": 0.002099887715366486
+      },
+      "modelPayloadSha256": "4f3a913059d86a000d51b13626fde6dcf5fc968a65af1383ee1e0c1f125b2dbe",
+      "trainingMetrics": {
+        "truePositive": 371,
+        "trueNegative": 91,
+        "falsePositive": 79,
+        "falseNegative": 0,
+        "rowCount": 541,
+        "positiveCount": 371,
+        "negativeCount": 170,
+        "predictedPositiveCount": 450,
+        "predictedNegativeCount": 91,
+        "accuracy": 0.8539741219963032,
+        "recall": 1,
+        "specificity": 0.5352941176470588,
+        "precision": 0.8244444444444444,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4647058823529412
+      },
+      "descriptorMetrics": {
+        "truePositive": 12,
+        "trueNegative": 10,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "positiveCount": 12,
+        "negativeCount": 12,
+        "predictedPositiveCount": 14,
+        "predictedNegativeCount": 10,
+        "accuracy": 0.9166666666666666,
+        "recall": 1,
+        "specificity": 0.8333333333333334,
+        "precision": 0.8571428571428571,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.16666666666666666
+      },
+      "pureMlMetrics": {
+        "truePositive": 12,
+        "trueNegative": 12,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 24,
+        "positiveCount": 12,
+        "negativeCount": 12,
+        "predictedPositiveCount": 12,
+        "predictedNegativeCount": 12,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridMetrics": {
+        "truePositive": 12,
+        "trueNegative": 12,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 24,
+        "positiveCount": 12,
+        "negativeCount": 12,
+        "predictedPositiveCount": 12,
+        "predictedNegativeCount": 12,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 2,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [
+          {
+            "recognitionId": "ca0dced0-8352-4215-af88-66859ab174b7",
+            "targetKanji": "一",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.0007905905529658791,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          },
+          {
+            "recognitionId": "9c539bec-a261-4acc-bc9a-619251a753d8",
+            "targetKanji": "一",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.002115341444131911,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          }
+        ],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.08333333333333337,
+          "recall": 0,
+          "specificity": 0.16666666666666663,
+          "precision": 0.1428571428571429
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_56de",
+      "heldOutKanji": "回",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 524,
+      "evaluationRowCount": 41,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 123,
+      "evaluationFeatureCount": 51,
+      "dimensionCount": 246,
+      "unseenEvaluationFeatureCount": 8,
+      "unseenEvaluationFeatures": [
+        "perRole.role_stroke5_horizontal.angleAbsDiff",
+        "perRole.role_stroke5_horizontal.centerDistance",
+        "perRole.role_stroke5_horizontal.comparisonCost",
+        "perRole.role_stroke5_horizontal.deltaXRelativeDiff",
+        "perRole.role_stroke5_horizontal.deltaYRelativeDiff",
+        "perRole.role_stroke5_horizontal.heightRelativeDiff",
+        "perRole.role_stroke5_horizontal.straightnessDiff",
+        "perRole.role_stroke5_horizontal.widthRelativeDiff"
+      ],
+      "trainingLabelCounts": {
+        "positiveCount": 356,
+        "negativeCount": 168
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 27,
+        "negativeCount": 14
+      },
+      "selectedThreshold": 0.07073159754852522,
+      "thresholdCandidateCount": 500,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.07073159754852522,
+        "maximumNegativeProbability": 0.948715470725781,
+        "positiveNegativeMargin": -0.8779838731772558
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.200665090409472,
+        "meanCrossEntropy": 0.19853115008111738,
+        "l2Penalty": 0.002133940328354629
+      },
+      "modelPayloadSha256": "029bf3f923b26acefb29913862e0d27bc12d0ec110e0fa3451f6b011bde806f5",
+      "trainingMetrics": {
+        "truePositive": 356,
+        "trueNegative": 79,
+        "falsePositive": 89,
+        "falseNegative": 0,
+        "rowCount": 524,
+        "positiveCount": 356,
+        "negativeCount": 168,
+        "predictedPositiveCount": 445,
+        "predictedNegativeCount": 79,
+        "accuracy": 0.8301526717557252,
+        "recall": 1,
+        "specificity": 0.47023809523809523,
+        "precision": 0.8,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5297619047619048
+      },
+      "descriptorMetrics": {
+        "truePositive": 27,
+        "trueNegative": 13,
+        "falsePositive": 1,
+        "falseNegative": 0,
+        "positiveCount": 27,
+        "negativeCount": 14,
+        "predictedPositiveCount": 28,
+        "predictedNegativeCount": 13,
+        "accuracy": 0.975609756097561,
+        "recall": 1,
+        "specificity": 0.9285714285714286,
+        "precision": 0.9642857142857143,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.07142857142857142
+      },
+      "pureMlMetrics": {
+        "truePositive": 27,
+        "trueNegative": 12,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 41,
+        "positiveCount": 27,
+        "negativeCount": 14,
+        "predictedPositiveCount": 29,
+        "predictedNegativeCount": 12,
+        "accuracy": 0.9512195121951219,
+        "recall": 1,
+        "specificity": 0.8571428571428571,
+        "precision": 0.9310344827586207,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.14285714285714285
+      },
+      "hybridMetrics": {
+        "truePositive": 27,
+        "trueNegative": 13,
+        "falsePositive": 1,
+        "falseNegative": 0,
+        "rowCount": 41,
+        "positiveCount": 27,
+        "negativeCount": 14,
+        "predictedPositiveCount": 28,
+        "predictedNegativeCount": 13,
+        "accuracy": 0.975609756097561,
+        "recall": 1,
+        "specificity": 0.9285714285714286,
+        "precision": 0.9642857142857143,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.07142857142857142
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 1,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "51d87091-d452-4f35-bc13-185da4e20c06",
+            "targetKanji": "回",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.674512795069454,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 1,
+          "falsePositive": -1,
+          "falseNegative": 0,
+          "accuracy": 0.024390243902439046,
+          "recall": 0,
+          "specificity": 0.07142857142857151,
+          "precision": 0.03325123152709364
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_53e3",
+      "heldOutKanji": "口",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 539,
+      "evaluationRowCount": 26,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 27,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 366,
+        "negativeCount": 173
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 17,
+        "negativeCount": 9
+      },
+      "selectedThreshold": 0.08206329750929983,
+      "thresholdCandidateCount": 508,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.08206329750929983,
+        "maximumNegativeProbability": 0.9442923603897249,
+        "positiveNegativeMargin": -0.862229062880425
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19461933622714778,
+        "meanCrossEntropy": 0.19248694295587224,
+        "l2Penalty": 0.00213239327127553
+      },
+      "modelPayloadSha256": "8d463e657c201d8b6c46a7561b8ba0d520af7ac67778e842efbb9b69d35b2540",
+      "trainingMetrics": {
+        "truePositive": 366,
+        "trueNegative": 88,
+        "falsePositive": 85,
+        "falseNegative": 0,
+        "rowCount": 539,
+        "positiveCount": 366,
+        "negativeCount": 173,
+        "predictedPositiveCount": 451,
+        "predictedNegativeCount": 88,
+        "accuracy": 0.8423005565862709,
+        "recall": 1,
+        "specificity": 0.5086705202312138,
+        "precision": 0.811529933481153,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4913294797687861
+      },
+      "descriptorMetrics": {
+        "truePositive": 17,
+        "trueNegative": 9,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "positiveCount": 17,
+        "negativeCount": 9,
+        "predictedPositiveCount": 17,
+        "predictedNegativeCount": 9,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "pureMlMetrics": {
+        "truePositive": 17,
+        "trueNegative": 3,
+        "falsePositive": 6,
+        "falseNegative": 0,
+        "rowCount": 26,
+        "positiveCount": 17,
+        "negativeCount": 9,
+        "predictedPositiveCount": 23,
+        "predictedNegativeCount": 3,
+        "accuracy": 0.7692307692307693,
+        "recall": 1,
+        "specificity": 0.3333333333333333,
+        "precision": 0.7391304347826086,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.6666666666666666
+      },
+      "hybridMetrics": {
+        "truePositive": 17,
+        "trueNegative": 9,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 26,
+        "positiveCount": 17,
+        "negativeCount": 9,
+        "predictedPositiveCount": 17,
+        "predictedNegativeCount": 9,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 6,
+          "falsePositive": -6,
+          "falseNegative": 0,
+          "accuracy": 0.23076923076923073,
+          "recall": 0,
+          "specificity": 0.6666666666666667,
+          "precision": 0.26086956521739135
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_4e09",
+      "heldOutKanji": "三",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 545,
+      "evaluationRowCount": 20,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 27,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 370,
+        "negativeCount": 175
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 13,
+        "negativeCount": 7
+      },
+      "selectedThreshold": 0.09096146867779693,
+      "thresholdCandidateCount": 513,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.09096146867779693,
+        "maximumNegativeProbability": 0.9479616104777662,
+        "positiveNegativeMargin": -0.8570001417999692
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19412675068906096,
+        "meanCrossEntropy": 0.19199257590339425,
+        "l2Penalty": 0.002134174785666719
+      },
+      "modelPayloadSha256": "bf0257536d98fe79d5fc3a54b778a7390a8f9f4e0729b0c020dfe4031bcaf302",
+      "trainingMetrics": {
+        "truePositive": 370,
+        "trueNegative": 88,
+        "falsePositive": 87,
+        "falseNegative": 0,
+        "rowCount": 545,
+        "positiveCount": 370,
+        "negativeCount": 175,
+        "predictedPositiveCount": 457,
+        "predictedNegativeCount": 88,
+        "accuracy": 0.8403669724770643,
+        "recall": 1,
+        "specificity": 0.5028571428571429,
+        "precision": 0.8096280087527352,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.49714285714285716
+      },
+      "descriptorMetrics": {
+        "truePositive": 13,
+        "trueNegative": 7,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "positiveCount": 13,
+        "negativeCount": 7,
+        "predictedPositiveCount": 13,
+        "predictedNegativeCount": 7,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "pureMlMetrics": {
+        "truePositive": 13,
+        "trueNegative": 5,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 20,
+        "positiveCount": 13,
+        "negativeCount": 7,
+        "predictedPositiveCount": 15,
+        "predictedNegativeCount": 5,
+        "accuracy": 0.9,
+        "recall": 1,
+        "specificity": 0.7142857142857143,
+        "precision": 0.8666666666666667,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.2857142857142857
+      },
+      "hybridMetrics": {
+        "truePositive": 13,
+        "trueNegative": 7,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 20,
+        "positiveCount": 13,
+        "negativeCount": 7,
+        "predictedPositiveCount": 13,
+        "predictedNegativeCount": 7,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.09999999999999998,
+          "recall": 0,
+          "specificity": 0.2857142857142857,
+          "precision": 0.1333333333333333
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_5c71",
+      "heldOutKanji": "山",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 543,
+      "evaluationRowCount": 22,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 27,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 369,
+        "negativeCount": 174
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 14,
+        "negativeCount": 8
+      },
+      "selectedThreshold": 0.09605537234327217,
+      "thresholdCandidateCount": 511,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.09605537234327217,
+        "maximumNegativeProbability": 0.9421352634169434,
+        "positiveNegativeMargin": -0.8460798910736712
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.1912424255884906,
+        "meanCrossEntropy": 0.18907719897244163,
+        "l2Penalty": 0.0021652266160489854
+      },
+      "modelPayloadSha256": "2ffb1a6e33edd384f8dfe484b0c46e47b11838f777eefb0388df86fe823fb19e",
+      "trainingMetrics": {
+        "truePositive": 369,
+        "trueNegative": 88,
+        "falsePositive": 86,
+        "falseNegative": 0,
+        "rowCount": 543,
+        "positiveCount": 369,
+        "negativeCount": 174,
+        "predictedPositiveCount": 455,
+        "predictedNegativeCount": 88,
+        "accuracy": 0.8416206261510129,
+        "recall": 1,
+        "specificity": 0.5057471264367817,
+        "precision": 0.810989010989011,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4942528735632184
+      },
+      "descriptorMetrics": {
+        "truePositive": 14,
+        "trueNegative": 6,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "positiveCount": 14,
+        "negativeCount": 8,
+        "predictedPositiveCount": 16,
+        "predictedNegativeCount": 6,
+        "accuracy": 0.9090909090909091,
+        "recall": 1,
+        "specificity": 0.75,
+        "precision": 0.875,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.25
+      },
+      "pureMlMetrics": {
+        "truePositive": 14,
+        "trueNegative": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 22,
+        "positiveCount": 14,
+        "negativeCount": 8,
+        "predictedPositiveCount": 14,
+        "predictedNegativeCount": 8,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridMetrics": {
+        "truePositive": 14,
+        "trueNegative": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 22,
+        "positiveCount": 14,
+        "negativeCount": 8,
+        "predictedPositiveCount": 14,
+        "predictedNegativeCount": 8,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 2,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [
+          {
+            "recognitionId": "fd993944-ed6d-4b04-88a4-3148c1e6ef87",
+            "targetKanji": "山",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.0029892812835767267,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          },
+          {
+            "recognitionId": "8fd6824b-03f0-4a15-a02e-b491c69eee8b",
+            "targetKanji": "山",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.004213967450377396,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          }
+        ],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.09090909090909094,
+          "recall": 0,
+          "specificity": 0.25,
+          "precision": 0.125
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_56db",
+      "heldOutKanji": "四",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 531,
+      "evaluationRowCount": 34,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 361,
+        "negativeCount": 170
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 22,
+        "negativeCount": 12
+      },
+      "selectedThreshold": 0.2449917952276848,
+      "thresholdCandidateCount": 502,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.2449917952276848,
+        "maximumNegativeProbability": 0.9484762818814686,
+        "positiveNegativeMargin": -0.7034844866537838
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19394786264330247,
+        "meanCrossEntropy": 0.19177276516554595,
+        "l2Penalty": 0.002175097477756513
+      },
+      "modelPayloadSha256": "fe46f768053a44394656d291f5adcc8467559b9b4d31bb12edb03ad861b5741e",
+      "trainingMetrics": {
+        "truePositive": 361,
+        "trueNegative": 118,
+        "falsePositive": 52,
+        "falseNegative": 0,
+        "rowCount": 531,
+        "positiveCount": 361,
+        "negativeCount": 170,
+        "predictedPositiveCount": 413,
+        "predictedNegativeCount": 118,
+        "accuracy": 0.9020715630885122,
+        "recall": 1,
+        "specificity": 0.6941176470588235,
+        "precision": 0.87409200968523,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.3058823529411765
+      },
+      "descriptorMetrics": {
+        "truePositive": 22,
+        "trueNegative": 9,
+        "falsePositive": 3,
+        "falseNegative": 0,
+        "positiveCount": 22,
+        "negativeCount": 12,
+        "predictedPositiveCount": 25,
+        "predictedNegativeCount": 9,
+        "accuracy": 0.9117647058823529,
+        "recall": 1,
+        "specificity": 0.75,
+        "precision": 0.88,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.25
+      },
+      "pureMlMetrics": {
+        "truePositive": 22,
+        "trueNegative": 7,
+        "falsePositive": 5,
+        "falseNegative": 0,
+        "rowCount": 34,
+        "positiveCount": 22,
+        "negativeCount": 12,
+        "predictedPositiveCount": 27,
+        "predictedNegativeCount": 7,
+        "accuracy": 0.8529411764705882,
+        "recall": 1,
+        "specificity": 0.5833333333333334,
+        "precision": 0.8148148148148148,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4166666666666667
+      },
+      "hybridMetrics": {
+        "truePositive": 22,
+        "trueNegative": 10,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 34,
+        "positiveCount": 22,
+        "negativeCount": 12,
+        "predictedPositiveCount": 24,
+        "predictedNegativeCount": 10,
+        "accuracy": 0.9411764705882353,
+        "recall": 1,
+        "specificity": 0.8333333333333334,
+        "precision": 0.9166666666666666,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.16666666666666666
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 1,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 2,
+        "descriptorFalsePositivesRejected": [
+          {
+            "recognitionId": "ffe6411c-8c09-4e47-ae16-bc09296ba130",
+            "targetKanji": "四",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.11895199501128606,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          }
+        ],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "da5bdf7f-47be-4818-a50c-7c438b0a6062",
+            "targetKanji": "四",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.6504662032422985,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "5fcf6371-bce8-4f8b-b209-fdc887a7c58e",
+            "targetKanji": "四",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.8851327571119669,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 1,
+          "falsePositive": -1,
+          "falseNegative": 0,
+          "accuracy": 0.02941176470588236,
+          "recall": 0,
+          "specificity": 0.08333333333333337,
+          "precision": 0.036666666666666625
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 3,
+          "falsePositive": -3,
+          "falseNegative": 0,
+          "accuracy": 0.08823529411764708,
+          "recall": 0,
+          "specificity": 0.25,
+          "precision": 0.10185185185185186
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_4e03",
+      "heldOutKanji": "七",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 540,
+      "evaluationRowCount": 25,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 19,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 373,
+        "negativeCount": 167
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 10,
+        "negativeCount": 15
+      },
+      "selectedThreshold": 0.0914367777918333,
+      "thresholdCandidateCount": 508,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.0914367777918333,
+        "maximumNegativeProbability": 0.9406029121192986,
+        "positiveNegativeMargin": -0.8491661343274652
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19429898347827293,
+        "meanCrossEntropy": 0.19217817598147663,
+        "l2Penalty": 0.0021208074967963043
+      },
+      "modelPayloadSha256": "e79fde3fd2b97cf39aaa398ca947e95d271c76bf80c8c4aabc6992abcc0e317d",
+      "trainingMetrics": {
+        "truePositive": 373,
+        "trueNegative": 84,
+        "falsePositive": 83,
+        "falseNegative": 0,
+        "rowCount": 540,
+        "positiveCount": 373,
+        "negativeCount": 167,
+        "predictedPositiveCount": 456,
+        "predictedNegativeCount": 84,
+        "accuracy": 0.8462962962962963,
+        "recall": 1,
+        "specificity": 0.5029940119760479,
+        "precision": 0.8179824561403509,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.49700598802395207
+      },
+      "descriptorMetrics": {
+        "truePositive": 10,
+        "trueNegative": 11,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "positiveCount": 10,
+        "negativeCount": 15,
+        "predictedPositiveCount": 14,
+        "predictedNegativeCount": 11,
+        "accuracy": 0.84,
+        "recall": 1,
+        "specificity": 0.7333333333333333,
+        "precision": 0.7142857142857143,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.26666666666666666
+      },
+      "pureMlMetrics": {
+        "truePositive": 10,
+        "trueNegative": 6,
+        "falsePositive": 9,
+        "falseNegative": 0,
+        "rowCount": 25,
+        "positiveCount": 10,
+        "negativeCount": 15,
+        "predictedPositiveCount": 19,
+        "predictedNegativeCount": 6,
+        "accuracy": 0.64,
+        "recall": 1,
+        "specificity": 0.4,
+        "precision": 0.5263157894736842,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.6
+      },
+      "hybridMetrics": {
+        "truePositive": 10,
+        "trueNegative": 13,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 25,
+        "positiveCount": 10,
+        "negativeCount": 15,
+        "predictedPositiveCount": 12,
+        "predictedNegativeCount": 13,
+        "accuracy": 0.92,
+        "recall": 1,
+        "specificity": 0.8666666666666667,
+        "precision": 0.8333333333333334,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.13333333333333333
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 2,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 2,
+        "descriptorFalsePositivesRejected": [
+          {
+            "recognitionId": "d740ffc3-7e28-4551-a5f1-87d4ed1307af",
+            "targetKanji": "七",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.019978950372895946,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          },
+          {
+            "recognitionId": "26881aab-1e2f-4b5e-ab54-4066f60d0400",
+            "targetKanji": "七",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.04782758449403181,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          }
+        ],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "effb7945-cb5e-46a4-a956-eb1e5de4634b",
+            "targetKanji": "七",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.4430643966839315,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "e9b21e3f-3b5d-495b-a300-159a1a3b28f4",
+            "targetKanji": "七",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.7924169690202608,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.08000000000000007,
+          "recall": 0,
+          "specificity": 0.13333333333333341,
+          "precision": 0.11904761904761907
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 7,
+          "falsePositive": -7,
+          "falseNegative": 0,
+          "accuracy": 0.28,
+          "recall": 0,
+          "specificity": 0.4666666666666667,
+          "precision": 0.3070175438596492
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_5341",
+      "heldOutKanji": "十",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 561,
+      "evaluationRowCount": 4,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 19,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 380,
+        "negativeCount": 181
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 3,
+        "negativeCount": 1
+      },
+      "selectedThreshold": 0.07853225599551755,
+      "thresholdCandidateCount": 529,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.07853225599551755,
+        "maximumNegativeProbability": 0.9466122339836688,
+        "positiveNegativeMargin": -0.8680799779881512
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.1908951794411126,
+        "meanCrossEntropy": 0.18874085875105637,
+        "l2Penalty": 0.0021543206900562126
+      },
+      "modelPayloadSha256": "49b67d2a18b329a057f86b0fe93a86de5d2e0a502aa3ac07a415043d48c8db8a",
+      "trainingMetrics": {
+        "truePositive": 380,
+        "trueNegative": 92,
+        "falsePositive": 89,
+        "falseNegative": 0,
+        "rowCount": 561,
+        "positiveCount": 380,
+        "negativeCount": 181,
+        "predictedPositiveCount": 469,
+        "predictedNegativeCount": 92,
+        "accuracy": 0.8413547237076648,
+        "recall": 1,
+        "specificity": 0.5082872928176796,
+        "precision": 0.8102345415778252,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.49171270718232046
+      },
+      "descriptorMetrics": {
+        "truePositive": 3,
+        "trueNegative": 1,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "positiveCount": 3,
+        "negativeCount": 1,
+        "predictedPositiveCount": 3,
+        "predictedNegativeCount": 1,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "pureMlMetrics": {
+        "truePositive": 3,
+        "trueNegative": 0,
+        "falsePositive": 1,
+        "falseNegative": 0,
+        "rowCount": 4,
+        "positiveCount": 3,
+        "negativeCount": 1,
+        "predictedPositiveCount": 4,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.75,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.75,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "hybridMetrics": {
+        "truePositive": 3,
+        "trueNegative": 1,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 4,
+        "positiveCount": 3,
+        "negativeCount": 1,
+        "predictedPositiveCount": 3,
+        "predictedNegativeCount": 1,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 1,
+          "falsePositive": -1,
+          "falseNegative": 0,
+          "accuracy": 0.25,
+          "recall": 0,
+          "specificity": 1,
+          "precision": 0.25
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_7530",
+      "heldOutKanji": "田",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 538,
+      "evaluationRowCount": 27,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 363,
+        "negativeCount": 175
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 20,
+        "negativeCount": 7
+      },
+      "selectedThreshold": 0.08764463951060407,
+      "thresholdCandidateCount": 507,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.08764463951060407,
+        "maximumNegativeProbability": 0.9526736096689717,
+        "positiveNegativeMargin": -0.8650289701583677
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.18457161283600027,
+        "meanCrossEntropy": 0.18237081087768525,
+        "l2Penalty": 0.0022008019583150138
+      },
+      "modelPayloadSha256": "7a79c1f98ec0b49e05f4eee410290bd4f5b53b6b79fc35c434be6df34c80c7fa",
+      "trainingMetrics": {
+        "truePositive": 363,
+        "trueNegative": 89,
+        "falsePositive": 86,
+        "falseNegative": 0,
+        "rowCount": 538,
+        "positiveCount": 363,
+        "negativeCount": 175,
+        "predictedPositiveCount": 449,
+        "predictedNegativeCount": 89,
+        "accuracy": 0.8401486988847584,
+        "recall": 1,
+        "specificity": 0.5085714285714286,
+        "precision": 0.8084632516703786,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.49142857142857144
+      },
+      "descriptorMetrics": {
+        "truePositive": 20,
+        "trueNegative": 3,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "positiveCount": 20,
+        "negativeCount": 7,
+        "predictedPositiveCount": 24,
+        "predictedNegativeCount": 3,
+        "accuracy": 0.8518518518518519,
+        "recall": 1,
+        "specificity": 0.42857142857142855,
+        "precision": 0.8333333333333334,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5714285714285714
+      },
+      "pureMlMetrics": {
+        "truePositive": 20,
+        "trueNegative": 1,
+        "falsePositive": 6,
+        "falseNegative": 0,
+        "rowCount": 27,
+        "positiveCount": 20,
+        "negativeCount": 7,
+        "predictedPositiveCount": 26,
+        "predictedNegativeCount": 1,
+        "accuracy": 0.7777777777777778,
+        "recall": 1,
+        "specificity": 0.14285714285714285,
+        "precision": 0.7692307692307693,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.8571428571428571
+      },
+      "hybridMetrics": {
+        "truePositive": 20,
+        "trueNegative": 3,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "rowCount": 27,
+        "positiveCount": 20,
+        "negativeCount": 7,
+        "predictedPositiveCount": 24,
+        "predictedNegativeCount": 3,
+        "accuracy": 0.8518518518518519,
+        "recall": 1,
+        "specificity": 0.42857142857142855,
+        "precision": 0.8333333333333334,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5714285714285714
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 4,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "0b891302-9582-465f-ba1e-9b43f5f596bb",
+            "targetKanji": "田",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.2830903174647806,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "6e1d1d93-4e87-451a-aacf-785718689746",
+            "targetKanji": "田",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.7771340262287935,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "87e0dd68-6fb4-41d0-9b54-006407e29f18",
+            "targetKanji": "田",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9588373804222209,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "45c5c15a-f61e-4958-846f-911d3504c0aa",
+            "targetKanji": "田",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9653704501213124,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.07407407407407407,
+          "recall": 0,
+          "specificity": 0.2857142857142857,
+          "precision": 0.0641025641025641
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_4e8c",
+      "heldOutKanji": "二",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 538,
+      "evaluationRowCount": 27,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 19,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 362,
+        "negativeCount": 176
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 21,
+        "negativeCount": 6
+      },
+      "selectedThreshold": 0.0941577663966504,
+      "thresholdCandidateCount": 506,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.0941577663966504,
+        "maximumNegativeProbability": 0.9476551230453117,
+        "positiveNegativeMargin": -0.8534973566486613
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19730194886209731,
+        "meanCrossEntropy": 0.19518145147273555,
+        "l2Penalty": 0.0021204973893617545
+      },
+      "modelPayloadSha256": "311beab46d86e726bca152af119d1417e59f4bd73fda98db2c107d48f12f87f5",
+      "trainingMetrics": {
+        "truePositive": 362,
+        "trueNegative": 91,
+        "falsePositive": 85,
+        "falseNegative": 0,
+        "rowCount": 538,
+        "positiveCount": 362,
+        "negativeCount": 176,
+        "predictedPositiveCount": 447,
+        "predictedNegativeCount": 91,
+        "accuracy": 0.8420074349442379,
+        "recall": 1,
+        "specificity": 0.5170454545454546,
+        "precision": 0.8098434004474273,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.48295454545454547
+      },
+      "descriptorMetrics": {
+        "truePositive": 21,
+        "trueNegative": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "positiveCount": 21,
+        "negativeCount": 6,
+        "predictedPositiveCount": 21,
+        "predictedNegativeCount": 6,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "pureMlMetrics": {
+        "truePositive": 21,
+        "trueNegative": 5,
+        "falsePositive": 1,
+        "falseNegative": 0,
+        "rowCount": 27,
+        "positiveCount": 21,
+        "negativeCount": 6,
+        "predictedPositiveCount": 22,
+        "predictedNegativeCount": 5,
+        "accuracy": 0.9629629629629629,
+        "recall": 1,
+        "specificity": 0.8333333333333334,
+        "precision": 0.9545454545454546,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.16666666666666666
+      },
+      "hybridMetrics": {
+        "truePositive": 21,
+        "trueNegative": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 27,
+        "positiveCount": 21,
+        "negativeCount": 6,
+        "predictedPositiveCount": 21,
+        "predictedNegativeCount": 6,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 1,
+          "falsePositive": -1,
+          "falseNegative": 0,
+          "accuracy": 0.03703703703703709,
+          "recall": 0,
+          "specificity": 0.16666666666666663,
+          "precision": 0.045454545454545414
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_65e5",
+      "heldOutKanji": "日",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 543,
+      "evaluationRowCount": 22,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 35,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 370,
+        "negativeCount": 173
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 13,
+        "negativeCount": 9
+      },
+      "selectedThreshold": 0.0820268440903835,
+      "thresholdCandidateCount": 513,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.0820268440903835,
+        "maximumNegativeProbability": 0.9376317548564624,
+        "positiveNegativeMargin": -0.8556049107660789
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.1830027959016952,
+        "meanCrossEntropy": 0.18081377832277482,
+        "l2Penalty": 0.0021890175789203593
+      },
+      "modelPayloadSha256": "8e765160a68ba58d2a2169b6c9cf2f55b6211093e498f66d9e8e5b28133be557",
+      "trainingMetrics": {
+        "truePositive": 370,
+        "trueNegative": 89,
+        "falsePositive": 84,
+        "falseNegative": 0,
+        "rowCount": 543,
+        "positiveCount": 370,
+        "negativeCount": 173,
+        "predictedPositiveCount": 454,
+        "predictedNegativeCount": 89,
+        "accuracy": 0.8453038674033149,
+        "recall": 1,
+        "specificity": 0.5144508670520231,
+        "precision": 0.8149779735682819,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.48554913294797686
+      },
+      "descriptorMetrics": {
+        "truePositive": 13,
+        "trueNegative": 7,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "positiveCount": 13,
+        "negativeCount": 9,
+        "predictedPositiveCount": 15,
+        "predictedNegativeCount": 7,
+        "accuracy": 0.9090909090909091,
+        "recall": 1,
+        "specificity": 0.7777777777777778,
+        "precision": 0.8666666666666667,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.2222222222222222
+      },
+      "pureMlMetrics": {
+        "truePositive": 13,
+        "trueNegative": 1,
+        "falsePositive": 8,
+        "falseNegative": 0,
+        "rowCount": 22,
+        "positiveCount": 13,
+        "negativeCount": 9,
+        "predictedPositiveCount": 21,
+        "predictedNegativeCount": 1,
+        "accuracy": 0.6363636363636364,
+        "recall": 1,
+        "specificity": 0.1111111111111111,
+        "precision": 0.6190476190476191,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.8888888888888888
+      },
+      "hybridMetrics": {
+        "truePositive": 13,
+        "trueNegative": 7,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 22,
+        "positiveCount": 13,
+        "negativeCount": 9,
+        "predictedPositiveCount": 15,
+        "predictedNegativeCount": 7,
+        "accuracy": 0.9090909090909091,
+        "recall": 1,
+        "specificity": 0.7777777777777778,
+        "precision": 0.8666666666666667,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.2222222222222222
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 2,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "8c284d61-32cd-4234-b62e-a26bcc202991",
+            "targetKanji": "日",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9776360536391859,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "dcc21351-5275-49ab-9be5-872c082fae53",
+            "targetKanji": "日",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9824809468274939,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 6,
+          "falsePositive": -6,
+          "falseNegative": 0,
+          "accuracy": 0.2727272727272727,
+          "recall": 0,
+          "specificity": 0.6666666666666667,
+          "precision": 0.24761904761904763
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_516b",
+      "heldOutKanji": "八",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 560,
+      "evaluationRowCount": 5,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 123,
+      "evaluationFeatureCount": 19,
+      "dimensionCount": 246,
+      "unseenEvaluationFeatureCount": 8,
+      "unseenEvaluationFeatures": [
+        "perRole.role_stroke0_left_diagonal.angleAbsDiff",
+        "perRole.role_stroke0_left_diagonal.centerDistance",
+        "perRole.role_stroke0_left_diagonal.comparisonCost",
+        "perRole.role_stroke0_left_diagonal.deltaXRelativeDiff",
+        "perRole.role_stroke0_left_diagonal.deltaYRelativeDiff",
+        "perRole.role_stroke0_left_diagonal.heightRelativeDiff",
+        "perRole.role_stroke0_left_diagonal.straightnessDiff",
+        "perRole.role_stroke0_left_diagonal.widthRelativeDiff"
+      ],
+      "trainingLabelCounts": {
+        "positiveCount": 380,
+        "negativeCount": 180
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 3,
+        "negativeCount": 2
+      },
+      "selectedThreshold": 0.0820780657036741,
+      "thresholdCandidateCount": 528,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.0820780657036741,
+        "maximumNegativeProbability": 0.9458216364909322,
+        "positiveNegativeMargin": -0.863743570787258
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19243700614126963,
+        "meanCrossEntropy": 0.19030602259848278,
+        "l2Penalty": 0.002130983542786844
+      },
+      "modelPayloadSha256": "d8dd93f8b8af98056e157ac9e165bf4b132e4dab745a7b1009fbe8dff47ee1fe",
+      "trainingMetrics": {
+        "truePositive": 380,
+        "trueNegative": 92,
+        "falsePositive": 88,
+        "falseNegative": 0,
+        "rowCount": 560,
+        "positiveCount": 380,
+        "negativeCount": 180,
+        "predictedPositiveCount": 468,
+        "predictedNegativeCount": 92,
+        "accuracy": 0.8428571428571429,
+        "recall": 1,
+        "specificity": 0.5111111111111111,
+        "precision": 0.811965811965812,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4888888888888889
+      },
+      "descriptorMetrics": {
+        "truePositive": 3,
+        "trueNegative": 0,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "positiveCount": 3,
+        "negativeCount": 2,
+        "predictedPositiveCount": 5,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.6,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.6,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "pureMlMetrics": {
+        "truePositive": 3,
+        "trueNegative": 0,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 5,
+        "positiveCount": 3,
+        "negativeCount": 2,
+        "predictedPositiveCount": 5,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.6,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.6,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "hybridMetrics": {
+        "truePositive": 3,
+        "trueNegative": 0,
+        "falsePositive": 2,
+        "falseNegative": 0,
+        "rowCount": 5,
+        "positiveCount": 3,
+        "negativeCount": 2,
+        "predictedPositiveCount": 5,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.6,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.6,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 2,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "67f6cfb4-bdb0-479a-9c51-d6efb787f669",
+            "targetKanji": "八",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.18737182870752964,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "38cecf36-ce08-4dbf-9ec1-4dfac40e79d8",
+            "targetKanji": "八",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.6475294989115704,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_672c",
+      "heldOutKanji": "本",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 515,
+      "evaluationRowCount": 50,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 351,
+        "negativeCount": 164
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 32,
+        "negativeCount": 18
+      },
+      "selectedThreshold": 0.03154655531287101,
+      "thresholdCandidateCount": 486,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.03154655531287101,
+        "maximumNegativeProbability": 0.9425179880825492,
+        "positiveNegativeMargin": -0.9109714327696782
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.18099325412999814,
+        "meanCrossEntropy": 0.17883816265433763,
+        "l2Penalty": 0.002155091475660516
+      },
+      "modelPayloadSha256": "aaef79d19e427266834fd3d68f94bf889c5ce3260850e5a442f2d71220c4b446",
+      "trainingMetrics": {
+        "truePositive": 351,
+        "trueNegative": 48,
+        "falsePositive": 116,
+        "falseNegative": 0,
+        "rowCount": 515,
+        "positiveCount": 351,
+        "negativeCount": 164,
+        "predictedPositiveCount": 467,
+        "predictedNegativeCount": 48,
+        "accuracy": 0.7747572815533981,
+        "recall": 1,
+        "specificity": 0.2926829268292683,
+        "precision": 0.7516059957173448,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.7073170731707317
+      },
+      "descriptorMetrics": {
+        "truePositive": 32,
+        "trueNegative": 10,
+        "falsePositive": 8,
+        "falseNegative": 0,
+        "positiveCount": 32,
+        "negativeCount": 18,
+        "predictedPositiveCount": 40,
+        "predictedNegativeCount": 10,
+        "accuracy": 0.84,
+        "recall": 1,
+        "specificity": 0.5555555555555556,
+        "precision": 0.8,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4444444444444444
+      },
+      "pureMlMetrics": {
+        "truePositive": 31,
+        "trueNegative": 1,
+        "falsePositive": 17,
+        "falseNegative": 1,
+        "rowCount": 50,
+        "positiveCount": 32,
+        "negativeCount": 18,
+        "predictedPositiveCount": 48,
+        "predictedNegativeCount": 2,
+        "accuracy": 0.64,
+        "recall": 0.96875,
+        "specificity": 0.05555555555555555,
+        "precision": 0.6458333333333334,
+        "falseNegativeRate": 0.03125,
+        "falsePositiveRate": 0.9444444444444444
+      },
+      "hybridMetrics": {
+        "truePositive": 31,
+        "trueNegative": 10,
+        "falsePositive": 8,
+        "falseNegative": 1,
+        "rowCount": 50,
+        "positiveCount": 32,
+        "negativeCount": 18,
+        "predictedPositiveCount": 39,
+        "predictedNegativeCount": 11,
+        "accuracy": 0.82,
+        "recall": 0.96875,
+        "specificity": 0.5555555555555556,
+        "precision": 0.7948717948717948,
+        "falseNegativeRate": 0.03125,
+        "falsePositiveRate": 0.4444444444444444
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 1,
+        "remainingDescriptorFalsePositiveCount": 8,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [
+          {
+            "recognitionId": "1a975e69-4d52-4084-bcc2-31f0d2010780",
+            "targetKanji": "本",
+            "label": 1,
+            "classification": "truePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.021748435218832383,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          }
+        ],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "a7b29642-393b-48bd-8b42-055dd3b3f020",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.06783118192724522,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "b76feb8f-38d0-40e1-9f09-b37ed0549c86",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.45176060421964614,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "8a276f37-ac50-49b9-ba13-d3f038f5cab8",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.6176115498308077,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "2b29fb12-cc6a-4d00-b691-d03074b75132",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.623677717680327,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "03e6417e-c4d7-4a6d-8f6a-d9a472f5759f",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.8637965438135337,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "8aa2f4d1-e9f3-4d0d-92c2-4c0dc1f480f6",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.8871709823620283,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "2173a2f1-d687-4ec9-b9b3-c46a5217ac9d",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9510231698546813,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "7faf2d0e-dd5c-430a-bcc7-fe21adb09ac0",
+            "targetKanji": "本",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9751857305347531,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": -1,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 1,
+          "accuracy": -0.020000000000000018,
+          "recall": -0.03125,
+          "specificity": 0,
+          "precision": -0.005128205128205221
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 9,
+          "falsePositive": -9,
+          "falseNegative": 0,
+          "accuracy": 0.17999999999999994,
+          "recall": 0,
+          "specificity": 0.5,
+          "precision": 0.14903846153846145
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_672b",
+      "heldOutKanji": "末",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 531,
+      "evaluationRowCount": 34,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 361,
+        "negativeCount": 170
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 22,
+        "negativeCount": 12
+      },
+      "selectedThreshold": 0.11036180770962839,
+      "thresholdCandidateCount": 502,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.11036180770962839,
+        "maximumNegativeProbability": 0.9493122050410192,
+        "positiveNegativeMargin": -0.8389503973313908
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.18468879984780337,
+        "meanCrossEntropy": 0.1825467773065393,
+        "l2Penalty": 0.0021420225412640877
+      },
+      "modelPayloadSha256": "62dfad7bd016917d98f861e218eaa2b7a83506d6f892bc159c465e65d253a5f1",
+      "trainingMetrics": {
+        "truePositive": 361,
+        "trueNegative": 97,
+        "falsePositive": 73,
+        "falseNegative": 0,
+        "rowCount": 531,
+        "positiveCount": 361,
+        "negativeCount": 170,
+        "predictedPositiveCount": 434,
+        "predictedNegativeCount": 97,
+        "accuracy": 0.8625235404896422,
+        "recall": 1,
+        "specificity": 0.5705882352941176,
+        "precision": 0.8317972350230415,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.4294117647058823
+      },
+      "descriptorMetrics": {
+        "truePositive": 22,
+        "trueNegative": 5,
+        "falsePositive": 7,
+        "falseNegative": 0,
+        "positiveCount": 22,
+        "negativeCount": 12,
+        "predictedPositiveCount": 29,
+        "predictedNegativeCount": 5,
+        "accuracy": 0.7941176470588235,
+        "recall": 1,
+        "specificity": 0.4166666666666667,
+        "precision": 0.7586206896551724,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5833333333333334
+      },
+      "pureMlMetrics": {
+        "truePositive": 22,
+        "trueNegative": 3,
+        "falsePositive": 9,
+        "falseNegative": 0,
+        "rowCount": 34,
+        "positiveCount": 22,
+        "negativeCount": 12,
+        "predictedPositiveCount": 31,
+        "predictedNegativeCount": 3,
+        "accuracy": 0.7352941176470589,
+        "recall": 1,
+        "specificity": 0.25,
+        "precision": 0.7096774193548387,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.75
+      },
+      "hybridMetrics": {
+        "truePositive": 22,
+        "trueNegative": 5,
+        "falsePositive": 7,
+        "falseNegative": 0,
+        "rowCount": 34,
+        "positiveCount": 22,
+        "negativeCount": 12,
+        "predictedPositiveCount": 29,
+        "predictedNegativeCount": 5,
+        "accuracy": 0.7941176470588235,
+        "recall": 1,
+        "specificity": 0.4166666666666667,
+        "precision": 0.7586206896551724,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5833333333333334
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 7,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "b0bd8c48-acf5-44be-8b6f-59068f80d067",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.20161681622978267,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "2cd61223-0b5a-4821-a4b5-948c254fdb23",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.43295456805386934,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "19b23994-2cf9-4bcc-93b4-b203a321d1cf",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.46918616446150113,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "2dbac6ca-561c-4d25-bfea-ce79a8d13c19",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.5332484517015406,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "847b96ef-78b6-43d6-a234-688db8562a76",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.629085400635422,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "ecae75d7-46d9-4414-b525-47a44f3bf01d",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.8882366733277722,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "38205fde-b395-41bb-9195-6701b97ff42f",
+            "targetKanji": "末",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9430712836499707,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.05882352941176461,
+          "recall": 0,
+          "specificity": 0.16666666666666669,
+          "precision": 0.04894327030033363
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_672a",
+      "heldOutKanji": "未",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 529,
+      "evaluationRowCount": 36,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 361,
+        "negativeCount": 168
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 22,
+        "negativeCount": 14
+      },
+      "selectedThreshold": 0.09349819208681946,
+      "thresholdCandidateCount": 500,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.09349819208681946,
+        "maximumNegativeProbability": 0.9457469232405323,
+        "positiveNegativeMargin": -0.8522487311537129
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.18873062198330134,
+        "meanCrossEntropy": 0.18662528689798716,
+        "l2Penalty": 0.0021053350853141727
+      },
+      "modelPayloadSha256": "79f814d091c675074afc24ea89ebf9ee43e22ef5c4ac3cc0be09fb18fb8cf3bb",
+      "trainingMetrics": {
+        "truePositive": 361,
+        "trueNegative": 89,
+        "falsePositive": 79,
+        "falseNegative": 0,
+        "rowCount": 529,
+        "positiveCount": 361,
+        "negativeCount": 168,
+        "predictedPositiveCount": 440,
+        "predictedNegativeCount": 89,
+        "accuracy": 0.8506616257088847,
+        "recall": 1,
+        "specificity": 0.5297619047619048,
+        "precision": 0.8204545454545454,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.47023809523809523
+      },
+      "descriptorMetrics": {
+        "truePositive": 22,
+        "trueNegative": 7,
+        "falsePositive": 7,
+        "falseNegative": 0,
+        "positiveCount": 22,
+        "negativeCount": 14,
+        "predictedPositiveCount": 29,
+        "predictedNegativeCount": 7,
+        "accuracy": 0.8055555555555556,
+        "recall": 1,
+        "specificity": 0.5,
+        "precision": 0.7586206896551724,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5
+      },
+      "pureMlMetrics": {
+        "truePositive": 22,
+        "trueNegative": 5,
+        "falsePositive": 9,
+        "falseNegative": 0,
+        "rowCount": 36,
+        "positiveCount": 22,
+        "negativeCount": 14,
+        "predictedPositiveCount": 31,
+        "predictedNegativeCount": 5,
+        "accuracy": 0.75,
+        "recall": 1,
+        "specificity": 0.35714285714285715,
+        "precision": 0.7096774193548387,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.6428571428571429
+      },
+      "hybridMetrics": {
+        "truePositive": 22,
+        "trueNegative": 7,
+        "falsePositive": 7,
+        "falseNegative": 0,
+        "rowCount": 36,
+        "positiveCount": 22,
+        "negativeCount": 14,
+        "predictedPositiveCount": 29,
+        "predictedNegativeCount": 7,
+        "accuracy": 0.8055555555555556,
+        "recall": 1,
+        "specificity": 0.5,
+        "precision": 0.7586206896551724,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 7,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "781445d1-b987-40b5-9752-62ef52982a7e",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.19421973628844982,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "f4e254f7-0527-4d17-aa1d-61b117e32224",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.266609353838675,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "9316a496-c16c-44be-8278-53e4954cfc47",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.30264836199796485,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "c41ac747-d501-461b-ae09-17ba5f8d9fb6",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.3733071278139198,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "5d5a646b-442f-4daa-9e64-915db80fc64a",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.5940321800972634,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "5e110a9a-d0f8-49aa-9c08-b377ea6c870c",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.7254774975060613,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "6b3ce7e2-02a5-4b12-96c9-d9ffb884b6bc",
+            "targetKanji": "未",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.7680475264934413,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 2,
+          "falsePositive": -2,
+          "falseNegative": 0,
+          "accuracy": 0.05555555555555558,
+          "recall": 0,
+          "specificity": 0.14285714285714285,
+          "precision": 0.04894327030033363
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_6728",
+      "heldOutKanji": "木",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 496,
+      "evaluationRowCount": 69,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 35,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 324,
+        "negativeCount": 172
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 59,
+        "negativeCount": 10
+      },
+      "selectedThreshold": 0.027654831486677772,
+      "thresholdCandidateCount": 464,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.027654831486677772,
+        "maximumNegativeProbability": 0.9543529741215894,
+        "positiveNegativeMargin": -0.9266981426349116
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.18074540650817017,
+        "meanCrossEntropy": 0.17849809966454327,
+        "l2Penalty": 0.0022473068436269076
+      },
+      "modelPayloadSha256": "af290e2ae4a5ed1b38702dd61e86a4dfcc5eddfdfb35abef6a44ebdcbe825cd2",
+      "trainingMetrics": {
+        "truePositive": 324,
+        "trueNegative": 50,
+        "falsePositive": 122,
+        "falseNegative": 0,
+        "rowCount": 496,
+        "positiveCount": 324,
+        "negativeCount": 172,
+        "predictedPositiveCount": 446,
+        "predictedNegativeCount": 50,
+        "accuracy": 0.7540322580645161,
+        "recall": 1,
+        "specificity": 0.29069767441860467,
+        "precision": 0.726457399103139,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.7093023255813954
+      },
+      "descriptorMetrics": {
+        "truePositive": 59,
+        "trueNegative": 4,
+        "falsePositive": 6,
+        "falseNegative": 0,
+        "positiveCount": 59,
+        "negativeCount": 10,
+        "predictedPositiveCount": 65,
+        "predictedNegativeCount": 4,
+        "accuracy": 0.9130434782608695,
+        "recall": 1,
+        "specificity": 0.4,
+        "precision": 0.9076923076923077,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.6
+      },
+      "pureMlMetrics": {
+        "truePositive": 57,
+        "trueNegative": 3,
+        "falsePositive": 7,
+        "falseNegative": 2,
+        "rowCount": 69,
+        "positiveCount": 59,
+        "negativeCount": 10,
+        "predictedPositiveCount": 64,
+        "predictedNegativeCount": 5,
+        "accuracy": 0.8695652173913043,
+        "recall": 0.9661016949152542,
+        "specificity": 0.3,
+        "precision": 0.890625,
+        "falseNegativeRate": 0.03389830508474576,
+        "falsePositiveRate": 0.7
+      },
+      "hybridMetrics": {
+        "truePositive": 57,
+        "trueNegative": 4,
+        "falsePositive": 6,
+        "falseNegative": 2,
+        "rowCount": 69,
+        "positiveCount": 59,
+        "negativeCount": 10,
+        "predictedPositiveCount": 63,
+        "predictedNegativeCount": 6,
+        "accuracy": 0.8840579710144928,
+        "recall": 0.9661016949152542,
+        "specificity": 0.4,
+        "precision": 0.9047619047619048,
+        "falseNegativeRate": 0.03389830508474576,
+        "falsePositiveRate": 0.6
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 2,
+        "remainingDescriptorFalsePositiveCount": 6,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [
+          {
+            "recognitionId": "4f6b0109-24d1-4c39-bac5-d7a7856f04be",
+            "targetKanji": "木",
+            "label": 1,
+            "classification": "truePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.0006833641282770843,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          },
+          {
+            "recognitionId": "dcf35b45-ec34-4470-acbd-50e5534f374b",
+            "targetKanji": "木",
+            "label": 1,
+            "classification": "truePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.015595051725314231,
+            "mlPrediction": 0,
+            "hybridPrediction": 0
+          }
+        ],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "aff8ef38-c1ca-4ec7-a07e-4030e6c3d08a",
+            "targetKanji": "木",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.33292447815990817,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "704a038a-5d1b-4423-8ef2-6d174ed4e7e8",
+            "targetKanji": "木",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.3374293544170747,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "6006717a-0cc9-4095-9489-afdb2c683155",
+            "targetKanji": "木",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.3776192339186057,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "e40db4ee-248e-44c7-a328-a1cef36f7333",
+            "targetKanji": "木",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.44852733177279847,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "535d06f2-9c2f-4dde-8572-725f66859eae",
+            "targetKanji": "木",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.5828026836021574,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "8dcc084b-e94d-4d99-9c99-9f4368f33dc9",
+            "targetKanji": "木",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.6659769753986597,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": -2,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 2,
+          "accuracy": -0.02898550724637672,
+          "recall": -0.03389830508474578,
+          "specificity": 0,
+          "precision": -0.00293040293040292
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 1,
+          "falsePositive": -1,
+          "falseNegative": 0,
+          "accuracy": 0.01449275362318847,
+          "recall": 0,
+          "specificity": 0.10000000000000003,
+          "precision": 0.014136904761904767
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_76ee",
+      "heldOutKanji": "目",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 545,
+      "evaluationRowCount": 20,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 368,
+        "negativeCount": 177
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 15,
+        "negativeCount": 5
+      },
+      "selectedThreshold": 0.07971363918875576,
+      "thresholdCandidateCount": 517,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.07971363918875576,
+        "maximumNegativeProbability": 0.9432203430750841,
+        "positiveNegativeMargin": -0.8635067038863283
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19681757446371118,
+        "meanCrossEntropy": 0.1946614735352783,
+        "l2Penalty": 0.00215610092843289
+      },
+      "modelPayloadSha256": "30185332b1423e0f682fcdd2f0d5b1e4ddd6fbb1604575056f9f12827007b28e",
+      "trainingMetrics": {
+        "truePositive": 368,
+        "trueNegative": 87,
+        "falsePositive": 90,
+        "falseNegative": 0,
+        "rowCount": 545,
+        "positiveCount": 368,
+        "negativeCount": 177,
+        "predictedPositiveCount": 458,
+        "predictedNegativeCount": 87,
+        "accuracy": 0.8348623853211009,
+        "recall": 1,
+        "specificity": 0.4915254237288136,
+        "precision": 0.8034934497816594,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.5084745762711864
+      },
+      "descriptorMetrics": {
+        "truePositive": 15,
+        "trueNegative": 5,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "positiveCount": 15,
+        "negativeCount": 5,
+        "predictedPositiveCount": 15,
+        "predictedNegativeCount": 5,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "pureMlMetrics": {
+        "truePositive": 15,
+        "trueNegative": 5,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 20,
+        "positiveCount": 15,
+        "negativeCount": 5,
+        "predictedPositiveCount": 15,
+        "predictedNegativeCount": 5,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridMetrics": {
+        "truePositive": 15,
+        "trueNegative": 5,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "rowCount": 20,
+        "positiveCount": 15,
+        "negativeCount": 5,
+        "predictedPositiveCount": 15,
+        "predictedNegativeCount": 5,
+        "accuracy": 1,
+        "recall": 1,
+        "specificity": 1,
+        "precision": 1,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 0,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": []
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_7528",
+      "heldOutKanji": "用",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 504,
+      "evaluationRowCount": 61,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 123,
+      "evaluationFeatureCount": 43,
+      "dimensionCount": 246,
+      "unseenEvaluationFeatureCount": 8,
+      "unseenEvaluationFeatures": [
+        "perRole.role_stroke4_vertical.angleAbsDiff",
+        "perRole.role_stroke4_vertical.centerDistance",
+        "perRole.role_stroke4_vertical.comparisonCost",
+        "perRole.role_stroke4_vertical.deltaXRelativeDiff",
+        "perRole.role_stroke4_vertical.deltaYRelativeDiff",
+        "perRole.role_stroke4_vertical.heightRelativeDiff",
+        "perRole.role_stroke4_vertical.straightnessDiff",
+        "perRole.role_stroke4_vertical.widthRelativeDiff"
+      ],
+      "trainingLabelCounts": {
+        "positiveCount": 339,
+        "negativeCount": 165
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 44,
+        "negativeCount": 17
+      },
+      "selectedThreshold": 0.08730541690359657,
+      "thresholdCandidateCount": 480,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.08730541690359657,
+        "maximumNegativeProbability": 0.9382053024811083,
+        "positiveNegativeMargin": -0.8508998855775117
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.19108341974038026,
+        "meanCrossEntropy": 0.18891096593330023,
+        "l2Penalty": 0.0021724538070800243
+      },
+      "modelPayloadSha256": "df6bc3082d17780524dbae457a47a17372babb9f116b91e0ec9a40a85fa32c47",
+      "trainingMetrics": {
+        "truePositive": 339,
+        "trueNegative": 82,
+        "falsePositive": 83,
+        "falseNegative": 0,
+        "rowCount": 504,
+        "positiveCount": 339,
+        "negativeCount": 165,
+        "predictedPositiveCount": 422,
+        "predictedNegativeCount": 82,
+        "accuracy": 0.8353174603174603,
+        "recall": 1,
+        "specificity": 0.49696969696969695,
+        "precision": 0.8033175355450237,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.503030303030303
+      },
+      "descriptorMetrics": {
+        "truePositive": 44,
+        "trueNegative": 13,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "positiveCount": 44,
+        "negativeCount": 17,
+        "predictedPositiveCount": 48,
+        "predictedNegativeCount": 13,
+        "accuracy": 0.9344262295081968,
+        "recall": 1,
+        "specificity": 0.7647058823529411,
+        "precision": 0.9166666666666666,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.23529411764705882
+      },
+      "pureMlMetrics": {
+        "truePositive": 44,
+        "trueNegative": 9,
+        "falsePositive": 8,
+        "falseNegative": 0,
+        "rowCount": 61,
+        "positiveCount": 44,
+        "negativeCount": 17,
+        "predictedPositiveCount": 52,
+        "predictedNegativeCount": 9,
+        "accuracy": 0.8688524590163934,
+        "recall": 1,
+        "specificity": 0.5294117647058824,
+        "precision": 0.8461538461538461,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.47058823529411764
+      },
+      "hybridMetrics": {
+        "truePositive": 44,
+        "trueNegative": 13,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "rowCount": 61,
+        "positiveCount": 44,
+        "negativeCount": 17,
+        "predictedPositiveCount": 48,
+        "predictedNegativeCount": 13,
+        "accuracy": 0.9344262295081968,
+        "recall": 1,
+        "specificity": 0.7647058823529411,
+        "precision": 0.9166666666666666,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.23529411764705882
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 4,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "d4c1c68a-e163-4809-92ca-a650482c9f55",
+            "targetKanji": "用",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.3021850806238816,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "49877cdc-aac8-4ea1-9a1b-b83abdfcc2b0",
+            "targetKanji": "用",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.5291418413409571,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "d64ba54c-6b24-48eb-b6f6-5a80c54dbb19",
+            "targetKanji": "用",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.5580402857471307,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "359a220b-6ff4-4862-88ba-672d118064e8",
+            "targetKanji": "用",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.7706181920576738,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 4,
+          "falsePositive": -4,
+          "falseNegative": 0,
+          "accuracy": 0.06557377049180335,
+          "recall": 0,
+          "specificity": 0.23529411764705876,
+          "precision": 0.07051282051282048
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    },
+    {
+      "foldId": "held_out_516d",
+      "heldOutKanji": "六",
+      "thresholdCalibrationScope": "outer_fold_training_partition",
+      "trainingRowCount": 547,
+      "evaluationRowCount": 18,
+      "trainingKanjiCount": 18,
+      "trainingFeatureCount": 131,
+      "evaluationFeatureCount": 35,
+      "dimensionCount": 262,
+      "unseenEvaluationFeatureCount": 0,
+      "unseenEvaluationFeatures": [],
+      "trainingLabelCounts": {
+        "positiveCount": 369,
+        "negativeCount": 178
+      },
+      "evaluationLabelCounts": {
+        "positiveCount": 14,
+        "negativeCount": 4
+      },
+      "selectedThreshold": 0.09370465692988728,
+      "thresholdCandidateCount": 515,
+      "trainingProbabilityBoundaries": {
+        "minimumPositiveProbability": 0.09370465692988728,
+        "maximumNegativeProbability": 0.9501171831488527,
+        "positiveNegativeMargin": -0.8564125262189655
+      },
+      "initialLoss": {
+        "totalLoss": 0.6931471805599468,
+        "meanCrossEntropy": 0.6931471805599468,
+        "l2Penalty": 0
+      },
+      "finalLoss": {
+        "totalLoss": 0.1906543528138843,
+        "meanCrossEntropy": 0.18849438229552753,
+        "l2Penalty": 0.002159970518356757
+      },
+      "modelPayloadSha256": "91c83fe8ab5407fb80d6047b08087b8ff6a3ee1c17710eb538bf9c98721f39c0",
+      "trainingMetrics": {
+        "truePositive": 369,
+        "trueNegative": 92,
+        "falsePositive": 86,
+        "falseNegative": 0,
+        "rowCount": 547,
+        "positiveCount": 369,
+        "negativeCount": 178,
+        "predictedPositiveCount": 455,
+        "predictedNegativeCount": 92,
+        "accuracy": 0.8427787934186471,
+        "recall": 1,
+        "specificity": 0.5168539325842697,
+        "precision": 0.810989010989011,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 0.48314606741573035
+      },
+      "descriptorMetrics": {
+        "truePositive": 14,
+        "trueNegative": 0,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "positiveCount": 14,
+        "negativeCount": 4,
+        "predictedPositiveCount": 18,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.7777777777777778,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.7777777777777778,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "pureMlMetrics": {
+        "truePositive": 14,
+        "trueNegative": 0,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "rowCount": 18,
+        "positiveCount": 14,
+        "negativeCount": 4,
+        "predictedPositiveCount": 18,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.7777777777777778,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.7777777777777778,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "hybridMetrics": {
+        "truePositive": 14,
+        "trueNegative": 0,
+        "falsePositive": 4,
+        "falseNegative": 0,
+        "rowCount": 18,
+        "positiveCount": 14,
+        "negativeCount": 4,
+        "predictedPositiveCount": 18,
+        "predictedNegativeCount": 0,
+        "accuracy": 0.7777777777777778,
+        "recall": 1,
+        "specificity": 0,
+        "precision": 0.7777777777777778,
+        "falseNegativeRate": 0,
+        "falsePositiveRate": 1
+      },
+      "hybridChanges": {
+        "descriptorFalsePositiveRejectedCount": 0,
+        "descriptorTruePositiveRejectedCount": 0,
+        "remainingDescriptorFalsePositiveCount": 4,
+        "descriptorFalsePositivesRejected": [],
+        "descriptorTruePositivesRejected": [],
+        "unchangedDescriptorFalsePositives": [
+          {
+            "recognitionId": "13c70b4e-6ade-49fd-b1b7-69e024e9e57c",
+            "targetKanji": "六",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.2681656002176864,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "8dc52140-113c-4f95-8571-182459515a09",
+            "targetKanji": "六",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.4757172889783619,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "21acbf8d-13e3-42fa-9747-b8c72d060130",
+            "targetKanji": "六",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9414202859083655,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          },
+          {
+            "recognitionId": "fc1342ea-a2e8-4602-bac6-5323581b1f4e",
+            "targetKanji": "六",
+            "label": 0,
+            "classification": "falsePositive",
+            "descriptorPrediction": 1,
+            "mlProbability": 0.9431323115167405,
+            "mlPrediction": 1,
+            "hybridPrediction": 1
+          }
+        ]
+      },
+      "comparisons": {
+        "hybridVsDescriptor": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        },
+        "hybridVsPureMl": {
+          "truePositive": 0,
+          "trueNegative": 0,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "accuracy": 0,
+          "recall": 0,
+          "specificity": 0,
+          "precision": 0
+        }
+      },
+      "integrity": {
+        "passed": true,
+        "errors": []
+      }
+    }
+  ],
+  "aggregate": {
+    "descriptorMetrics": {
+      "truePositive": 383,
+      "trueNegative": 126,
+      "falsePositive": 56,
+      "falseNegative": 0,
+      "rowCount": 565,
+      "positiveCount": 383,
+      "negativeCount": 182,
+      "predictedPositiveCount": 439,
+      "predictedNegativeCount": 126,
+      "accuracy": 0.9008849557522124,
+      "recall": 1,
+      "specificity": 0.6923076923076923,
+      "precision": 0.8724373576309795,
+      "falseNegativeRate": 0,
+      "falsePositiveRate": 0.3076923076923077
+    },
+    "pureMlMetrics": {
+      "truePositive": 380,
+      "trueNegative": 86,
+      "falsePositive": 96,
+      "falseNegative": 3,
+      "rowCount": 565,
+      "positiveCount": 383,
+      "negativeCount": 182,
+      "predictedPositiveCount": 476,
+      "predictedNegativeCount": 89,
+      "accuracy": 0.8247787610619469,
+      "recall": 0.9921671018276762,
+      "specificity": 0.4725274725274725,
+      "precision": 0.7983193277310925,
+      "falseNegativeRate": 0.007832898172323759,
+      "falsePositiveRate": 0.5274725274725275
+    },
+    "hybridMetrics": {
+      "truePositive": 380,
+      "trueNegative": 133,
+      "falsePositive": 49,
+      "falseNegative": 3,
+      "rowCount": 565,
+      "positiveCount": 383,
+      "negativeCount": 182,
+      "predictedPositiveCount": 429,
+      "predictedNegativeCount": 136,
+      "accuracy": 0.9079646017699115,
+      "recall": 0.9921671018276762,
+      "specificity": 0.7307692307692307,
+      "precision": 0.8857808857808858,
+      "falseNegativeRate": 0.007832898172323759,
+      "falsePositiveRate": 0.2692307692307692
+    },
+    "comparisons": {
+      "hybridVsDescriptor": {
+        "truePositive": -3,
+        "trueNegative": 7,
+        "falsePositive": -7,
+        "falseNegative": 3,
+        "accuracy": 0.0070796460176990594,
+        "recall": -0.007832898172323799,
+        "specificity": 0.038461538461538436,
+        "precision": 0.013343528149906247
+      },
+      "hybridVsPureMl": {
+        "truePositive": 0,
+        "trueNegative": 47,
+        "falsePositive": -47,
+        "falseNegative": 0,
+        "accuracy": 0.08318584070796453,
+        "recall": 0,
+        "specificity": 0.2582417582417582,
+        "precision": 0.08746155804979328
+      }
+    },
+    "outcomes": {
+      "foldCount": 19,
+      "evaluationRowCount": 565,
+      "foldsWithHybridFalseNegatives": [
+        "本",
+        "木"
+      ],
+      "foldsWithHybridFpImprovement": [
+        "一",
+        "山",
+        "四",
+        "七"
+      ],
+      "foldsWithHybridFpEquality": [
+        "回",
+        "口",
+        "三",
+        "十",
+        "田",
+        "二",
+        "日",
+        "八",
+        "本",
+        "末",
+        "未",
+        "木",
+        "目",
+        "用",
+        "六"
+      ],
+      "foldsWithHybridFpRegression": [],
+      "foldsWithUnseenEvaluationFeatures": [
+        {
+          "heldOutKanji": "回",
+          "count": 8
+        },
+        {
+          "heldOutKanji": "八",
+          "count": 8
+        },
+        {
+          "heldOutKanji": "用",
+          "count": 8
+        }
+      ]
+    }
+  },
+  "assessment": {
+    "aggregateHybridFalseNegativeSafe": false,
+    "aggregateHybridFpImprovement": true,
+    "aggregateHybridFpReduction": 7,
+    "foldsWithHybridFalseNegativeCount": 2,
+    "foldsWithHybridFpImprovementCount": 4
+  },
+  "integrity": {
+    "passed": true,
+    "errors": []
+  }
+}
