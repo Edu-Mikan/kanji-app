@@ -1,0 +1,1351 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Diagnose held-out hybrid false negatives without modifying or recalibrating the model",
+  "methodology": {
+    "affectedFoldsOnly": true,
+    "thresholdRecalibration": false,
+    "modelConfiguration": "same_as_loocv",
+    "contributionFormula": "weight * vectorValue",
+    "counterfactualUse": "diagnostic_only"
+  },
+  "source": {
+    "loocvReportPath": "D:\\projects\\kanji_app\\backend\\ml_models\\reference_candidate_logistic_leave_one_kanji_out_report.json",
+    "falseNegativeCount": 3
+  },
+  "summary": {
+    "falseNegativeCount": 3,
+    "affectedKanjis": [
+      "本",
+      "木"
+    ],
+    "minimumProbability": 0.0006833641282770843,
+    "maximumProbability": 0.021748435218832383,
+    "minimumThresholdMargin": -0.026971467358400687,
+    "maximumThresholdMargin": -0.009798120094038628
+  },
+  "diagnoses": [
+    {
+      "heldOutKanji": "本",
+      "recognitionId": "1a975e69-4d52-4084-bcc2-31f0d2010780",
+      "label": 1,
+      "classification": "truePositive",
+      "descriptorPrediction": 1,
+      "mlProbability": 0.021748435218832383,
+      "selectedThreshold": 0.03154655531287101,
+      "thresholdMargin": -0.009798120094038628,
+      "score": -3.8062250496762253,
+      "bias": -0.09908779673753756,
+      "contributionSum": -3.7071372529386877,
+      "decomposition": {
+        "passed": true,
+        "contributionSum": -3.7071372529386877,
+        "reconstructedScore": -3.8062250496762253,
+        "directScore": -3.8062250496762253,
+        "scoreDifference": 0,
+        "reconstructedProbability": 0.021748435218832383
+      },
+      "topContributions": {
+        "mostNegative": [
+          {
+            "index": 182,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+            "weight": -0.32016391484250806,
+            "vectorValue": 3.4535621853830207,
+            "contribution": -1.1057059894242756,
+            "absoluteContribution": 1.1057059894242756,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 178,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+            "weight": -0.2884557737063795,
+            "vectorValue": 3.4628416019231594,
+            "contribution": -0.9988766535053835,
+            "absoluteContribution": 0.9988766535053835,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 258,
+            "dimensionName": "value.referenceComparison.maxRoleCost",
+            "weight": -0.6147711505060004,
+            "vectorValue": 1.5900304959078848,
+            "contribution": -0.9775048773089167,
+            "absoluteContribution": 0.9775048773089167,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 118,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+            "weight": -0.2658046235595895,
+            "vectorValue": 3.2754434420886938,
+            "contribution": -0.8706280111151113,
+            "absoluteContribution": 0.8706280111151113,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 116,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+            "weight": -0.1797068012785861,
+            "vectorValue": 2.5257671187151045,
+            "contribution": -0.4538975296789223,
+            "absoluteContribution": 0.4538975296789223,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 260,
+            "dimensionName": "value.referenceComparison.meanRoleCost",
+            "weight": -0.4853718001936572,
+            "vectorValue": 0.8298878637717171,
+            "contribution": -0.4028041663977469,
+            "absoluteContribution": 0.4028041663977469,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 114,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+            "weight": -0.15763668631468677,
+            "vectorValue": 2.1098952937697524,
+            "contribution": -0.33259690258081637,
+            "absoluteContribution": 0.33259690258081637,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 2,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.centerDistance",
+            "weight": -0.29116869002338364,
+            "vectorValue": 1.1336734883428405,
+            "contribution": -0.33009022451502457,
+            "absoluteContribution": 0.33009022451502457,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 86,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": 0.1376580887196116,
+            "vectorValue": -1.5624455340790027,
+            "contribution": -0.21508326594980828,
+            "absoluteContribution": 0.21508326594980828,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 180,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.comparisonCost",
+            "weight": -0.13651344532859125,
+            "vectorValue": 1.3367278743809794,
+            "contribution": -0.18248132759851182,
+            "absoluteContribution": 0.18248132759851182,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 202,
+            "dimensionName": "value.perRole.role_stroke4_horizontal.heightRelativeDiff",
+            "weight": 0.206439905920006,
+            "vectorValue": -0.8237323899831023,
+            "contribution": -0.17005123709137332,
+            "absoluteContribution": 0.17005123709137332,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 10,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.heightRelativeDiff",
+            "weight": -0.09257985561852912,
+            "vectorValue": 1.7479980937211403,
+            "contribution": -0.16182941113816732,
+            "absoluteContribution": 0.16182941113816732,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 14,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.widthRelativeDiff",
+            "weight": -0.11226157089136887,
+            "vectorValue": 1.4347863877580262,
+            "contribution": -0.16107137378326875,
+            "absoluteContribution": 0.16107137378326875,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 4,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.comparisonCost",
+            "weight": -0.08027862265018536,
+            "vectorValue": 1.9147676377329343,
+            "contribution": -0.15371490865234905,
+            "absoluteContribution": 0.15371490865234905,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 6,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+            "weight": -0.11391979188257079,
+            "vectorValue": 0.9815694685515849,
+            "contribution": -0.11182018957568216,
+            "absoluteContribution": 0.11182018957568216,
+            "effect": "decreases_positive_probability"
+          }
+        ],
+        "mostPositive": [
+          {
+            "index": 204,
+            "dimensionName": "value.perRole.role_stroke4_horizontal.straightnessDiff",
+            "weight": 0.11190526772508327,
+            "vectorValue": 2.4072641009398095,
+            "contribution": 0.26938553370065127,
+            "absoluteContribution": 0.26938553370065127,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 8,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+            "weight": 0.16210791433009183,
+            "vectorValue": 1.4524335699307653,
+            "contribution": 0.23545097672448595,
+            "absoluteContribution": 0.23545097672448595,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 188,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.straightnessDiff",
+            "weight": -0.2547542763497373,
+            "vectorValue": -0.6405452067712728,
+            "contribution": 0.16318163062030844,
+            "absoluteContribution": 0.16318163062030844,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 256,
+            "dimensionName": "value.referenceComparison.comparisonCost",
+            "weight": -0.7750876983777063,
+            "vectorValue": -0.19561036678263782,
+            "contribution": 0.1516151889683737,
+            "absoluteContribution": 0.1516151889683737,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 112,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+            "weight": 0.05712725282140095,
+            "vectorValue": 2.548946749372062,
+            "contribution": 0.14561432537966593,
+            "absoluteContribution": 0.14561432537966593,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 259,
+            "dimensionName": "presence.referenceComparison.maxRoleCost",
+            "weight": 0.11322795579697713,
+            "vectorValue": 1,
+            "contribution": 0.11322795579697713,
+            "absoluteContribution": 0.11322795579697713,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 261,
+            "dimensionName": "presence.referenceComparison.meanRoleCost",
+            "weight": 0.11322795579697713,
+            "vectorValue": 1,
+            "contribution": 0.11322795579697713,
+            "absoluteContribution": 0.11322795579697713,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 198,
+            "dimensionName": "value.perRole.role_stroke4_horizontal.deltaXRelativeDiff",
+            "weight": -0.16278272622757647,
+            "vectorValue": -0.6787370732208845,
+            "contribution": 0.11048667117062178,
+            "absoluteContribution": 0.11048667117062178,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 12,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.straightnessDiff",
+            "weight": -0.444845485025546,
+            "vectorValue": -0.2304542720403035,
+            "contribution": 0.10251654242197793,
+            "absoluteContribution": 0.10251654242197793,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 206,
+            "dimensionName": "value.perRole.role_stroke4_horizontal.widthRelativeDiff",
+            "weight": -0.13253138859698205,
+            "vectorValue": -0.7678845300956445,
+            "contribution": 0.10176880305571681,
+            "absoluteContribution": 0.10176880305571681,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 81,
+            "dimensionName": "presence.perRole.role_stroke1_vertical.angleAbsDiff",
+            "weight": 0.0758235233235753,
+            "vectorValue": 1,
+            "contribution": 0.0758235233235753,
+            "absoluteContribution": 0.0758235233235753,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 83,
+            "dimensionName": "presence.perRole.role_stroke1_vertical.centerDistance",
+            "weight": 0.0758235233235753,
+            "vectorValue": 1,
+            "contribution": 0.0758235233235753,
+            "absoluteContribution": 0.0758235233235753,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 85,
+            "dimensionName": "presence.perRole.role_stroke1_vertical.comparisonCost",
+            "weight": 0.0758235233235753,
+            "vectorValue": 1,
+            "contribution": 0.0758235233235753,
+            "absoluteContribution": 0.0758235233235753,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 87,
+            "dimensionName": "presence.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": 0.0758235233235753,
+            "vectorValue": 1,
+            "contribution": 0.0758235233235753,
+            "absoluteContribution": 0.0758235233235753,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 89,
+            "dimensionName": "presence.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+            "weight": 0.0758235233235753,
+            "vectorValue": 1,
+            "contribution": 0.0758235233235753,
+            "absoluteContribution": 0.0758235233235753,
+            "effect": "increases_positive_probability"
+          }
+        ],
+        "mostInfluential": [
+          {
+            "index": 182,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+            "weight": -0.32016391484250806,
+            "vectorValue": 3.4535621853830207,
+            "contribution": -1.1057059894242756,
+            "absoluteContribution": 1.1057059894242756,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 178,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+            "weight": -0.2884557737063795,
+            "vectorValue": 3.4628416019231594,
+            "contribution": -0.9988766535053835,
+            "absoluteContribution": 0.9988766535053835,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 258,
+            "dimensionName": "value.referenceComparison.maxRoleCost",
+            "weight": -0.6147711505060004,
+            "vectorValue": 1.5900304959078848,
+            "contribution": -0.9775048773089167,
+            "absoluteContribution": 0.9775048773089167,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 118,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+            "weight": -0.2658046235595895,
+            "vectorValue": 3.2754434420886938,
+            "contribution": -0.8706280111151113,
+            "absoluteContribution": 0.8706280111151113,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 116,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+            "weight": -0.1797068012785861,
+            "vectorValue": 2.5257671187151045,
+            "contribution": -0.4538975296789223,
+            "absoluteContribution": 0.4538975296789223,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 260,
+            "dimensionName": "value.referenceComparison.meanRoleCost",
+            "weight": -0.4853718001936572,
+            "vectorValue": 0.8298878637717171,
+            "contribution": -0.4028041663977469,
+            "absoluteContribution": 0.4028041663977469,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 114,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+            "weight": -0.15763668631468677,
+            "vectorValue": 2.1098952937697524,
+            "contribution": -0.33259690258081637,
+            "absoluteContribution": 0.33259690258081637,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 2,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.centerDistance",
+            "weight": -0.29116869002338364,
+            "vectorValue": 1.1336734883428405,
+            "contribution": -0.33009022451502457,
+            "absoluteContribution": 0.33009022451502457,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 204,
+            "dimensionName": "value.perRole.role_stroke4_horizontal.straightnessDiff",
+            "weight": 0.11190526772508327,
+            "vectorValue": 2.4072641009398095,
+            "contribution": 0.26938553370065127,
+            "absoluteContribution": 0.26938553370065127,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 8,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+            "weight": 0.16210791433009183,
+            "vectorValue": 1.4524335699307653,
+            "contribution": 0.23545097672448595,
+            "absoluteContribution": 0.23545097672448595,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 86,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": 0.1376580887196116,
+            "vectorValue": -1.5624455340790027,
+            "contribution": -0.21508326594980828,
+            "absoluteContribution": 0.21508326594980828,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 180,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.comparisonCost",
+            "weight": -0.13651344532859125,
+            "vectorValue": 1.3367278743809794,
+            "contribution": -0.18248132759851182,
+            "absoluteContribution": 0.18248132759851182,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 202,
+            "dimensionName": "value.perRole.role_stroke4_horizontal.heightRelativeDiff",
+            "weight": 0.206439905920006,
+            "vectorValue": -0.8237323899831023,
+            "contribution": -0.17005123709137332,
+            "absoluteContribution": 0.17005123709137332,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 188,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.straightnessDiff",
+            "weight": -0.2547542763497373,
+            "vectorValue": -0.6405452067712728,
+            "contribution": 0.16318163062030844,
+            "absoluteContribution": 0.16318163062030844,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 10,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.heightRelativeDiff",
+            "weight": -0.09257985561852912,
+            "vectorValue": 1.7479980937211403,
+            "contribution": -0.16182941113816732,
+            "absoluteContribution": 0.16182941113816732,
+            "effect": "decreases_positive_probability"
+          }
+        ]
+      },
+      "counterfactual": {
+        "counterfactualThreshold": 0.021748435218832383,
+        "recoveredPositiveCount": 1,
+        "additionalFalsePositiveCount": 0
+      }
+    },
+    {
+      "heldOutKanji": "木",
+      "recognitionId": "4f6b0109-24d1-4c39-bac5-d7a7856f04be",
+      "label": 1,
+      "classification": "truePositive",
+      "descriptorPrediction": 1,
+      "mlProbability": 0.0006833641282770843,
+      "selectedThreshold": 0.027654831486677772,
+      "thresholdMargin": -0.026971467358400687,
+      "score": -7.287799112016047,
+      "bias": -0.13543278702700665,
+      "contributionSum": -7.15236632498904,
+      "decomposition": {
+        "passed": true,
+        "contributionSum": -7.15236632498904,
+        "reconstructedScore": -7.287799112016047,
+        "directScore": -7.287799112016047,
+        "scoreDifference": 0,
+        "reconstructedProbability": 0.0006833641282770843
+      },
+      "topContributions": {
+        "mostNegative": [
+          {
+            "index": 260,
+            "dimensionName": "value.referenceComparison.meanRoleCost",
+            "weight": -0.5489106799692266,
+            "vectorValue": 2.3251059504332607,
+            "contribution": -1.276275488252816,
+            "absoluteContribution": 1.276275488252816,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 258,
+            "dimensionName": "value.referenceComparison.maxRoleCost",
+            "weight": -0.5891370868953033,
+            "vectorValue": 1.636417230535354,
+            "contribution": -0.9640740801428784,
+            "absoluteContribution": 0.9640740801428784,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 2,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.centerDistance",
+            "weight": -0.3397211665250649,
+            "vectorValue": 2.312282649350375,
+            "contribution": -0.785531358972977,
+            "absoluteContribution": 0.785531358972977,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 178,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+            "weight": -0.23993532819806745,
+            "vectorValue": 2.320343018011017,
+            "contribution": -0.5567322635585676,
+            "absoluteContribution": 0.5567322635585676,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 118,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+            "weight": -0.17148215187403323,
+            "vectorValue": 3.0588651819027697,
+            "contribution": -0.524540783685243,
+            "absoluteContribution": 0.524540783685243,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 120,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+            "weight": -0.10338233908884055,
+            "vectorValue": 4.8212960975728985,
+            "contribution": -0.49843686800698506,
+            "absoluteContribution": 0.49843686800698506,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 116,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+            "weight": -0.1828000969757696,
+            "vectorValue": 2.5608838821655873,
+            "contribution": -0.4681298220035547,
+            "absoluteContribution": 0.4681298220035547,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 114,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+            "weight": -0.18418563256247666,
+            "vectorValue": 1.7723867468804737,
+            "contribution": -0.32644817411953025,
+            "absoluteContribution": 0.32644817411953025,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 84,
+            "dimensionName": "value.perRole.role_stroke1_vertical.comparisonCost",
+            "weight": -0.09799793434349673,
+            "vectorValue": 3.0334626017319897,
+            "contribution": -0.29727306887798427,
+            "absoluteContribution": 0.29727306887798427,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 14,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.widthRelativeDiff",
+            "weight": -0.21765495854407796,
+            "vectorValue": 1.3120248013788427,
+            "contribution": -0.2855687037529141,
+            "absoluteContribution": 0.2855687037529141,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 126,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+            "weight": -0.1570419119999386,
+            "vectorValue": 1.744213651131922,
+            "contribution": -0.2739146467101509,
+            "absoluteContribution": 0.2739146467101509,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 182,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+            "weight": -0.12455029856206898,
+            "vectorValue": 1.8672274889352212,
+            "contribution": -0.23256374123018414,
+            "absoluteContribution": 0.23256374123018414,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 88,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 3.1118258631426485,
+            "contribution": -0.22207046161792518,
+            "absoluteContribution": 0.22207046161792518,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 90,
+            "dimensionName": "value.perRole.role_stroke1_vertical.heightRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 3.1118258631426485,
+            "contribution": -0.22207046161792518,
+            "absoluteContribution": 0.22207046161792518,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 86,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": -0.12508988783950073,
+            "vectorValue": 1.6577859983550047,
+            "contribution": -0.2073722645961223,
+            "absoluteContribution": 0.2073722645961223,
+            "effect": "decreases_positive_probability"
+          }
+        ],
+        "mostPositive": [
+          {
+            "index": 8,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+            "weight": 0.11816558808256657,
+            "vectorValue": 1.4308723972268929,
+            "contribution": 0.16907987828942758,
+            "absoluteContribution": 0.16907987828942758,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 122,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+            "weight": -0.24166479763525717,
+            "vectorValue": -0.6476450621254088,
+            "contribution": 0.15651301287801048,
+            "absoluteContribution": 0.15651301287801048,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 188,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.straightnessDiff",
+            "weight": -0.15068245155710808,
+            "vectorValue": -0.6972562336734494,
+            "contribution": 0.10506427865339116,
+            "absoluteContribution": 0.10506427865339116,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 259,
+            "dimensionName": "presence.referenceComparison.maxRoleCost",
+            "weight": 0.09986920595128443,
+            "vectorValue": 1,
+            "contribution": 0.09986920595128443,
+            "absoluteContribution": 0.09986920595128443,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 261,
+            "dimensionName": "presence.referenceComparison.meanRoleCost",
+            "weight": 0.09986920595128443,
+            "vectorValue": 1,
+            "contribution": 0.09986920595128443,
+            "absoluteContribution": 0.09986920595128443,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 256,
+            "dimensionName": "value.referenceComparison.comparisonCost",
+            "weight": -0.8083014848531364,
+            "vectorValue": -0.08176995709217799,
+            "contribution": 0.06609477773398471,
+            "absoluteContribution": 0.06609477773398471,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 12,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.straightnessDiff",
+            "weight": -0.4124998661358019,
+            "vectorValue": -0.14274431330096138,
+            "contribution": 0.05888201012829354,
+            "absoluteContribution": 0.05888201012829354,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 112,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+            "weight": 0.03618532723466752,
+            "vectorValue": 1.6151395409059508,
+            "contribution": 0.05844435281733249,
+            "absoluteContribution": 0.05844435281733249,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 124,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.straightnessDiff",
+            "weight": -0.05233722440963063,
+            "vectorValue": -0.8272245028797819,
+            "contribution": 0.04329463444436429,
+            "absoluteContribution": 0.04329463444436429,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 1,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.angleAbsDiff",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 3,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.centerDistance",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 5,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.comparisonCost",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 7,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 9,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 11,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.heightRelativeDiff",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          }
+        ],
+        "mostInfluential": [
+          {
+            "index": 260,
+            "dimensionName": "value.referenceComparison.meanRoleCost",
+            "weight": -0.5489106799692266,
+            "vectorValue": 2.3251059504332607,
+            "contribution": -1.276275488252816,
+            "absoluteContribution": 1.276275488252816,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 258,
+            "dimensionName": "value.referenceComparison.maxRoleCost",
+            "weight": -0.5891370868953033,
+            "vectorValue": 1.636417230535354,
+            "contribution": -0.9640740801428784,
+            "absoluteContribution": 0.9640740801428784,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 2,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.centerDistance",
+            "weight": -0.3397211665250649,
+            "vectorValue": 2.312282649350375,
+            "contribution": -0.785531358972977,
+            "absoluteContribution": 0.785531358972977,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 178,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+            "weight": -0.23993532819806745,
+            "vectorValue": 2.320343018011017,
+            "contribution": -0.5567322635585676,
+            "absoluteContribution": 0.5567322635585676,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 118,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+            "weight": -0.17148215187403323,
+            "vectorValue": 3.0588651819027697,
+            "contribution": -0.524540783685243,
+            "absoluteContribution": 0.524540783685243,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 120,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+            "weight": -0.10338233908884055,
+            "vectorValue": 4.8212960975728985,
+            "contribution": -0.49843686800698506,
+            "absoluteContribution": 0.49843686800698506,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 116,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+            "weight": -0.1828000969757696,
+            "vectorValue": 2.5608838821655873,
+            "contribution": -0.4681298220035547,
+            "absoluteContribution": 0.4681298220035547,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 114,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+            "weight": -0.18418563256247666,
+            "vectorValue": 1.7723867468804737,
+            "contribution": -0.32644817411953025,
+            "absoluteContribution": 0.32644817411953025,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 84,
+            "dimensionName": "value.perRole.role_stroke1_vertical.comparisonCost",
+            "weight": -0.09799793434349673,
+            "vectorValue": 3.0334626017319897,
+            "contribution": -0.29727306887798427,
+            "absoluteContribution": 0.29727306887798427,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 14,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.widthRelativeDiff",
+            "weight": -0.21765495854407796,
+            "vectorValue": 1.3120248013788427,
+            "contribution": -0.2855687037529141,
+            "absoluteContribution": 0.2855687037529141,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 126,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+            "weight": -0.1570419119999386,
+            "vectorValue": 1.744213651131922,
+            "contribution": -0.2739146467101509,
+            "absoluteContribution": 0.2739146467101509,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 182,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.deltaXRelativeDiff",
+            "weight": -0.12455029856206898,
+            "vectorValue": 1.8672274889352212,
+            "contribution": -0.23256374123018414,
+            "absoluteContribution": 0.23256374123018414,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 88,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 3.1118258631426485,
+            "contribution": -0.22207046161792518,
+            "absoluteContribution": 0.22207046161792518,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 90,
+            "dimensionName": "value.perRole.role_stroke1_vertical.heightRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 3.1118258631426485,
+            "contribution": -0.22207046161792518,
+            "absoluteContribution": 0.22207046161792518,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 86,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": -0.12508988783950073,
+            "vectorValue": 1.6577859983550047,
+            "contribution": -0.2073722645961223,
+            "absoluteContribution": 0.2073722645961223,
+            "effect": "decreases_positive_probability"
+          }
+        ]
+      },
+      "counterfactual": {
+        "counterfactualThreshold": 0.0006833641282770843,
+        "recoveredPositiveCount": 2,
+        "additionalFalsePositiveCount": 0
+      }
+    },
+    {
+      "heldOutKanji": "木",
+      "recognitionId": "dcf35b45-ec34-4470-acbd-50e5534f374b",
+      "label": 1,
+      "classification": "truePositive",
+      "descriptorPrediction": 1,
+      "mlProbability": 0.015595051725314231,
+      "selectedThreshold": 0.027654831486677772,
+      "thresholdMargin": -0.012059779761363541,
+      "score": -4.145083678352723,
+      "bias": -0.13543278702700665,
+      "contributionSum": -4.009650891325716,
+      "decomposition": {
+        "passed": true,
+        "contributionSum": -4.009650891325716,
+        "reconstructedScore": -4.145083678352723,
+        "directScore": -4.145083678352723,
+        "scoreDifference": 0,
+        "reconstructedProbability": 0.015595051725314231
+      },
+      "topContributions": {
+        "mostNegative": [
+          {
+            "index": 258,
+            "dimensionName": "value.referenceComparison.maxRoleCost",
+            "weight": -0.5891370868953033,
+            "vectorValue": 1.808039460948986,
+            "contribution": -1.0651831010152402,
+            "absoluteContribution": 1.0651831010152402,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 122,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+            "weight": -0.24166479763525717,
+            "vectorValue": 2.4188443858466813,
+            "contribution": -0.5845495390168162,
+            "absoluteContribution": 0.5845495390168162,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 88,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 6.745955200317826,
+            "contribution": -0.4814142729296255,
+            "absoluteContribution": 0.4814142729296255,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 90,
+            "dimensionName": "value.perRole.role_stroke1_vertical.heightRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 6.745955200317826,
+            "contribution": -0.4814142729296255,
+            "absoluteContribution": 0.4814142729296255,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 82,
+            "dimensionName": "value.perRole.role_stroke1_vertical.centerDistance",
+            "weight": -0.1308141651455743,
+            "vectorValue": 3.429138121619254,
+            "contribution": -0.44857984054848554,
+            "absoluteContribution": 0.44857984054848554,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 260,
+            "dimensionName": "value.referenceComparison.meanRoleCost",
+            "weight": -0.5489106799692266,
+            "vectorValue": 0.7471305308774143,
+            "contribution": -0.41010792772969074,
+            "absoluteContribution": 0.41010792772969074,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 84,
+            "dimensionName": "value.perRole.role_stroke1_vertical.comparisonCost",
+            "weight": -0.09799793434349673,
+            "vectorValue": 4.104331490967959,
+            "contribution": -0.4022160079758241,
+            "absoluteContribution": 0.4022160079758241,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 114,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+            "weight": -0.18418563256247666,
+            "vectorValue": 1.8903625302576503,
+            "contribution": -0.3481776184079093,
+            "absoluteContribution": 0.3481776184079093,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 178,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+            "weight": -0.23993532819806745,
+            "vectorValue": 1.4340704160390059,
+            "contribution": -0.344084155931458,
+            "absoluteContribution": 0.344084155931458,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 120,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+            "weight": -0.10338233908884055,
+            "vectorValue": 2.1958004366417883,
+            "contribution": -0.2270069853123255,
+            "absoluteContribution": 0.2270069853123255,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 86,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": -0.12508988783950073,
+            "vectorValue": 1.6577859983550047,
+            "contribution": -0.2073722645961223,
+            "absoluteContribution": 0.2073722645961223,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 80,
+            "dimensionName": "value.perRole.role_stroke1_vertical.angleAbsDiff",
+            "weight": -0.025626717850693138,
+            "vectorValue": 7.361746907054415,
+            "contribution": -0.18865741087529636,
+            "absoluteContribution": 0.18865741087529636,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 116,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+            "weight": -0.1828000969757696,
+            "vectorValue": 1.031693415094025,
+            "contribution": -0.18859365632845068,
+            "absoluteContribution": 0.18859365632845068,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 8,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.deltaYRelativeDiff",
+            "weight": 0.11816558808256657,
+            "vectorValue": -1.134988832454527,
+            "contribution": -0.13411662285413478,
+            "absoluteContribution": 0.13411662285413478,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 257,
+            "dimensionName": "presence.referenceComparison.comparisonCost",
+            "weight": -0.1339400022803419,
+            "vectorValue": 1,
+            "contribution": -0.1339400022803419,
+            "absoluteContribution": 0.1339400022803419,
+            "effect": "decreases_positive_probability"
+          }
+        ],
+        "mostPositive": [
+          {
+            "index": 256,
+            "dimensionName": "value.referenceComparison.comparisonCost",
+            "weight": -0.8083014848531364,
+            "vectorValue": -0.22335982439252675,
+            "contribution": 0.18054207771301514,
+            "absoluteContribution": 0.18054207771301514,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 126,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+            "weight": -0.1570419119999386,
+            "vectorValue": -0.8675604687990155,
+            "contribution": 0.13624335479576047,
+            "absoluteContribution": 0.13624335479576047,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 118,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaXRelativeDiff",
+            "weight": -0.17148215187403323,
+            "vectorValue": -0.7708612930958032,
+            "contribution": 0.13218895333646818,
+            "absoluteContribution": 0.13218895333646818,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 188,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.straightnessDiff",
+            "weight": -0.15068245155710808,
+            "vectorValue": -0.6853664527619715,
+            "contribution": 0.10327269731717277,
+            "absoluteContribution": 0.10327269731717277,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 259,
+            "dimensionName": "presence.referenceComparison.maxRoleCost",
+            "weight": 0.09986920595128443,
+            "vectorValue": 1,
+            "contribution": 0.09986920595128443,
+            "absoluteContribution": 0.09986920595128443,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 261,
+            "dimensionName": "presence.referenceComparison.meanRoleCost",
+            "weight": 0.09986920595128443,
+            "vectorValue": 1,
+            "contribution": 0.09986920595128443,
+            "absoluteContribution": 0.09986920595128443,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 12,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.straightnessDiff",
+            "weight": -0.4124998661358019,
+            "vectorValue": -0.22984119113808865,
+            "contribution": 0.09480946057695483,
+            "absoluteContribution": 0.09480946057695483,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 176,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.angleAbsDiff",
+            "weight": -0.08646706120664076,
+            "vectorValue": -1.0538454623543698,
+            "contribution": 0.09112292009573593,
+            "absoluteContribution": 0.09112292009573593,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 4,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.comparisonCost",
+            "weight": -0.08192991727952137,
+            "vectorValue": -0.9847564248238275,
+            "contribution": 0.0806810124262934,
+            "absoluteContribution": 0.0806810124262934,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 14,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.widthRelativeDiff",
+            "weight": -0.21765495854407796,
+            "vectorValue": -0.3693342313124664,
+            "contribution": 0.08038742680522377,
+            "absoluteContribution": 0.08038742680522377,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 124,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.straightnessDiff",
+            "weight": -0.05233722440963063,
+            "vectorValue": -1.2339657906935522,
+            "contribution": 0.06458234450133574,
+            "absoluteContribution": 0.06458234450133574,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 6,
+            "dimensionName": "value.perRole.role_stroke0_horizontal.deltaXRelativeDiff",
+            "weight": -0.17864273172584008,
+            "vectorValue": -0.3517550793077201,
+            "contribution": 0.06283848826597065,
+            "absoluteContribution": 0.06283848826597065,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 112,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.angleAbsDiff",
+            "weight": 0.03618532723466752,
+            "vectorValue": 1.448584822568844,
+            "contribution": 0.052417515831826404,
+            "absoluteContribution": 0.052417515831826404,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 1,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.angleAbsDiff",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 3,
+            "dimensionName": "presence.perRole.role_stroke0_horizontal.centerDistance",
+            "weight": 0.03254953274960291,
+            "vectorValue": 1,
+            "contribution": 0.03254953274960291,
+            "absoluteContribution": 0.03254953274960291,
+            "effect": "increases_positive_probability"
+          }
+        ],
+        "mostInfluential": [
+          {
+            "index": 258,
+            "dimensionName": "value.referenceComparison.maxRoleCost",
+            "weight": -0.5891370868953033,
+            "vectorValue": 1.808039460948986,
+            "contribution": -1.0651831010152402,
+            "absoluteContribution": 1.0651831010152402,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 122,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.heightRelativeDiff",
+            "weight": -0.24166479763525717,
+            "vectorValue": 2.4188443858466813,
+            "contribution": -0.5845495390168162,
+            "absoluteContribution": 0.5845495390168162,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 88,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaYRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 6.745955200317826,
+            "contribution": -0.4814142729296255,
+            "absoluteContribution": 0.4814142729296255,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 90,
+            "dimensionName": "value.perRole.role_stroke1_vertical.heightRelativeDiff",
+            "weight": -0.07136339608465594,
+            "vectorValue": 6.745955200317826,
+            "contribution": -0.4814142729296255,
+            "absoluteContribution": 0.4814142729296255,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 82,
+            "dimensionName": "value.perRole.role_stroke1_vertical.centerDistance",
+            "weight": -0.1308141651455743,
+            "vectorValue": 3.429138121619254,
+            "contribution": -0.44857984054848554,
+            "absoluteContribution": 0.44857984054848554,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 260,
+            "dimensionName": "value.referenceComparison.meanRoleCost",
+            "weight": -0.5489106799692266,
+            "vectorValue": 0.7471305308774143,
+            "contribution": -0.41010792772969074,
+            "absoluteContribution": 0.41010792772969074,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 84,
+            "dimensionName": "value.perRole.role_stroke1_vertical.comparisonCost",
+            "weight": -0.09799793434349673,
+            "vectorValue": 4.104331490967959,
+            "contribution": -0.4022160079758241,
+            "absoluteContribution": 0.4022160079758241,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 114,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.centerDistance",
+            "weight": -0.18418563256247666,
+            "vectorValue": 1.8903625302576503,
+            "contribution": -0.3481776184079093,
+            "absoluteContribution": 0.3481776184079093,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 178,
+            "dimensionName": "value.perRole.role_stroke3_right_diagonal.centerDistance",
+            "weight": -0.23993532819806745,
+            "vectorValue": 1.4340704160390059,
+            "contribution": -0.344084155931458,
+            "absoluteContribution": 0.344084155931458,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 120,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.deltaYRelativeDiff",
+            "weight": -0.10338233908884055,
+            "vectorValue": 2.1958004366417883,
+            "contribution": -0.2270069853123255,
+            "absoluteContribution": 0.2270069853123255,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 86,
+            "dimensionName": "value.perRole.role_stroke1_vertical.deltaXRelativeDiff",
+            "weight": -0.12508988783950073,
+            "vectorValue": 1.6577859983550047,
+            "contribution": -0.2073722645961223,
+            "absoluteContribution": 0.2073722645961223,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 80,
+            "dimensionName": "value.perRole.role_stroke1_vertical.angleAbsDiff",
+            "weight": -0.025626717850693138,
+            "vectorValue": 7.361746907054415,
+            "contribution": -0.18865741087529636,
+            "absoluteContribution": 0.18865741087529636,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 116,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.comparisonCost",
+            "weight": -0.1828000969757696,
+            "vectorValue": 1.031693415094025,
+            "contribution": -0.18859365632845068,
+            "absoluteContribution": 0.18859365632845068,
+            "effect": "decreases_positive_probability"
+          },
+          {
+            "index": 256,
+            "dimensionName": "value.referenceComparison.comparisonCost",
+            "weight": -0.8083014848531364,
+            "vectorValue": -0.22335982439252675,
+            "contribution": 0.18054207771301514,
+            "absoluteContribution": 0.18054207771301514,
+            "effect": "increases_positive_probability"
+          },
+          {
+            "index": 126,
+            "dimensionName": "value.perRole.role_stroke2_left_diagonal.widthRelativeDiff",
+            "weight": -0.1570419119999386,
+            "vectorValue": -0.8675604687990155,
+            "contribution": 0.13624335479576047,
+            "absoluteContribution": 0.13624335479576047,
+            "effect": "increases_positive_probability"
+          }
+        ]
+      },
+      "counterfactual": {
+        "counterfactualThreshold": 0.015595051725314231,
+        "recoveredPositiveCount": 1,
+        "additionalFalsePositiveCount": 0
+      }
+    }
+  ],
+  "integrity": {
+    "passed": true,
+    "expectedDiagnosisCount": 3,
+    "actualDiagnosisCount": 3,
+    "errors": []
+  }
+}

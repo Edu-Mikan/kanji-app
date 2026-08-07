@@ -744,8 +744,19 @@ function evaluateFold({
   });
 
   return {
-    ...foldResult,
-    integrity: validation,
+    foldResult: {
+      ...foldResult,
+      integrity: validation,
+    },
+    runtimeArtifacts: {
+      model: trainingResult.model,
+      dimensionNames,
+      featureTransformers,
+      trainingExamples,
+      evaluationExamples,
+      evaluationProbabilityRows,
+      hybridEvaluation,
+    },
   };
 }
 
@@ -1046,14 +1057,14 @@ function main(argv = process.argv.slice(2)) {
           `held out ${fold.heldOutKanji}`,
       );
 
-      foldResults.push(
-        evaluateFold({
-          fold,
-          datasetEntries,
-          entriesByRecognitionId,
-          options,
-        }),
-      );
+      const evaluation = evaluateFold({
+        fold,
+        datasetEntries,
+        entriesByRecognitionId,
+        options,
+      });
+
+      foldResults.push(evaluation.foldResult);
     }
 
     const report = buildReport({
