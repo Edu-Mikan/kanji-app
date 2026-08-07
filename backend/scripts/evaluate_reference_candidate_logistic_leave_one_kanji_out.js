@@ -432,9 +432,143 @@ function validateFoldResult({ foldResult, sourceRowCount }) {
     }
   }
 
+  const diagnosticEvidence = foldResult.diagnosticEvidence;
+
+  if (!diagnosticEvidence || typeof diagnosticEvidence !== "object") {
+    errors.push(
+      `Fold ${foldResult.heldOutKanji} diagnostic evidence is missing.`,
+    );
+  } else {
+    if (!Array.isArray(diagnosticEvidence.hybridFalseNegativePredictions)) {
+      errors.push(
+        `Fold ${foldResult.heldOutKanji} hybrid false negative ` +
+          `predictions must be an array.`,
+      );
+    } else if (
+      diagnosticEvidence.hybridFalseNegativePredictions.length !==
+      foldResult.hybridMetrics.falseNegative
+    ) {
+      errors.push(
+        `Fold ${foldResult.heldOutKanji} diagnostic FN count mismatch: ` +
+          `evidence=` +
+          `${diagnosticEvidence.hybridFalseNegativePredictions.length}, ` +
+          `metrics=${foldResult.hybridMetrics.falseNegative}.`,
+      );
+    }
+
+    if (
+      diagnosticEvidence.hybridFalseNegativeCount !==
+      foldResult.hybridMetrics.falseNegative
+    ) {
+      errors.push(
+        `Fold ${foldResult.heldOutKanji} stored diagnostic FN count ` +
+          `does not match hybrid metrics.`,
+      );
+    }
+
+    if (!Array.isArray(diagnosticEvidence.descriptorFalsePositivesRejected)) {
+      errors.push(
+        `Fold ${foldResult.heldOutKanji} rejected descriptor FP ` +
+          `predictions must be an array.`,
+      );
+    } else {
+      const expectedRejectedFpCount =
+        foldResult.descriptorMetrics.falsePositive -
+        foldResult.hybridMetrics.falsePositive;
+
+      if (
+        diagnosticEvidence.descriptorFalsePositivesRejected.length !==
+        expectedRejectedFpCount
+      ) {
+        errors.push(
+          `Fold ${foldResult.heldOutKanji} rejected descriptor FP ` +
+            `count mismatch: evidence=` +
+            `${diagnosticEvidence.descriptorFalsePositivesRejected.length}, ` +
+            `expected=${expectedRejectedFpCount}.`,
+        );
+      }
+
+      if (
+        diagnosticEvidence.descriptorFalsePositiveRejectedCount !==
+        expectedRejectedFpCount
+      ) {
+        errors.push(
+          `Fold ${foldResult.heldOutKanji} stored rejected descriptor ` +
+            `FP count does not match metrics.`,
+        );
+      }
+    }
+  }
+
   return {
     passed: errors.length === 0,
     errors,
+  };
+}
+
+function buildFoldDiagnosticEvidence({ hybridEvaluation, selectedThreshold }) {
+  if (!hybridEvaluation || !Array.isArray(hybridEvaluation.predictions)) {
+    throw new Error("hybridEvaluation.predictions must be an array");
+  }
+
+  if (
+    typeof selectedThreshold !== "number" ||
+    !Number.isFinite(selectedThreshold) ||
+    selectedThreshold < 0 ||
+    selectedThreshold > 1
+  ) {
+    throw new Error("selectedThreshold must be between 0 and 1");
+  }
+
+  const hybridFalseNegativePredictions = [];
+
+  const descriptorFalsePositivesRejected = [];
+
+  for (const prediction of hybridEvaluation.predictions) {
+    const diagnosticPrediction = {
+      recognitionId: prediction.recognitionId,
+      targetKanji: prediction.targetKanji,
+      label: prediction.label,
+      classification: prediction.classification,
+      descriptorPrediction: prediction.descriptorPrediction,
+      mlProbability: prediction.mlProbability,
+      selectedThreshold,
+      thresholdMargin: prediction.mlProbability - selectedThreshold,
+      mlPrediction: prediction.mlPrediction,
+      hybridPrediction: prediction.hybridPrediction,
+    };
+
+    if (prediction.label === 1 && prediction.hybridPrediction === 0) {
+      hybridFalseNegativePredictions.push(diagnosticPrediction);
+    }
+
+    if (
+      prediction.label === 0 &&
+      prediction.descriptorPrediction === 1 &&
+      prediction.hybridPrediction === 0
+    ) {
+      descriptorFalsePositivesRejected.push(diagnosticPrediction);
+    }
+  }
+
+  const compareByProbabilityThenId = (left, right) => {
+    if (left.mlProbability !== right.mlProbability) {
+      return left.mlProbability - right.mlProbability;
+    }
+
+    return left.recognitionId.localeCompare(right.recognitionId);
+  };
+
+  hybridFalseNegativePredictions.sort(compareByProbabilityThenId);
+
+  descriptorFalsePositivesRejected.sort(compareByProbabilityThenId);
+
+  return {
+    hybridFalseNegativeCount: hybridFalseNegativePredictions.length,
+    hybridFalseNegativePredictions,
+    descriptorFalsePositiveRejectedCount:
+      descriptorFalsePositivesRejected.length,
+    descriptorFalsePositivesRejected,
   };
 }
 
@@ -554,6 +688,11 @@ function evaluateFold({
     hybridEvaluation,
   });
 
+  const diagnosticEvidence = buildFoldDiagnosticEvidence({
+    hybridEvaluation,
+    selectedThreshold,
+  });
+
   const trainingKanjis = new Set(
     trainingEntries.map(({ row }) => row.targetKanji),
   );
@@ -586,6 +725,7 @@ function evaluateFold({
     pureMlMetrics: pureMlEvaluation.metrics,
     hybridMetrics: hybridEvaluation.metrics,
     hybridChanges,
+    diagnosticEvidence,
     comparisons: {
       hybridVsDescriptor: calculateMetricDifference({
         candidateMetrics: hybridEvaluation.metrics,
@@ -960,6 +1100,7 @@ module.exports = {
   summarizeFoldOutcomes,
   calculateConfusionMatrixRowCount,
   validateFoldResult,
+  buildFoldDiagnosticEvidence,
   evaluateFold,
   buildAggregateResult,
   buildReport,

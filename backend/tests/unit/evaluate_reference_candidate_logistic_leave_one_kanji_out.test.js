@@ -12,6 +12,7 @@ const {
   summarizeFoldOutcomes,
   calculateConfusionMatrixRowCount,
   validateFoldResult,
+  buildFoldDiagnosticEvidence,
   buildAggregateResult,
   formatDecimal,
   formatMetrics,
@@ -76,6 +77,28 @@ function createFoldResult({
       falsePositive: hybridFalsePositive,
       falseNegative: hybridFalseNegative,
     }),
+  };
+}
+
+function createHybridPrediction({
+  recognitionId,
+  targetKanji = "木",
+  label,
+  classification,
+  descriptorPrediction,
+  mlProbability,
+  mlPrediction,
+  hybridPrediction,
+}) {
+  return {
+    recognitionId,
+    targetKanji,
+    label,
+    classification,
+    descriptorPrediction,
+    mlProbability,
+    mlPrediction,
+    hybridPrediction,
   };
 }
 
@@ -277,11 +300,134 @@ test("validateFoldResult accepts a coherent fold", () => {
         falsePositive: 0,
         falseNegative: 0,
       }),
+      diagnosticEvidence: {
+        hybridFalseNegativeCount: 0,
+        hybridFalseNegativePredictions: [],
+        descriptorFalsePositiveRejectedCount: 1,
+        descriptorFalsePositivesRejected: [
+          {
+            recognitionId: "descriptor-fp-rejected",
+          },
+        ],
+      },
     },
   });
 
   assert.equal(result.passed, true);
   assert.deepEqual(result.errors, []);
+});
+
+test("buildFoldDiagnosticEvidence records hybrid false negatives", () => {
+  const selectedThreshold = 0.1;
+
+  const evidence = buildFoldDiagnosticEvidence({
+    selectedThreshold,
+    hybridEvaluation: {
+      predictions: [
+        createHybridPrediction({
+          recognitionId: "positive-rejected",
+          targetKanji: "木",
+          label: 1,
+          classification: "truePositive",
+          descriptorPrediction: 1,
+          mlProbability: 0.08,
+          mlPrediction: 0,
+          hybridPrediction: 0,
+        }),
+        createHybridPrediction({
+          recognitionId: "positive-accepted",
+          targetKanji: "木",
+          label: 1,
+          classification: "truePositive",
+          descriptorPrediction: 1,
+          mlProbability: 0.8,
+          mlPrediction: 1,
+          hybridPrediction: 1,
+        }),
+      ],
+    },
+  });
+
+  assert.equal(evidence.hybridFalseNegativeCount, 1);
+
+  assert.equal(evidence.hybridFalseNegativePredictions.length, 1);
+
+  assert.equal(
+    evidence.hybridFalseNegativePredictions[0].recognitionId,
+    "positive-rejected",
+  );
+
+  assert.ok(
+    Math.abs(
+      evidence.hybridFalseNegativePredictions[0].thresholdMargin - -0.02,
+    ) < 1e-12,
+  );
+});
+
+test("buildFoldDiagnosticEvidence records rejected descriptor false positives", () => {
+  const evidence = buildFoldDiagnosticEvidence({
+    selectedThreshold: 0.1,
+    hybridEvaluation: {
+      predictions: [
+        createHybridPrediction({
+          recognitionId: "descriptor-fp-rejected",
+          targetKanji: "山",
+          label: 0,
+          classification: "falsePositive",
+          descriptorPrediction: 1,
+          mlProbability: 0.05,
+          mlPrediction: 0,
+          hybridPrediction: 0,
+        }),
+        createHybridPrediction({
+          recognitionId: "descriptor-fp-kept",
+          targetKanji: "山",
+          label: 0,
+          classification: "falsePositive",
+          descriptorPrediction: 1,
+          mlProbability: 0.4,
+          mlPrediction: 1,
+          hybridPrediction: 1,
+        }),
+      ],
+    },
+  });
+
+  assert.equal(evidence.descriptorFalsePositiveRejectedCount, 1);
+
+  assert.equal(
+    evidence.descriptorFalsePositivesRejected[0].recognitionId,
+    "descriptor-fp-rejected",
+  );
+
+  assert.equal(
+    evidence.descriptorFalsePositivesRejected[0].thresholdMargin,
+    -0.05,
+  );
+});
+
+test("buildFoldDiagnosticEvidence ignores descriptor true negatives", () => {
+  const evidence = buildFoldDiagnosticEvidence({
+    selectedThreshold: 0.1,
+    hybridEvaluation: {
+      predictions: [
+        createHybridPrediction({
+          recognitionId: "descriptor-true-negative",
+          targetKanji: "木",
+          label: 0,
+          classification: "trueNegative",
+          descriptorPrediction: 0,
+          mlProbability: 0.01,
+          mlPrediction: 0,
+          hybridPrediction: 0,
+        }),
+      ],
+    },
+  });
+
+  assert.equal(evidence.descriptorFalsePositiveRejectedCount, 0);
+
+  assert.deepEqual(evidence.descriptorFalsePositivesRejected, []);
 });
 
 test("validateFoldResult rejects an evaluation confusion matrix mismatch", () => {
@@ -316,6 +462,16 @@ test("validateFoldResult rejects an evaluation confusion matrix mismatch", () =>
         falsePositive: 0,
         falseNegative: 0,
       }),
+      diagnosticEvidence: {
+        hybridFalseNegativeCount: 0,
+        hybridFalseNegativePredictions: [],
+        descriptorFalsePositiveRejectedCount: 1,
+        descriptorFalsePositivesRejected: [
+          {
+            recognitionId: "descriptor-fp-rejected",
+          },
+        ],
+      },
     },
   });
 
@@ -360,6 +516,16 @@ test("validateFoldResult rejects a training FN", () => {
         falsePositive: 0,
         falseNegative: 0,
       }),
+      diagnosticEvidence: {
+        hybridFalseNegativeCount: 0,
+        hybridFalseNegativePredictions: [],
+        descriptorFalsePositiveRejectedCount: 1,
+        descriptorFalsePositivesRejected: [
+          {
+            recognitionId: "descriptor-fp-rejected",
+          },
+        ],
+      },
     },
   });
 
@@ -410,5 +576,59 @@ test("formatMetrics formats a confusion matrix", () => {
       falseNegative: 1,
     }),
     "TP=10, TN=8, FP=2, FN=1",
+  );
+});
+
+test("validateFoldResult rejects diagnostic false negative count mismatch", () => {
+  const result = validateFoldResult({
+    sourceRowCount: 100,
+    foldResult: {
+      heldOutKanji: "木",
+      trainingRowCount: 90,
+      evaluationRowCount: 10,
+      trainingKanjiCount: 18,
+      trainingMetrics: createMetrics({
+        truePositive: 60,
+        trueNegative: 30,
+        falsePositive: 0,
+        falseNegative: 0,
+      }),
+      descriptorMetrics: createMetrics({
+        truePositive: 6,
+        trueNegative: 3,
+        falsePositive: 1,
+        falseNegative: 0,
+      }),
+      pureMlMetrics: createMetrics({
+        truePositive: 5,
+        trueNegative: 3,
+        falsePositive: 1,
+        falseNegative: 1,
+      }),
+      hybridMetrics: createMetrics({
+        truePositive: 5,
+        trueNegative: 4,
+        falsePositive: 0,
+        falseNegative: 1,
+      }),
+      diagnosticEvidence: {
+        hybridFalseNegativeCount: 0,
+        hybridFalseNegativePredictions: [],
+        descriptorFalsePositiveRejectedCount: 1,
+        descriptorFalsePositivesRejected: [
+          {
+            recognitionId: "descriptor-fp-rejected",
+          },
+        ],
+      },
+    },
+  });
+
+  assert.equal(result.passed, false);
+
+  assert.ok(
+    result.errors.some((error) =>
+      error.includes("diagnostic FN count mismatch"),
+    ),
   );
 });
