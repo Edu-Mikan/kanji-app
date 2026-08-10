@@ -560,7 +560,7 @@ app.post("/feedback", async (req, res) => {
       isCorrect,
       // Tipo de feedback, por si más adelante tienes varios
       // Ej: "manual_debug", "user_feedback", "auto_log"
-      feedbackType: feedbackType ?? "manual_debug",
+      feedbackType: feedbackType ?? "unknown",
       // Resultado de la estrategia automática del backend
       validationStrategy: validationStrategy ?? "unknown",
       validationResult: validationResult ?? null,
