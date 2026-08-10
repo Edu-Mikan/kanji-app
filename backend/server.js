@@ -27,6 +27,10 @@ const {
 
 const { validateByDescriptor } = require("./services/descriptor_validator");
 
+const {
+  createFeedbackReviewRouter,
+} = require("./routes/feedback_review_routes");
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
@@ -47,6 +51,13 @@ let mongoClient = null;
 let feedbackCollection = null;
 let mongoConnectionError = null;
 let mongoConnectionAttemptedAt = null;
+
+app.use(
+  "/api/review",
+  createFeedbackReviewRouter({
+    getCollection: () => feedbackCollection,
+  }),
+);
 
 const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
 const kanjiDescriptors = loadKanjiDescriptors();
