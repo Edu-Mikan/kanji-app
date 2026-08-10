@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Consolidated comparison of descriptor, FP-safe and logistic baseline alternatives",
+  "decisionPolicy": {
+    "primary": "Require falseNegative = 0",
+    "secondary": "Minimize falsePositive",
+    "tieBreak": "Prefer the simpler alternative",
+    "scopeIsolation": "Do not rank alternatives across different evaluation scopes as equivalent evidence"
+  },
+  "knownDataset": {
+    "descriptorMetrics": {
+      "truePositive": 383,
+      "trueNegative": 126,
+      "falsePositive": 56,
+      "falseNegative": 0,
+      "rowCount": 565,
+      "accuracy": 0.9008849557522124,
+      "recall": 1,
+      "specificity": 0.6923076923076923,
+      "precision": 0.8724373576309795
+    },
+    "fpSafeMetrics": {
+      "truePositive": 383,
+      "trueNegative": 166,
+      "falsePositive": 16,
+      "falseNegative": 0,
+      "rowCount": 565,
+      "accuracy": 0.9716814159292035,
+      "recall": 1,
+      "specificity": 0.9120879120879121,
+      "precision": 0.9598997493734336
+    },
+    "alternatives": [
+      {
+        "id": "descriptor_base",
+        "label": "Descriptor base",
+        "evaluationScope": "known_full_dataset",
+        "metrics": {
+          "truePositive": 383,
+          "trueNegative": 126,
+          "falsePositive": 56,
+          "falseNegative": 0,
+          "rowCount": 565,
+          "accuracy": 0.9008849557522124,
+          "recall": 1,
+          "specificity": 0.6923076923076923,
+          "precision": 0.8724373576309795
+        },
+        "fnSafe": true,
+        "complexityRank": 1,
+        "evidenceLevel": "observed_on_known_dataset",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": [
+          "Evaluated on the same known dataset used during descriptor development."
+        ]
+      },
+      {
+        "id": "fp_safe_patch_proposals",
+        "label": "FP-safe patch proposals",
+        "evaluationScope": "known_full_dataset",
+        "metrics": {
+          "truePositive": 383,
+          "trueNegative": 166,
+          "falsePositive": 16,
+          "falseNegative": 0,
+          "rowCount": 565,
+          "accuracy": 0.9716814159292035,
+          "recall": 1,
+          "specificity": 0.9120879120879121,
+          "precision": 0.9598997493734336
+        },
+        "fnSafe": true,
+        "complexityRank": 2,
+        "evidenceLevel": "candidate_evaluated_on_known_dataset",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": true,
+        "limitations": [
+          "Suggestions were generated and evaluated on the known dataset.",
+          "Fourteen proposals remain subject to manual review.",
+          "No independent unseen-kanji evaluation is available."
+        ]
+      }
+    ],
+    "recommendedCandidateId": "fp_safe_patch_proposals",
+    "recommendationStatus": "manual_review_required",
+    "proposalCount": 14,
+    "proposalKanjis": [
+      "一",
+      "七",
+      "八",
+      "六",
+      "四",
+      "回",
+      "山",
+      "日",
+      "木",
+      "未",
+      "末",
+      "本",
+      "用",
+      "田"
+    ]
+  },
+  "developmentValidation": {
+    "alternatives": [
+      {
+        "id": "development_descriptor",
+        "label": "Development descriptor",
+        "evaluationScope": "row_level_development_validation",
+        "metrics": {
+          "truePositive": 76,
+          "trueNegative": 22,
+          "falsePositive": 14,
+          "falseNegative": 0,
+          "positiveCount": 76,
+          "negativeCount": 36,
+          "predictedPositiveCount": 90,
+          "predictedNegativeCount": 22,
+          "accuracy": 0.875,
+          "recall": 1,
+          "specificity": 0.6111111111111112,
+          "precision": 0.8444444444444444,
+          "falseNegativeRate": 0,
+          "falsePositiveRate": 0.3888888888888889
+        },
+        "fnSafe": true,
+        "complexityRank": 1,
+        "evidenceLevel": "row_level_development_validation",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": []
+      },
+      {
+        "id": "development_pure_ml",
+        "label": "Development pure ML",
+        "evaluationScope": "row_level_development_validation",
+        "metrics": {
+          "truePositive": 76,
+          "trueNegative": 8,
+          "falsePositive": 28,
+          "falseNegative": 0,
+          "rowCount": 112,
+          "positiveCount": 76,
+          "negativeCount": 36,
+          "predictedPositiveCount": 104,
+          "predictedNegativeCount": 8,
+          "accuracy": 0.75,
+          "recall": 1,
+          "specificity": 0.2222222222222222,
+          "precision": 0.7307692307692307,
+          "falseNegativeRate": 0,
+          "falsePositiveRate": 0.7777777777777778
+        },
+        "fnSafe": true,
+        "complexityRank": 3,
+        "evidenceLevel": "row_level_development_validation",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": []
+      },
+      {
+        "id": "development_hybrid",
+        "label": "Development descriptor and ML hybrid",
+        "evaluationScope": "row_level_development_validation",
+        "metrics": {
+          "truePositive": 76,
+          "trueNegative": 24,
+          "falsePositive": 12,
+          "falseNegative": 0,
+          "rowCount": 112,
+          "positiveCount": 76,
+          "negativeCount": 36,
+          "predictedPositiveCount": 88,
+          "predictedNegativeCount": 24,
+          "accuracy": 0.8928571428571429,
+          "recall": 1,
+          "specificity": 0.6666666666666666,
+          "precision": 0.8636363636363636,
+          "falseNegativeRate": 0,
+          "falsePositiveRate": 0.3333333333333333
+        },
+        "fnSafe": true,
+        "complexityRank": 4,
+        "evidenceLevel": "row_level_development_validation",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": [
+          "Threshold was selected using the same development validation partition."
+        ]
+      }
+    ],
+    "warning": "Development metrics are not independent unseen-kanji evidence."
+  },
+  "leaveOneKanjiOut": {
+    "alternatives": [
+      {
+        "id": "loocv_descriptor",
+        "label": "LOOCV descriptor",
+        "evaluationScope": "leave_one_target_kanji_out",
+        "metrics": {
+          "truePositive": 383,
+          "trueNegative": 126,
+          "falsePositive": 56,
+          "falseNegative": 0,
+          "rowCount": 565,
+          "positiveCount": 383,
+          "negativeCount": 182,
+          "predictedPositiveCount": 439,
+          "predictedNegativeCount": 126,
+          "accuracy": 0.9008849557522124,
+          "recall": 1,
+          "specificity": 0.6923076923076923,
+          "precision": 0.8724373576309795,
+          "falseNegativeRate": 0,
+          "falsePositiveRate": 0.3076923076923077
+        },
+        "fnSafe": true,
+        "complexityRank": 1,
+        "evidenceLevel": "held_out_target_kanji",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": []
+      },
+      {
+        "id": "loocv_pure_ml",
+        "label": "LOOCV pure ML",
+        "evaluationScope": "leave_one_target_kanji_out",
+        "metrics": {
+          "truePositive": 380,
+          "trueNegative": 86,
+          "falsePositive": 96,
+          "falseNegative": 3,
+          "rowCount": 565,
+          "positiveCount": 383,
+          "negativeCount": 182,
+          "predictedPositiveCount": 476,
+          "predictedNegativeCount": 89,
+          "accuracy": 0.8247787610619469,
+          "recall": 0.9921671018276762,
+          "specificity": 0.4725274725274725,
+          "precision": 0.7983193277310925,
+          "falseNegativeRate": 0.007832898172323759,
+          "falsePositiveRate": 0.5274725274725275
+        },
+        "fnSafe": false,
+        "complexityRank": 3,
+        "evidenceLevel": "held_out_target_kanji",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": []
+      },
+      {
+        "id": "loocv_hybrid",
+        "label": "LOOCV descriptor and ML hybrid",
+        "evaluationScope": "leave_one_target_kanji_out",
+        "metrics": {
+          "truePositive": 380,
+          "trueNegative": 133,
+          "falsePositive": 49,
+          "falseNegative": 3,
+          "rowCount": 565,
+          "positiveCount": 383,
+          "negativeCount": 182,
+          "predictedPositiveCount": 429,
+          "predictedNegativeCount": 136,
+          "accuracy": 0.9079646017699115,
+          "recall": 0.9921671018276762,
+          "specificity": 0.7307692307692307,
+          "precision": 0.8857808857808858,
+          "falseNegativeRate": 0.007832898172323759,
+          "falsePositiveRate": 0.2692307692307692
+        },
+        "fnSafe": false,
+        "complexityRank": 4,
+        "evidenceLevel": "held_out_target_kanji",
+        "automaticallyPromoted": false,
+        "manualReviewRequired": false,
+        "limitations": [
+          "Introduces false negatives on held-out kanjis."
+        ]
+      }
+    ],
+    "hybridPromotionBlocked": true,
+    "affectedFalseNegativeKanjis": [
+      "本",
+      "木"
+    ],
+    "falseNegativeCount": 3
+  },
+  "finalDecision": {
+    "currentOfficialValidator": "descriptor_base",
+    "bestReviewableCandidate": "fp_safe_patch_proposals",
+    "pureMlPromotionReady": false,
+    "hybridPromotionReady": false,
+    "fpSafeAutomaticPromotionReady": false,
+    "productionPromotionReady": false,
+    "reason": "The descriptor remains FN-safe. FP-safe proposals show the strongest known-dataset improvement but require manual review and independent evaluation. The logistic hybrid introduces held-out false negatives."
+  },
+  "integrity": {
+    "passed": true,
+    "errors": [],
+    "knownDatasetValidation": {
+      "passed": true,
+      "errors": [],
+      "rowTotals": {
+        "fpBefore": 56,
+        "fpAfter": 16,
+        "fpReduction": 40,
+        "fnIncrease": 0,
+        "tpLoss": 0
+      },
+      "proposalTotals": {
+        "fpReduction": 40,
+        "fnIncrease": 0,
+        "tpLoss": 0
+      }
+    }
+  },
+  "sources": {
+    "datasetSummary": {
+      "path": "ml_datasets/reference_candidate_binary_dataset_summary.json",
+      "sha256": "34b5515d8e2798a8462ed87e5c754c770e1124a729e8d0f2fe3e6deeed21239b"
+    },
+    "fpSuggestionSummary": {
+      "path": "candidate_reports_training/reference_candidate_fp_constraint_suggestion_batch_summary.json",
+      "sha256": "8a707963c23c1a35bf868455945f8a67cb005b204d21d511c2a7cacb8ab20b6f"
+    },
+    "fpProposals": {
+      "path": "candidate_reports_training/reference_candidate_fp_constraint_patch_proposals.json",
+      "sha256": "e3a3e275dd648b4c1ec603d5178b8ec8c54f742bc7fd4d73b40014ce9a11e83b"
+    },
+    "generationStatus": {
+      "path": "candidate_reports_training/reference_candidate_generation_status_summary.json",
+      "sha256": "22793c6edd314d63a0fa3b7e6a65cb58254aa6cb4a3e4b0a8812f61d641fd1fb"
+    },
+    "hybridDevelopmentReport": {
+      "path": "ml_models/reference_candidate_logistic_hybrid_evaluation_report.json",
+      "sha256": "4ba999d8fc08c38d84fcda888f6a7fa69c31e7184abe6f72503c868304c586c3"
+    },
+    "loocvReport": {
+      "path": "ml_models/reference_candidate_logistic_leave_one_kanji_out_report.json",
+      "sha256": "4b3f86b94d272933e6bb1f44407546bb82ed2a17f644a85d054ed26b55a9781c"
+    },
+    "diagnosisReport": {
+      "path": "ml_models/reference_candidate_logistic_leave_one_kanji_out_diagnosis.json",
+      "sha256": "22b09ffd69ad142174744733c95fdc6bbb294691f95067e3ab6b335cedabf275"
+    }
+  }
+}
