@@ -30,3 +30,4 @@ Thumbs.db
 /backend/feedback.jsonl
 /backend/training_data.jsonl
 /backend/kanji_full.json
+/passwords.txt
