@@ -13,7 +13,7 @@
     "test:regression": "node --test tests/regression/*.test.js",
     "test:integration": "node --test tests/integration/*.test.js",
     "report:descriptor-coverage": "node scripts/analyze_descriptor_coverage.js --file ./training_data.jsonl --descriptor-file ./data/kanji_descriptors.json --out-json ./candidate_reports_training/descriptor_coverage_report.json",
-    "prestart": "npm run check:kanji-full",
+    "prestart": "npm run check:kanji-runtime",
     "pretest:reference-candidate-quality": "npm run check:kanji-full",
     "test:reference-candidate-quality": "node scripts/run_reference_descriptor_candidate_quality_check.js --all-covered --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --continue-on-error",
     "pretest:reference-candidate-fp-suggestions": "npm run check:kanji-full",
@@ -22,6 +22,8 @@
     "test:reference-candidate-fp-patches": "node scripts/run_reference_candidate_fp_patch_proposal_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --continue-on-error",
     "pretest:reference-candidate-ml-dataset": "npm run check:kanji-full",
     "test:reference-candidate-ml-dataset": "node scripts/run_reference_candidate_ml_dataset_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --out-jsonl ./ml_datasets/reference_candidate_binary_dataset.jsonl --out-summary ./ml_datasets/reference_candidate_binary_dataset_summary.json --continue-on-error",
+    "generate:kanji-runtime": "node scripts/generate_kanji_runtime.js",
+    "check:kanji-runtime": "node scripts/check_kanji_runtime_exists.js",
     "start": "node server.js"
   },
   "keywords": [],

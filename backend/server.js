@@ -59,7 +59,9 @@ app.use(
   }),
 );
 
-const kanjiDataset = JSON.parse(fs.readFileSync("./kanji_full.json", "utf-8"));
+const kanjiDataset = JSON.parse(
+  fs.readFileSync("./kanji_runtime.json", "utf8"),
+);
 const kanjiDescriptors = loadKanjiDescriptors();
 
 async function connectMongoIfConfigured() {
