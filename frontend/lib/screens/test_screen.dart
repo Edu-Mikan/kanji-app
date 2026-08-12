@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'sample_review_screen.dart';
 import '../services/validation_service.dart';
 import '../widgets/drawing_canvas.dart';
 
@@ -158,6 +158,19 @@ class _TestScreenState extends State<TestScreen> {
     });
 
     canvasKey.currentState?.clear();
+  }
+
+  Future<void> openSampleReview() async {
+    final kanji = currentKanji;
+
+    if (kanji.isEmpty || _isSaving) {
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => SampleReviewScreen(kanji: kanji)),
+    );
   }
 
   double _getContentMaxWidth(double screenWidth) {
@@ -352,8 +365,15 @@ class _TestScreenState extends State<TestScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Entrenamiento IA"),
+        title: const Text('Entrenamiento IA'),
         backgroundColor: Colors.orange,
+        actions: [
+          IconButton(
+            tooltip: 'Ver muestras de $currentKanji',
+            onPressed: _isSaving ? null : openSampleReview,
+            icon: const Icon(Icons.collections_outlined),
+          ),
+        ],
       ),
       backgroundColor: Colors.white,
       body: SafeArea(

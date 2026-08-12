@@ -71,4 +71,39 @@ void main() {
 
     expect(find.text('2 / 3'), findsOneWidget);
   });
+
+  testWidgets('TestScreen abre las muestras del kanji actual', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      createTestApp(kanjiList: const ['力', '木'], initialIndex: 0),
+    );
+
+    await tester.pump();
+
+    expect(find.byTooltip('Ver muestras de 力'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Ver muestras de 力'));
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Muestras de 力'), findsOneWidget);
+
+    expect(find.text('Muestras de 力'), findsOneWidget);
+
+    expect(find.text('Todas'), findsOneWidget);
+
+    expect(find.text('Correctas'), findsOneWidget);
+
+    expect(find.text('Incorrectas'), findsOneWidget);
+
+    expect(find.byType(SegmentedButton<String>), findsOneWidget);
+
+    final redundantKanjiField = find.byWidgetPredicate(
+      (widget) => widget is TextField && widget.controller?.text == '力',
+      description: 'Campo redundante del kanji',
+    );
+
+    expect(redundantKanjiField, findsNothing);
+  });
 }
