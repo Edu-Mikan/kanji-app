@@ -2,9 +2,18 @@
 
 const express = require("express");
 
-const { createReviewDevice } = require("../services/review_device_service");
+const {
+  REVIEW_KEY_HEADER,
+  normalizeReviewKey,
+  reviewKeysMatch,
+  createRequireReviewKey,
+} = require("../middleware/require_review_key");
 
-const { createRequireReviewKey } = require("../middleware/require_review_key");
+const {
+  ReviewDeviceAuthError,
+  authenticateReviewDevice,
+  createReviewDevice,
+} = require("../services/review_device_service");
 
 const {
   FeedbackReviewValidationError,
@@ -26,9 +35,104 @@ function createFeedbackReviewRouter({
     configuredKey,
   });
 
-  router.use(requireReviewKey);
+  //router.use(requireReviewKey);
 
-  router.post("/devices/pair", async (req, res) => {
+  function getProvidedReviewKey(req) {
+    return req.get?.(REVIEW_KEY_HEADER) ?? req.headers?.[REVIEW_KEY_HEADER];
+  }
+
+  function getBearerToken(req) {
+    const authorization =
+      req.get?.("authorization") ?? req.headers?.authorization;
+
+    if (typeof authorization !== "string") {
+      return "";
+    }
+
+    const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+    if (!match) {
+      return "";
+    }
+
+    return match[1].trim();
+  }
+
+  async function requireReviewReadAccess(req, res, next) {
+    const providedKey = getProvidedReviewKey(req);
+
+    const normalizedProvidedKey = normalizeReviewKey(providedKey);
+
+    const normalizedConfiguredKey = normalizeReviewKey(configuredKey);
+
+    if (normalizedProvidedKey.length > 0) {
+      if (normalizedConfiguredKey.length === 0) {
+        return res.status(503).json({
+          ok: false,
+          error: "review_admin_not_configured",
+          message: "Review administration is not configured.",
+        });
+      }
+
+      if (reviewKeysMatch(normalizedProvidedKey, normalizedConfiguredKey)) {
+        return next();
+      }
+
+      return res.status(403).json({
+        ok: false,
+        error: "review_admin_key_invalid",
+        message: "The review administration key is invalid.",
+      });
+    }
+
+    const deviceToken = getBearerToken(req);
+
+    if (deviceToken.length === 0) {
+      return res.status(401).json({
+        ok: false,
+        error: "review_authorization_required",
+        message: "A review administration key or device token is required.",
+      });
+    }
+
+    if (typeof getDeviceCollection !== "function") {
+      return res.status(503).json({
+        ok: false,
+        error: "review_device_storage_unavailable",
+        message: "The review device storage is unavailable.",
+      });
+    }
+
+    const deviceCollection = getDeviceCollection();
+
+    try {
+      req.reviewDevice = await authenticateReviewDevice({
+        collection: deviceCollection,
+        deviceToken,
+        requiredPermission: "review:read",
+      });
+
+      return next();
+    } catch (error) {
+      if (error instanceof ReviewDeviceAuthError) {
+        return res.status(error.statusCode).json({
+          ok: false,
+          error: error.code,
+          message: error.message,
+        });
+      }
+
+      console.error("Error authenticating review device:", error);
+
+      return res.status(500).json({
+        ok: false,
+        error: "review_device_auth_failed",
+        message: "The review device could not be authenticated.",
+      });
+    }
+  }
+
+  router.post("/devices/pair", requireReviewKey, async (req, res) => {
     try {
       if (typeof getDeviceCollection !== "function") {
         return res.status(503).json({
@@ -78,7 +182,7 @@ function createFeedbackReviewRouter({
     }
   });
 
-  router.get("/samples", async (req, res) => {
+  router.get("/samples", requireReviewReadAccess, async (req, res) => {
     try {
       const collection = getCollection();
 

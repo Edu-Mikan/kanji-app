@@ -9,6 +9,11 @@ const {
   createFeedbackReviewRouter,
 } = require("../../routes/feedback_review_routes");
 
+const {
+  buildDeviceToken,
+  hashDeviceTokenSecret,
+} = require("../../services/review_device_service");
+
 function createReviewDocument({
   id = "mongo-id-1",
   recognitionId = "recognition-id-1",
@@ -130,6 +135,7 @@ function createFakeCollection({
 async function startTestServer({
   configuredKey = "test-review-key",
   collection,
+  deviceCollection = null,
 }) {
   const app = express();
 
@@ -139,8 +145,8 @@ async function startTestServer({
     "/api/review",
     createFeedbackReviewRouter({
       configuredKey,
-
       getCollection: () => collection,
+      getDeviceCollection: () => deviceCollection,
     }),
   );
 
@@ -176,11 +182,15 @@ async function stopTestServer(server) {
   });
 }
 
-async function requestJson({ baseUrl, path, reviewKey }) {
+async function requestJson({ baseUrl, path, reviewKey, authorization }) {
   const headers = {};
 
   if (reviewKey !== undefined) {
     headers["X-Review-Key"] = reviewKey;
+  }
+
+  if (authorization !== undefined) {
+    headers.authorization = authorization;
   }
 
   const response = await fetch(`${baseUrl}${path}`, {
@@ -213,7 +223,7 @@ test("GET /api/review/samples rejects requests without a review key", async () =
 
     assert.equal(response.body.ok, false);
 
-    assert.equal(response.body.error, "review_admin_key_required");
+    assert.equal(response.body.error, "review_authorization_required");
   } finally {
     await stopTestServer(server);
   }
@@ -421,18 +431,94 @@ test("GET /api/review/samples returns 500 without exposing storage errors", asyn
     const response = await requestJson({
       baseUrl,
       path: "/api/review/samples?kanji=力",
-
       reviewKey: "test-review-key",
     });
 
     assert.equal(response.status, 500);
-
     assert.equal(response.body.error, "review_samples_query_failed");
 
     assert.equal(
       JSON.stringify(response.body).includes("Sensitive MongoDB"),
       false,
     );
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+function createFakeDeviceCollection({
+  expectedTokenId = "device-token-id",
+  expectedTokenHash,
+  permissions = ["review:read"],
+} = {}) {
+  return {
+    async findOne(query) {
+      if (query.tokenId !== expectedTokenId) {
+        return null;
+      }
+
+      return {
+        tokenId: expectedTokenId,
+        tokenHash: expectedTokenHash,
+        name: "Móvil test",
+        permissions,
+        revokedAt: null,
+        expiresAt: null,
+      };
+    },
+
+    async updateOne() {
+      return {
+        matchedCount: 1,
+        modifiedCount: 1,
+      };
+    },
+  };
+}
+
+test("GET /api/review/samples accepts a valid review device token", async () => {
+  const tokenId = "device-token-id";
+  const tokenSecret = "device-token-secret";
+
+  const deviceToken = buildDeviceToken({
+    tokenId,
+    tokenSecret,
+  });
+
+  const expectedTokenHash = hashDeviceTokenSecret({
+    tokenId,
+    tokenSecret,
+  });
+
+  const { collection } = createFakeCollection({
+    total: 1,
+    documents: [
+      createReviewDocument({
+        recognitionId: "force-sample-1",
+      }),
+    ],
+  });
+
+  const deviceCollection = createFakeDeviceCollection({
+    expectedTokenId: tokenId,
+    expectedTokenHash,
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/samples?kanji=力",
+      authorization: `Bearer ${deviceToken}`,
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(response.body.ok, true);
+    assert.equal(response.body.items.length, 1);
   } finally {
     await stopTestServer(server);
   }
