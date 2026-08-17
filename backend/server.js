@@ -51,11 +51,13 @@ let mongoClient = null;
 let feedbackCollection = null;
 let mongoConnectionError = null;
 let mongoConnectionAttemptedAt = null;
+let reviewDeviceCollection = null;
 
 app.use(
   "/api/review",
   createFeedbackReviewRouter({
     getCollection: () => feedbackCollection,
+    getDeviceCollection: () => reviewDeviceCollection,
   }),
 );
 
@@ -89,11 +91,21 @@ async function connectMongoIfConfigured() {
   const db = mongoClient.db(MONGO_DB_NAME);
   feedbackCollection = db.collection(MONGO_COLLECTION_FEEDBACK);
 
+  reviewDeviceCollection = db.collection("review_devices");
+
   await feedbackCollection.createIndex({ kanji: 1 });
   await feedbackCollection.createIndex({ expectedKanji: 1 });
   await feedbackCollection.createIndex({ isCorrect: 1 });
   await feedbackCollection.createIndex({ createdAt: -1 });
   await feedbackCollection.createIndex({ recognitionId: 1 });
+  await reviewDeviceCollection.createIndex(
+    {
+      tokenId: 1,
+    },
+    {
+      unique: true,
+    },
+  );
 
   console.log(
     `Conectado a MongoDB: ${MONGO_DB_NAME}.${MONGO_COLLECTION_FEEDBACK}`,
