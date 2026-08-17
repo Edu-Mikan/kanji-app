@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kanji_app/models/review_sample.dart';
 import 'package:kanji_app/services/sample_review_service.dart';
 import 'package:kanji_app/widgets/stroke_preview.dart';
+import 'sample_review_detail_screen.dart';
 
 class SampleReviewScreen extends StatefulWidget {
   final SampleReviewService? service;
@@ -183,6 +184,23 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
     }
 
     await _loadSamples(page: result.page + 1);
+  }
+
+  Future<void> _openSampleDetail({
+    required List<ReviewSample> samples,
+    required int index,
+  }) async {
+    if (samples.isEmpty) {
+      return;
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            SampleReviewDetailScreen(samples: samples, initialIndex: index),
+      ),
+    );
   }
 
   void _clearReviewKey() {
@@ -454,7 +472,11 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
             ),
             itemCount: result.items.length,
             itemBuilder: (context, index) {
-              return _buildSampleCard(result.items[index]);
+              return _buildSampleCard(
+                sample: result.items[index],
+                samples: result.items,
+                index: index,
+              );
             },
           ),
         ),
@@ -535,7 +557,11 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
     );
   }
 
-  Widget _buildSampleCard(ReviewSample sample) {
+  Widget _buildSampleCard({
+    required ReviewSample sample,
+    required List<ReviewSample> samples,
+    required int index,
+  }) {
     final labelColor = sample.isCorrect ? Colors.green : Colors.red;
 
     final labelText = sample.isCorrect ? 'Correcta' : 'Incorrecta';
@@ -543,87 +569,95 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: StrokePreview(
-                  strokes: sample.strokesNormalized,
-                  size: 180,
-                  semanticsLabel:
-                      'Muestra de '
-                      '${sample.expectedKanji}, '
-                      '$labelText',
+      child: InkWell(
+        onTap: () {
+          _openSampleDetail(samples: samples, index: index);
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: StrokePreview(
+                    strokes: sample.strokesNormalized,
+                    size: 180,
+                    semanticsLabel:
+                        'Muestra de '
+                        '${sample.expectedKanji}, '
+                        '$labelText',
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 4,
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: labelColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      labelText,
+                      style: TextStyle(
+                        color: labelColor.shade700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: labelColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
+                  const Spacer(),
+                  Text(
+                    '${sample.strokeCount} trazos',
+                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
                   ),
-                  child: Text(
-                    labelText,
-                    style: TextStyle(
-                      color: labelColor.shade700,
+                ],
+              ),
+              const SizedBox(height: 7),
+              Row(
+                children: [
+                  Text(
+                    sample.expectedKanji,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontFamily: 'NotoSansJP',
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const Spacer(),
-                Text(
-                  '${sample.strokeCount} trazos',
-                  style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
-                ),
-              ],
-            ),
-            const SizedBox(height: 7),
-            Row(
-              children: [
-                Text(
-                  sample.expectedKanji,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontFamily: 'NotoSansJP',
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _formatDate(sample.createdAt),
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    _formatDate(sample.createdAt),
-                    textAlign: TextAlign.end,
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Tooltip(
+                message: sample.recognitionId,
+                child: Text(
+                  _shortRecognitionId(sample.recognitionId),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Tooltip(
-              message: sample.recognitionId,
-              child: Text(
-                _shortRecognitionId(sample.recognitionId),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 11,
-                  fontFamily: 'monospace',
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
