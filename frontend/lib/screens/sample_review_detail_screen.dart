@@ -145,6 +145,7 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
             strokes: sample.strokesNormalized,
             size: previewSize,
             strokeWidth: 7,
+            showStrokeOrder: true,
             semanticsLabel:
                 'Muestra de ${sample.expectedKanji}, '
                 '${sample.isCorrect ? "correcta" : "incorrecta"}',

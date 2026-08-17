@@ -10,6 +10,7 @@ class StrokePreview extends StatelessWidget {
   final double strokeWidth;
   final bool showGuides;
   final String? semanticsLabel;
+  final bool showStrokeOrder;
 
   const StrokePreview({
     super.key,
@@ -21,6 +22,7 @@ class StrokePreview extends StatelessWidget {
     this.strokeWidth = 5,
     this.showGuides = true,
     this.semanticsLabel,
+    this.showStrokeOrder = false,
   });
 
   List<ReviewStroke> get validStrokes {
@@ -57,6 +59,7 @@ class StrokePreview extends StatelessWidget {
                 guideColor: guideColor,
                 strokeWidth: strokeWidth,
                 showGuides: showGuides,
+                showStrokeOrder: showStrokeOrder,
               ),
               child: previewStrokes.isEmpty
                   ? const Center(
@@ -93,6 +96,7 @@ class StrokePreviewPainter extends CustomPainter {
   final double strokeWidth;
   final bool showGuides;
   final double padding;
+  final bool showStrokeOrder;
 
   const StrokePreviewPainter({
     required this.strokes,
@@ -101,6 +105,7 @@ class StrokePreviewPainter extends CustomPainter {
     required this.guideColor,
     required this.strokeWidth,
     required this.showGuides,
+    required this.showStrokeOrder,
     this.padding = 14,
   });
 
@@ -148,22 +153,100 @@ class StrokePreviewPainter extends CustomPainter {
       final path = Path();
 
       for (var pointIndex = 0; pointIndex < stroke.pointCount; pointIndex++) {
-        final normalizedX = stroke.x[pointIndex].clamp(0.0, 1.0).toDouble();
-
-        final normalizedY = stroke.y[pointIndex].clamp(0.0, 1.0).toDouble();
-
-        final x = padding + normalizedX * drawableWidth;
-
-        final y = padding + normalizedY * drawableHeight;
+        final point = _toCanvasOffset(
+          normalizedX: stroke.x[pointIndex],
+          normalizedY: stroke.y[pointIndex],
+          drawableWidth: drawableWidth,
+          drawableHeight: drawableHeight,
+        );
 
         if (pointIndex == 0) {
-          path.moveTo(x, y);
+          path.moveTo(point.dx, point.dy);
         } else {
-          path.lineTo(x, y);
+          path.lineTo(point.dx, point.dy);
         }
       }
 
       canvas.drawPath(path, paint);
+    }
+    if (showStrokeOrder) {
+      _drawStrokeOrderMarkers(
+        canvas: canvas,
+        drawableWidth: drawableWidth,
+        drawableHeight: drawableHeight,
+      );
+    }
+  }
+
+  void _drawStrokeOrderMarkers({
+    required Canvas canvas,
+    required double drawableWidth,
+    required double drawableHeight,
+  }) {
+    final markerFillPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.92)
+      ..style = PaintingStyle.fill
+      ..isAntiAlias = true;
+
+    final markerBorderPaint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.55)
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke
+      ..isAntiAlias = true;
+
+    const markerRadius = 10.0;
+
+    for (var strokeIndex = 0; strokeIndex < strokes.length; strokeIndex++) {
+      final stroke = strokes[strokeIndex];
+
+      if (!stroke.isValid) {
+        continue;
+      }
+
+      final markerCenter = _toCanvasOffset(
+        normalizedX: stroke.x.first,
+        normalizedY: stroke.y.first,
+        drawableWidth: drawableWidth,
+        drawableHeight: drawableHeight,
+      );
+
+      final adjustedCenter = Offset(
+        markerCenter.dx.clamp(
+          markerRadius + 2,
+          padding + drawableWidth - markerRadius - 2,
+        ),
+        markerCenter.dy.clamp(
+          markerRadius + 2,
+          padding + drawableHeight - markerRadius - 2,
+        ),
+      );
+
+      canvas.drawCircle(adjustedCenter, markerRadius, markerFillPaint);
+
+      canvas.drawCircle(adjustedCenter, markerRadius, markerBorderPaint);
+
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${strokeIndex + 1}',
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      );
+
+      textPainter.layout();
+
+      textPainter.paint(
+        canvas,
+        Offset(
+          adjustedCenter.dx - textPainter.width / 2,
+          adjustedCenter.dy - textPainter.height / 2,
+        ),
+      );
     }
   }
 
@@ -219,6 +302,22 @@ class StrokePreviewPainter extends CustomPainter {
     }
   }
 
+  Offset _toCanvasOffset({
+    required double normalizedX,
+    required double normalizedY,
+    required double drawableWidth,
+    required double drawableHeight,
+  }) {
+    final clampedX = normalizedX.clamp(0.0, 1.0);
+
+    final clampedY = normalizedY.clamp(0.0, 1.0);
+
+    return Offset(
+      padding + clampedX * drawableWidth,
+      padding + clampedY * drawableHeight,
+    );
+  }
+
   @override
   bool shouldRepaint(covariant StrokePreviewPainter oldDelegate) {
     return oldDelegate.strokes != strokes ||
@@ -227,6 +326,7 @@ class StrokePreviewPainter extends CustomPainter {
         oldDelegate.guideColor != guideColor ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.showGuides != showGuides ||
+        oldDelegate.showStrokeOrder != showStrokeOrder ||
         oldDelegate.padding != padding;
   }
 }

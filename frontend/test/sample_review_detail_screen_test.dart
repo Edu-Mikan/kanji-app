@@ -85,6 +85,10 @@ void main() {
 
     expect(find.byType(StrokePreview), findsOneWidget);
 
+    final preview = tester.widget<StrokePreview>(find.byType(StrokePreview));
+
+    expect(preview.showStrokeOrder, isTrue);
+
     expect(find.textContaining('Vista de sólo lectura'), findsOneWidget);
   });
 

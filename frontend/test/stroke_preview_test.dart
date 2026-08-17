@@ -17,6 +17,7 @@ void main() {
     List<ReviewStroke>? strokes,
     double size = 180,
     bool showGuides = true,
+    bool showStrokeOrder = false,
   }) {
     return MaterialApp(
       home: Scaffold(
@@ -25,6 +26,7 @@ void main() {
             strokes: strokes ?? createValidStrokes(),
             size: size,
             showGuides: showGuides,
+            showStrokeOrder: showStrokeOrder,
           ),
         ),
       ),
@@ -141,6 +143,7 @@ void main() {
       guideColor: Colors.grey,
       strokeWidth: 5,
       showGuides: true,
+      showStrokeOrder: false,
     );
 
     expect(() => painter.paint(canvas, const Size(180, 180)), returnsNormally);
@@ -158,6 +161,7 @@ void main() {
       guideColor: Colors.grey,
       strokeWidth: 5,
       showGuides: true,
+      showStrokeOrder: false,
     );
 
     final unchanged = StrokePreviewPainter(
@@ -167,6 +171,7 @@ void main() {
       guideColor: Colors.grey,
       strokeWidth: 5,
       showGuides: true,
+      showStrokeOrder: false,
     );
 
     final changed = StrokePreviewPainter(
@@ -176,10 +181,33 @@ void main() {
       guideColor: Colors.grey,
       strokeWidth: 5,
       showGuides: true,
+      showStrokeOrder: false,
+    );
+
+    final changedOrder = StrokePreviewPainter(
+      strokes: strokes,
+      strokeColor: Colors.black,
+      backgroundColor: Colors.white,
+      guideColor: Colors.grey,
+      strokeWidth: 5,
+      showGuides: true,
+      showStrokeOrder: true,
     );
 
     expect(unchanged.shouldRepaint(original), isFalse);
 
     expect(changed.shouldRepaint(original), isTrue);
+
+    expect(changedOrder.shouldRepaint(original), isTrue);
+  });
+
+  testWidgets('StrokePreview puede mostrar el orden de los trazos', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(createTestApp(showStrokeOrder: true));
+
+    final painter = getStrokePreviewPainter(tester);
+
+    expect(painter.showStrokeOrder, isTrue);
   });
 }
