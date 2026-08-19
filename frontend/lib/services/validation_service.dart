@@ -46,8 +46,6 @@ class ValidationService {
     String? validationStrategy,
     bool? validationResult,
     Map<String, dynamic>? simpleValidation,
-
-    // Nuevos campos para backend / ML futuro
     String? recognitionId,
     String? expectedKanji,
     int? schemaVersion,
@@ -57,11 +55,16 @@ class ValidationService {
     Map<String, dynamic>? canvas,
     Map<String, dynamic>? clientInfo,
     String? feedbackType,
+    String? deviceToken,
   }) async {
     try {
       await http.post(
         Uri.parse('$baseUrl/feedback'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          if (deviceToken != null && deviceToken.trim().isNotEmpty)
+            'Authorization': 'Bearer ${deviceToken.trim()}',
+        },
         body: jsonEncode({
           "kanji": kanji,
           "expectedKanji": expectedKanji ?? kanji,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'sample_review_screen.dart';
 import '../services/validation_service.dart';
 import '../widgets/drawing_canvas.dart';
+import '../services/review_device_pairing_service.dart';
 
 class TestScreen extends StatefulWidget {
   final List<String> kanjiList;
@@ -21,6 +22,7 @@ class _TestScreenState extends State<TestScreen> {
   final GlobalKey<DrawingCanvasState> canvasKey = GlobalKey();
 
   late final ValidationService _validationService;
+  late final ReviewDevicePairingService _pairingService;
   late int currentIndex;
 
   String? lastFeedbackMessage;
@@ -41,7 +43,14 @@ class _TestScreenState extends State<TestScreen> {
   void initState() {
     super.initState();
     _validationService = ValidationService();
+    _pairingService = ReviewDevicePairingService();
     currentIndex = widget.initialIndex;
+  }
+
+  @override
+  void dispose() {
+    _pairingService.dispose();
+    super.dispose();
   }
 
   Future<void> sendResult(bool isCorrectUser) async {
@@ -83,6 +92,21 @@ class _TestScreenState extends State<TestScreen> {
         return;
       }
 
+      final deviceToken = await _pairingService.readDeviceToken();
+
+      if (deviceToken == null || deviceToken.trim().isEmpty) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          lastFeedbackMessage =
+              'Este dispositivo no está vinculado. Vuelve a Entrenamiento IA para vincularlo.';
+        });
+
+        return;
+      }
+
       await _validationService.sendFeedback(
         kanji: currentKanji,
         score: result.score,
@@ -96,6 +120,7 @@ class _TestScreenState extends State<TestScreen> {
         recognitionId: result.recognitionId,
         schemaVersion: result.schemaVersion,
         feedbackType: "manual_debug",
+        deviceToken: deviceToken,
       );
 
       if (!mounted) return;
