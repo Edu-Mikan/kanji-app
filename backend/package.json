@@ -24,6 +24,7 @@
     "test:reference-candidate-ml-dataset": "node scripts/run_reference_candidate_ml_dataset_quality_check.js --dataset ./kanji_full.json --descriptor-file ./data/kanji_descriptors.json --file ./training_data.jsonl --out-dir ./candidate_reports_training --out-jsonl ./ml_datasets/reference_candidate_binary_dataset.jsonl --out-summary ./ml_datasets/reference_candidate_binary_dataset_summary.json --continue-on-error",
     "generate:kanji-runtime": "node scripts/generate_kanji_runtime.js",
     "check:kanji-runtime": "node scripts/check_kanji_runtime_exists.js",
+    "audit:feedback-jsonl": "node scripts/audit_feedback_jsonl.js",
     "start": "node server.js"
   },
   "keywords": [],
