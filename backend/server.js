@@ -77,7 +77,9 @@ async function connectMongoIfConfigured() {
 
   if (!MONGO_URI) {
     mongoConnectionError = "MONGO_URI no configurada";
-    console.log("MONGO_URI no configurada. Se usará training_data.jsonl.");
+    console.log(
+      "MONGO_URI no configurada. El almacenamiento de feedback no estará disponible.",
+    );
     return;
   }
 
@@ -410,41 +412,11 @@ app.get("/health", (req, res) => {
     mongoConnected: Boolean(feedbackCollection),
     mongoConnectionAttemptedAt,
     mongoConnectionError,
-    storage: feedbackCollection ? "mongo" : "jsonl",
+    storage: feedbackCollection ? "mongo" : "unavailable",
     timestamp: new Date().toISOString(),
   });
 });
 
-/* app.post("/mongo/reconnect", async (req, res) => {
-  try {
-    feedbackCollection = null;
-    mongoConnectionError = null;
-
-    await connectMongoIfConfigured();
-
-    res.json({
-      ok: true,
-      mongoUriConfigured: Boolean(process.env.MONGO_URI),
-      mongoConnected: Boolean(feedbackCollection),
-      storage: feedbackCollection ? "mongo" : "jsonl",
-      mongoConnectionAttemptedAt,
-      mongoConnectionError,
-    });
-  } catch (err) {
-    mongoConnectionError = err.message;
-    feedbackCollection = null;
-
-    res.status(500).json({
-      ok: false,
-      mongoUriConfigured: Boolean(process.env.MONGO_URI),
-      mongoConnected: false,
-      storage: "jsonl",
-      mongoConnectionAttemptedAt,
-      mongoConnectionError: err.message,
-    });
-  }
-});
- */
 app.post("/recognize", async (req, res) => {
   try {
     const strokes = req.body.ink.strokes;
@@ -505,17 +477,6 @@ app.post("/recognize", async (req, res) => {
       features.descriptorPattern = descriptorValidation.pattern;
       features.descriptorRoleMatches = descriptorValidation.roleMatches;
     }
-
-    // const logEntry = {
-    //   kanji: targetKanji,
-    //   features,
-    //   score,
-    //   timestamp: Date.now(),
-    //   isCorrect: null,
-    // };
-
-    // guardar en fichero JSON (simple)
-    //fs.appendFileSync("training_data.jsonl", JSON.stringify(logEntry) + "\n");
 
     res.send({
       kanji: targetKanji,
@@ -703,19 +664,21 @@ app.post("/feedback", async (req, res) => {
       createdAt: new Date(now).toISOString(),
     };
 
-    let mongoInsertedId = null;
-
-    if (feedbackCollection) {
-      const result = await feedbackCollection.insertOne(entry);
-      mongoInsertedId = result.insertedId;
-    } else {
-      fs.appendFileSync("training_data.jsonl", JSON.stringify(entry) + "\n");
+    if (!feedbackCollection) {
+      return res.status(503).json({
+        ok: false,
+        error: "feedback_storage_unavailable",
+        message: "MongoDB feedback storage is unavailable.",
+      });
     }
+
+    const result = await feedbackCollection.insertOne(entry);
+    const mongoInsertedId = result.insertedId;
 
     res.json({
       ok: true,
       recognitionId: entry.recognitionId,
-      savedTo: feedbackCollection ? "mongo" : "jsonl",
+      savedTo: "mongo",
       mongoInsertedId,
     });
   } catch (err) {
@@ -745,7 +708,7 @@ app.listen(PORT, () => {
   connectMongoIfConfigured().catch((err) => {
     mongoConnectionError = err.message;
     console.error(
-      "No se pudo conectar a MongoDB. Se usará training_data.jsonl como fallback:",
+      "No se pudo conectar a MongoDB. El almacenamiento de feedback no estará disponible:",
       err,
     );
     feedbackCollection = null;
