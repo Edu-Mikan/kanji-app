@@ -45,6 +45,14 @@ const PORT = process.env.PORT || 3000;
 const ALGORITHM_VERSION = "heuristic-v2";
 const TRAINING_DATA_SCHEMA_VERSION = 1;
 
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config({
+    path: ".env.local",
+  });
+
+  require("dotenv").config();
+}
+
 const MONGO_URI = process.env.MONGO_URI;
 
 // Como solo has podido añadir una variable en Render,

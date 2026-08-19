@@ -32,3 +32,4 @@ Thumbs.db
 /backend/kanji_full.json
 /passwords.txt
 /backend/kanji_runtime.json
+/backend/.env.local
