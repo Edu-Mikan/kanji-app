@@ -235,7 +235,17 @@ class ReviewDevicePairingService {
       );
     }
 
-    await tokenStore.saveDeviceToken(result.deviceToken);
+    try {
+      await tokenStore.saveDeviceToken(result.deviceToken);
+    } catch (error) {
+      throw ReviewDevicePairingException(
+        code: 'device_token_storage_failed',
+        message:
+            'El dispositivo se vinculó, pero no se pudo guardar el token de forma segura.',
+        statusCode: response.statusCode,
+        details: error.toString(),
+      );
+    }
 
     return result;
   }

@@ -29,6 +29,26 @@ class InMemoryReviewDeviceTokenStore implements ReviewDeviceTokenStore {
   }
 }
 
+class FailingReviewDeviceTokenStore implements ReviewDeviceTokenStore {
+  @override
+  Future<String?> readDeviceToken() async {
+    return null;
+  }
+
+  @override
+  Future<void> saveDeviceToken(String token) async {
+    throw StateError('Secure storage unavailable');
+  }
+
+  @override
+  Future<void> deleteDeviceToken() async {}
+
+  @override
+  Future<bool> hasDeviceToken() async {
+    return false;
+  }
+}
+
 void main() {
   Map<String, dynamic> createPairingResponse() {
     return {
@@ -272,5 +292,35 @@ void main() {
     });
 
     expect(result.expiresAt, DateTime.parse('2026-08-17T12:00:00.000Z'));
+  });
+
+  test('pairDevice maps secure storage failures', () async {
+    final service = ReviewDevicePairingService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        return http.Response(
+          jsonEncode(createPairingResponse()),
+          201,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+      tokenStore: FailingReviewDeviceTokenStore(),
+    );
+
+    await expectLater(
+      service.pairDevice(
+        reviewKey: 'review-secret',
+        deviceName: 'Móvil Eduardo',
+      ),
+      throwsA(
+        isA<ReviewDevicePairingException>().having(
+          (error) => error.code,
+          'code',
+          'device_token_storage_failed',
+        ),
+      ),
+    );
+
+    service.dispose();
   });
 }

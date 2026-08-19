@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
 import '../config/app_config.dart';
 import 'lesson_list_screen.dart';
-import 'training_category_screen.dart';
+import 'training_access_screen.dart';
 
 class LevelScreen extends StatefulWidget {
   const LevelScreen({super.key});
@@ -108,7 +107,7 @@ class _LevelScreenState extends State<LevelScreen> {
   void _openTrainingIa() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const TrainingCategoryScreen()),
+      MaterialPageRoute(builder: (_) => const TrainingAccessScreen()),
     );
   }
 

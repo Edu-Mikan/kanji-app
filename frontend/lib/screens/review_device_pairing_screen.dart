@@ -143,7 +143,8 @@ class _ReviewDevicePairingScreenState extends State<ReviewDevicePairingScreen> {
       case 'invalid_response':
       case 'empty_response':
         return 'La respuesta del backend no es válida.';
-
+      case 'device_token_storage_failed':
+        return 'El dispositivo se vinculó, pero no se pudo guardar el token en este dispositivo.';
       default:
         return error.message;
     }
