@@ -25,6 +25,7 @@
     "generate:kanji-runtime": "node scripts/generate_kanji_runtime.js",
     "check:kanji-runtime": "node scripts/check_kanji_runtime_exists.js",
     "audit:feedback-jsonl": "node scripts/audit_feedback_jsonl.js",
+    "import:feedback-jsonl": "node scripts/import_feedback_jsonl_to_mongo.js",
     "start": "node server.js"
   },
   "keywords": [],
