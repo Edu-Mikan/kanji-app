@@ -31,6 +31,11 @@ const {
   createFeedbackReviewRouter,
 } = require("./routes/feedback_review_routes");
 
+const {
+  ReviewDeviceAuthError,
+  authenticateReviewDevice,
+} = require("./services/review_device_service");
+
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
@@ -534,8 +539,99 @@ app.post("/recognize", async (req, res) => {
   }
 });
 
+function getBearerToken(req) {
+  const authorization =
+    req.get?.("authorization") ?? req.headers?.authorization;
+
+  if (typeof authorization !== "string") {
+    return "";
+  }
+
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+
+  if (!match) {
+    return "";
+  }
+
+  return match[1].trim();
+}
+
+function isManualDebugFeedback(body) {
+  return (
+    body?.source === "test_screen" || body?.feedbackType === "manual_debug"
+  );
+}
+
+async function requireManualFeedbackDeviceAccess(req, res) {
+  if (!isManualDebugFeedback(req.body)) {
+    return true;
+  }
+
+  if (!reviewDeviceCollection) {
+    res.status(503).json({
+      ok: false,
+      error: "review_device_storage_unavailable",
+      message: "The review device storage is unavailable.",
+    });
+
+    return false;
+  }
+
+  const deviceToken = getBearerToken(req);
+
+  if (deviceToken.length === 0) {
+    res.status(401).json({
+      ok: false,
+      error: "review_authorization_required",
+      message:
+        "A paired review device token is required to create manual samples.",
+    });
+
+    return false;
+  }
+
+  try {
+    req.reviewDevice = await authenticateReviewDevice({
+      collection: reviewDeviceCollection,
+      deviceToken,
+      requiredPermission: "samples:create",
+    });
+
+    return true;
+  } catch (error) {
+    if (error instanceof ReviewDeviceAuthError) {
+      res.status(error.statusCode).json({
+        ok: false,
+        error: error.code,
+        message: error.message,
+      });
+
+      return false;
+    }
+
+    console.error("Error authenticating review device for feedback:", error);
+
+    res.status(500).json({
+      ok: false,
+      error: "review_device_auth_failed",
+      message: "The review device could not be authenticated.",
+    });
+
+    return false;
+  }
+}
+
 app.post("/feedback", async (req, res) => {
   try {
+    const hasManualFeedbackAccess = await requireManualFeedbackDeviceAccess(
+      req,
+      res,
+    );
+
+    if (!hasManualFeedbackAccess) {
+      return;
+    }
+
     const {
       recognitionId,
       kanji,
@@ -596,9 +692,13 @@ app.post("/feedback", async (req, res) => {
       durationMs: durationMs ?? null,
       canvas: canvas ?? null,
       clientInfo: clientInfo ?? null,
-
+      reviewDevice: req.reviewDevice
+        ? {
+            tokenId: req.reviewDevice.tokenId,
+            name: req.reviewDevice.name,
+          }
+        : null,
       ...(strokesData ?? {}),
-
       timestamp: now,
       createdAt: new Date(now).toISOString(),
     };
