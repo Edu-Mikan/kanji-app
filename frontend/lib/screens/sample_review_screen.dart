@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:kanji_app/models/review_sample.dart';
 import 'package:kanji_app/services/sample_review_service.dart';
 import 'package:kanji_app/widgets/stroke_preview.dart';
+import 'package:kanji_app/services/review_device_pairing_service.dart';
 import 'sample_review_detail_screen.dart';
 
 class SampleReviewScreen extends StatefulWidget {
   final SampleReviewService? service;
   final String kanji;
   final int pageSize;
+  final ReviewDevicePairingService? pairingService;
 
   const SampleReviewScreen({
     super.key,
     this.service,
+    this.pairingService,
     required this.kanji,
     this.pageSize = 20,
   });
@@ -23,15 +26,14 @@ class SampleReviewScreen extends StatefulWidget {
 class _SampleReviewScreenState extends State<SampleReviewScreen> {
   late final SampleReviewService _service;
   late final bool _ownsService;
-
-  late final TextEditingController _reviewKeyController;
+  late final ReviewDevicePairingService _pairingService;
+  late final bool _ownsPairingService;
 
   ReviewSamplePage? _result;
   String _status = 'pending';
   String _label = 'all';
 
   bool _isLoading = false;
-  bool _hideReviewKey = true;
   String? _errorMessage;
 
   int _currentPage = 1;
@@ -44,15 +46,19 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
 
     _service = widget.service ?? SampleReviewService();
 
-    _reviewKeyController = TextEditingController();
+    _ownsPairingService = widget.pairingService == null;
+
+    _pairingService = widget.pairingService ?? ReviewDevicePairingService();
   }
 
   @override
   void dispose() {
-    _reviewKeyController.dispose();
-
     if (_ownsService) {
       _service.dispose();
+    }
+
+    if (_ownsPairingService) {
+      _pairingService.dispose();
     }
 
     super.dispose();
@@ -63,13 +69,13 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
       return;
     }
 
-    final reviewKey = _reviewKeyController.text.trim();
-
     final kanji = widget.kanji.trim();
+    final deviceToken = await _pairingService.readDeviceToken();
 
-    if (reviewKey.isEmpty) {
+    if (deviceToken == null || deviceToken.trim().isEmpty) {
       setState(() {
-        _errorMessage = 'Introduce la clave de revisión.';
+        _errorMessage =
+            'Este dispositivo no está vinculado. Vuelve a Entrenamiento IA para vincularlo.';
       });
 
       return;
@@ -92,7 +98,7 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
 
     try {
       final result = await _service.getSamples(
-        reviewKey: reviewKey,
+        deviceToken: deviceToken,
         kanji: kanji,
         status: _status,
         label: _label,
@@ -155,6 +161,19 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
       case 'kanji_required':
         return 'El kanji es obligatorio.';
 
+      case 'device_token_required':
+      case 'review_authorization_required':
+        return 'Este dispositivo no está vinculado.';
+
+      case 'review_device_token_invalid':
+        return 'El token de este dispositivo no es válido. Vincula el dispositivo de nuevo.';
+
+      case 'review_device_token_revoked':
+        return 'Este dispositivo ha sido revocado.';
+
+      case 'review_device_permission_denied':
+        return 'Este dispositivo no tiene permiso para consultar muestras.';
+
       default:
         return error.message;
     }
@@ -203,16 +222,6 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
     );
   }
 
-  void _clearReviewKey() {
-    _reviewKeyController.clear();
-
-    setState(() {
-      _result = null;
-      _errorMessage = null;
-      _currentPage = 1;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -227,13 +236,6 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
                     _loadSamples();
                   },
             icon: const Icon(Icons.refresh),
-          ),
-          IconButton(
-            tooltip: 'Borrar clave',
-            onPressed: _reviewKeyController.text.isEmpty
-                ? null
-                : _clearReviewKey,
-            icon: const Icon(Icons.key_off_outlined),
           ),
         ],
       ),
@@ -266,32 +268,6 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
   }
 
   Widget _buildFilters(double screenWidth) {
-    final reviewKeyField = TextField(
-      controller: _reviewKeyController,
-      obscureText: _hideReviewKey,
-      autocorrect: false,
-      enableSuggestions: false,
-      textInputAction: TextInputAction.next,
-      decoration: InputDecoration(
-        labelText: 'Clave de revisión',
-        hintText: 'REVIEW_ADMIN_KEY',
-        prefixIcon: const Icon(Icons.key),
-        suffixIcon: IconButton(
-          tooltip: _hideReviewKey ? 'Mostrar clave' : 'Ocultar clave',
-          onPressed: () {
-            setState(() {
-              _hideReviewKey = !_hideReviewKey;
-            });
-          },
-          icon: Icon(_hideReviewKey ? Icons.visibility : Icons.visibility_off),
-        ),
-        border: const OutlineInputBorder(),
-      ),
-      onSubmitted: (_) {
-        _applyFilters();
-      },
-    );
-
     final statusField = DropdownButtonFormField<String>(
       initialValue: _status,
       isExpanded: true,
@@ -381,8 +357,6 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          reviewKeyField,
-          const SizedBox(height: 12),
           labelField,
           const SizedBox(height: 12),
           Row(
@@ -403,8 +377,6 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(flex: 3, child: reviewKeyField),
-            const SizedBox(width: 12),
             Expanded(flex: 2, child: statusField),
             const SizedBox(width: 12),
             SizedBox(height: 56, child: searchButton),
@@ -494,14 +466,13 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
             Icon(Icons.fact_check_outlined, size: 64, color: Colors.grey),
             SizedBox(height: 16),
             Text(
-              'Introduce la clave y pulsa Consultar',
+              'Pulsa Consultar para cargar las muestras',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
             SizedBox(height: 8),
             Text(
-              'La clave permanece únicamente '
-              'durante esta sesión.',
+              'Se usará el dispositivo vinculado para consultar las muestras.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey),
             ),

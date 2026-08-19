@@ -174,22 +174,22 @@ class SampleReviewService {
       _ownsClient = client == null;
 
   Future<ReviewSamplePage> getSamples({
-    required String reviewKey,
+    required String deviceToken,
     required String kanji,
     String status = 'pending',
     String label = 'all',
     int page = 1,
     int pageSize = 20,
   }) async {
-    final normalizedReviewKey = reviewKey.trim();
+    final normalizedDeviceToken = deviceToken.trim();
     final normalizedKanji = kanji.trim();
     final normalizedStatus = status.trim().toLowerCase();
     final normalizedLabel = label.trim().toLowerCase();
 
-    if (normalizedReviewKey.isEmpty) {
+    if (normalizedDeviceToken.isEmpty) {
       throw const SampleReviewException(
-        code: 'review_key_required',
-        message: 'La clave de revisión es obligatoria.',
+        code: 'device_token_required',
+        message: 'El dispositivo no está vinculado.',
       );
     }
 
@@ -245,7 +245,7 @@ class SampleReviewService {
         uri,
         headers: {
           'Accept': 'application/json',
-          'X-Review-Key': normalizedReviewKey,
+          'Authorization': 'Bearer $normalizedDeviceToken',
         },
       );
     } catch (_) {

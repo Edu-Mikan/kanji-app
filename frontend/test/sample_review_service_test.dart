@@ -75,7 +75,7 @@ void main() {
     );
 
     final result = await service.getSamples(
-      reviewKey: 'review-secret',
+      deviceToken: 'krd_tokenid_tokensecret',
       kanji: '力',
       status: 'pending',
       label: 'all',
@@ -93,7 +93,7 @@ void main() {
       'pageSize': '20',
     });
 
-    expect(requestedHeaders['x-review-key'], 'review-secret');
+    expect(requestedHeaders['authorization'], 'Bearer krd_tokenid_tokensecret');
 
     expect(result.total, 43);
 
@@ -127,7 +127,7 @@ void main() {
     expect(page.isNotEmpty, isTrue);
   });
 
-  test('getSamples rejects an empty review key before HTTP', () async {
+  test('getSamples rejects an empty device token before HTTP', () async {
     var requestCount = 0;
 
     final client = MockClient((request) async {
@@ -142,12 +142,12 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: '   ', kanji: '力'),
+      service.getSamples(deviceToken: '   ', kanji: '力'),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
           'code',
-          'review_key_required',
+          'device_token_required',
         ),
       ),
     );
@@ -164,7 +164,7 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'review-secret', kanji: ' '),
+      service.getSamples(deviceToken: 'krd_tokenid_tokensecret', kanji: ' '),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
@@ -185,7 +185,7 @@ void main() {
 
     await expectLater(
       service.getSamples(
-        reviewKey: 'review-secret',
+        deviceToken: 'krd_tokenid_tokensecret',
         kanji: '力',
         status: 'deleted',
       ),
@@ -201,14 +201,18 @@ void main() {
     service.dispose();
   });
 
-  test('getSamples rejects a page size greater than 100', () async {
+  test('getSamples maps an invalid device token response', () async {
     final service = SampleReviewService(
       baseUrl: 'https://example.test',
       client: MockClient((request) async => http.Response('{}', 200)),
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'review-secret', kanji: '力', pageSize: 101),
+      service.getSamples(
+        deviceToken: 'krd_tokenid_tokensecret',
+        kanji: '力',
+        pageSize: 101,
+      ),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
@@ -226,8 +230,8 @@ void main() {
       return http.Response(
         jsonEncode({
           'ok': false,
-          'error': 'review_admin_key_invalid',
-          'message': 'The review administration key is invalid.',
+          'error': 'review_device_token_invalid',
+          'message': 'The review device token is invalid.',
         }),
         403,
       );
@@ -239,10 +243,14 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'incorrect-secret', kanji: '力'),
+      service.getSamples(deviceToken: 'krd_tokenid_wrongsecret', kanji: '力'),
       throwsA(
         isA<SampleReviewException>()
-            .having((error) => error.code, 'code', 'review_admin_key_invalid')
+            .having(
+              (error) => error.code,
+              'code',
+              'review_device_token_invalid',
+            )
             .having((error) => error.statusCode, 'statusCode', 403),
       ),
     );
@@ -261,7 +269,7 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'review-secret', kanji: '力'),
+      service.getSamples(deviceToken: 'krd_tokenid_tokensecret', kanji: '力'),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
@@ -285,7 +293,7 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'review-secret', kanji: '力'),
+      service.getSamples(deviceToken: 'krd_tokenid_tokensecret', kanji: '力'),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
@@ -309,7 +317,7 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'review-secret', kanji: '力'),
+      service.getSamples(deviceToken: 'krd_tokenid_tokensecret', kanji: '力'),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
@@ -333,7 +341,7 @@ void main() {
     );
 
     await expectLater(
-      service.getSamples(reviewKey: 'review-secret', kanji: '力'),
+      service.getSamples(deviceToken: 'krd_tokenid_tokensecret', kanji: '力'),
       throwsA(
         isA<SampleReviewException>().having(
           (error) => error.code,
