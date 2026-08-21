@@ -240,6 +240,8 @@ function buildReviewProjection() {
     strokesNormalized: 1,
     createdAt: 1,
     updatedAt: 1,
+    labelUpdatedAt: 1,
+    labelRevisions: 1,
     source: 1,
     feedbackType: 1,
     algorithmVersion: 1,
@@ -329,6 +331,156 @@ function mapReviewSample(document) {
     algorithmVersion: document.algorithmVersion ?? null,
 
     schemaVersion: document.schemaVersion ?? null,
+  };
+}
+
+function normalizeRecognitionId(value) {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new FeedbackReviewValidationError(
+      "The recognitionId route parameter is required.",
+      "recognition_id_required",
+    );
+  }
+
+  return value.trim();
+}
+
+function normalizeLabelUpdate(body) {
+  if (!body || typeof body.isCorrect !== "boolean") {
+    throw new FeedbackReviewValidationError(
+      "isCorrect must be a boolean.",
+      "invalid_is_correct",
+      {
+        actualValue: body?.isCorrect,
+      },
+    );
+  }
+
+  return {
+    isCorrect: body.isCorrect,
+  };
+}
+
+function normalizeReviewDeviceForAudit(reviewDevice) {
+  return {
+    tokenId:
+      typeof reviewDevice?.tokenId === "string" ? reviewDevice.tokenId : null,
+    name: typeof reviewDevice?.name === "string" ? reviewDevice.name : null,
+  };
+}
+
+function unwrapFindOneAndUpdateResult(result) {
+  if (!result) {
+    return null;
+  }
+
+  if (
+    Object.hasOwn(result, "value") &&
+    (result.value === null || typeof result.value === "object")
+  ) {
+    return result.value;
+  }
+
+  return result;
+}
+
+async function updateReviewSampleLabel({
+  collection,
+  recognitionId,
+  isCorrect,
+  reviewDevice,
+  now = new Date(),
+}) {
+  if (!collection || typeof collection.findOneAndUpdate !== "function") {
+    throw new Error(
+      "A MongoDB feedback collection with findOneAndUpdate is required.",
+    );
+  }
+
+  const normalizedRecognitionId = normalizeRecognitionId(recognitionId);
+
+  const normalizedUpdate = normalizeLabelUpdate({
+    isCorrect,
+  });
+
+  const reviewedAt = now.toISOString();
+
+  const auditDevice = normalizeReviewDeviceForAudit(reviewDevice);
+
+  const revision = {
+    previousValue: "$isCorrect",
+    newValue: normalizedUpdate.isCorrect,
+    reviewedAt,
+    reviewDevice: auditDevice,
+  };
+
+  const result = await collection.findOneAndUpdate(
+    {
+      recognitionId: normalizedRecognitionId,
+      source: "test_screen",
+      feedbackType: "manual_debug",
+      isCorrect: {
+        $type: "bool",
+      },
+    },
+    [
+      {
+        $set: {
+          labelRevisions: {
+            $cond: [
+              {
+                $eq: ["$isCorrect", normalizedUpdate.isCorrect],
+              },
+              {
+                $ifNull: ["$labelRevisions", []],
+              },
+              {
+                $concatArrays: [
+                  {
+                    $ifNull: ["$labelRevisions", []],
+                  },
+                  [revision],
+                ],
+              },
+            ],
+          },
+          labelUpdatedAt: {
+            $cond: [
+              {
+                $eq: ["$isCorrect", normalizedUpdate.isCorrect],
+              },
+              "$labelUpdatedAt",
+              reviewedAt,
+            ],
+          },
+          updatedAt: {
+            $cond: [
+              {
+                $eq: ["$isCorrect", normalizedUpdate.isCorrect],
+              },
+              "$updatedAt",
+              reviewedAt,
+            ],
+          },
+          isCorrect: normalizedUpdate.isCorrect,
+        },
+      },
+    ],
+    {
+      returnDocument: "after",
+      projection: buildReviewProjection(),
+    },
+  );
+
+  const document = unwrapFindOneAndUpdateResult(result);
+
+  if (!document) {
+    return null;
+  }
+
+  return {
+    changed: document.labelUpdatedAt === reviewedAt,
+    sample: mapReviewSample(document),
   };
 }
 
@@ -426,4 +578,9 @@ module.exports = {
   mapReviewSample,
   calculateTotalPages,
   listReviewSamples,
+  normalizeRecognitionId,
+  normalizeLabelUpdate,
+  normalizeReviewDeviceForAudit,
+  unwrapFindOneAndUpdateResult,
+  updateReviewSampleLabel,
 };

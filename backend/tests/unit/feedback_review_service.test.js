@@ -20,6 +20,10 @@ const {
   mapReviewSample,
   calculateTotalPages,
   listReviewSamples,
+  normalizeRecognitionId,
+  normalizeLabelUpdate,
+  unwrapFindOneAndUpdateResult,
+  updateReviewSampleLabel,
 } = require("../../services/feedback_review_service");
 
 function createReviewDocument({
@@ -396,4 +400,124 @@ test("listReviewSamples rejects a missing MongoDB collection", async () => {
       }),
     /MongoDB feedback collection is required/,
   );
+});
+
+test("normalizeRecognitionId rejects an empty value", () => {
+  assert.throws(
+    () => normalizeRecognitionId(""),
+    (error) =>
+      error instanceof FeedbackReviewValidationError &&
+      error.code === "recognition_id_required",
+  );
+});
+
+test("normalizeLabelUpdate requires a boolean", () => {
+  assert.throws(
+    () =>
+      normalizeLabelUpdate({
+        isCorrect: "true",
+      }),
+    (error) => error.code === "invalid_is_correct",
+  );
+
+  assert.deepEqual(
+    normalizeLabelUpdate({
+      isCorrect: true,
+    }),
+    {
+      isCorrect: true,
+    },
+  );
+});
+
+test("unwrapFindOneAndUpdateResult supports Mongo result styles", () => {
+  const document = createReviewDocument();
+
+  assert.equal(unwrapFindOneAndUpdateResult(document), document);
+
+  assert.equal(
+    unwrapFindOneAndUpdateResult({
+      value: document,
+    }),
+    document,
+  );
+
+  assert.equal(
+    unwrapFindOneAndUpdateResult({
+      value: null,
+    }),
+    null,
+  );
+});
+
+test("updateReviewSampleLabel updates and maps the sample", async () => {
+  const document = createReviewDocument({
+    isCorrect: true,
+  });
+
+  document.updatedAt = "2026-08-21T10:00:00.000Z";
+
+  document.labelUpdatedAt = "2026-08-21T10:00:00.000Z";
+
+  const calls = [];
+
+  const collection = {
+    async findOneAndUpdate(filter, update, options) {
+      calls.push({
+        filter,
+        update,
+        options,
+      });
+
+      return document;
+    },
+  };
+
+  const result = await updateReviewSampleLabel({
+    collection,
+    recognitionId: "recognition-id-1",
+    isCorrect: true,
+    reviewDevice: {
+      tokenId: "device-token-id",
+      name: "Móvil test",
+    },
+    now: new Date("2026-08-21T10:00:00.000Z"),
+  });
+
+  assert.equal(result.changed, true);
+
+  assert.equal(result.sample.isCorrect, true);
+
+  assert.equal(calls.length, 1);
+
+  assert.deepEqual(calls[0].filter, {
+    recognitionId: "recognition-id-1",
+    source: "test_screen",
+    feedbackType: "manual_debug",
+    isCorrect: {
+      $type: "bool",
+    },
+  });
+
+  assert.equal(calls[0].options.returnDocument, "after");
+});
+
+test("updateReviewSampleLabel returns null when sample does not exist", async () => {
+  const collection = {
+    async findOneAndUpdate() {
+      return null;
+    },
+  };
+
+  const result = await updateReviewSampleLabel({
+    collection,
+    recognitionId: "missing-id",
+    isCorrect: false,
+    reviewDevice: {
+      tokenId: "device-token-id",
+      name: "Móvil test",
+    },
+  });
+
+  assert.equal(result, null);
 });

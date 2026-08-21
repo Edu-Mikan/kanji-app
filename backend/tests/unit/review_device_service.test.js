@@ -151,7 +151,7 @@ test("normalizeDeviceName returns a safe name", () => {
   assert.equal(normalizeDeviceName(null), "Unnamed device");
 });
 
-test("normalizePermissions keeps only allowed permissions", () => {
+test("normalizePermissions keeps only requested allowed permissions", () => {
   assert.deepEqual(
     normalizePermissions([
       "review:read",
@@ -410,4 +410,16 @@ test("authenticateReviewDevice rejects missing permissions", async () => {
       }),
     (error) => error.code === "review_device_permission_denied",
   );
+});
+
+test("default device permissions include label updates", () => {
+  assert.deepEqual(DEFAULT_DEVICE_PERMISSIONS, [
+    "review:read",
+    "review:update-label",
+    "samples:create",
+  ]);
+
+  assert.deepEqual(normalizePermissions(), DEFAULT_DEVICE_PERMISSIONS);
+
+  assert.deepEqual(normalizePermissions([]), DEFAULT_DEVICE_PERMISSIONS);
 });

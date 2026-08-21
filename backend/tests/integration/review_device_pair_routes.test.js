@@ -238,6 +238,7 @@ test("POST /api/review/devices/pair creates a device token", async () => {
 
     assert.deepEqual(response.body.permissions, [
       "review:read",
+      "review:update-label",
       "samples:create",
     ]);
 

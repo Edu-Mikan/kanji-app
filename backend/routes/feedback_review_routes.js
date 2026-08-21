@@ -18,6 +18,7 @@ const {
 const {
   FeedbackReviewValidationError,
   listReviewSamples,
+  updateReviewSampleLabel,
 } = require("../services/feedback_review_service");
 
 function createFeedbackReviewRouter({
@@ -132,6 +133,54 @@ function createFeedbackReviewRouter({
     }
   }
 
+  async function requireReviewLabelUpdateAccess(req, res, next) {
+    const deviceToken = getBearerToken(req);
+
+    if (deviceToken.length === 0) {
+      return res.status(401).json({
+        ok: false,
+        error: "review_authorization_required",
+        message: "A paired review device token is required to update labels.",
+      });
+    }
+
+    if (typeof getDeviceCollection !== "function") {
+      return res.status(503).json({
+        ok: false,
+        error: "review_device_storage_unavailable",
+        message: "The review device storage is unavailable.",
+      });
+    }
+
+    const deviceCollection = getDeviceCollection();
+
+    try {
+      req.reviewDevice = await authenticateReviewDevice({
+        collection: deviceCollection,
+        deviceToken,
+        requiredPermission: "review:update-label",
+      });
+
+      return next();
+    } catch (error) {
+      if (error instanceof ReviewDeviceAuthError) {
+        return res.status(error.statusCode).json({
+          ok: false,
+          error: error.code,
+          message: error.message,
+        });
+      }
+
+      console.error("Error authenticating review label update:", error);
+
+      return res.status(500).json({
+        ok: false,
+        error: "review_device_auth_failed",
+        message: "The review device could not be authenticated.",
+      });
+    }
+  }
+
   router.post("/devices/pair", requireReviewKey, async (req, res) => {
     try {
       if (typeof getDeviceCollection !== "function") {
@@ -160,7 +209,7 @@ function createFeedbackReviewRouter({
       const result = await createReviewDevice({
         collection: deviceCollection,
         deviceName,
-        permissions: ["review:read", "samples:create"],
+        permissions: ["review:read", "review:update-label", "samples:create"],
       });
 
       return res.status(201).json({
@@ -222,6 +271,62 @@ function createFeedbackReviewRouter({
       });
     }
   });
+
+  router.patch(
+    "/samples/:recognitionId/label",
+    requireReviewLabelUpdateAccess,
+    async (req, res) => {
+      try {
+        const collection = getCollection();
+
+        if (!collection) {
+          return res.status(503).json({
+            ok: false,
+            error: "review_storage_unavailable",
+            message: "The review sample storage is unavailable.",
+          });
+        }
+
+        const result = await updateReviewSampleLabel({
+          collection,
+          recognitionId: req.params.recognitionId,
+          isCorrect: req.body?.isCorrect,
+          reviewDevice: req.reviewDevice,
+        });
+
+        if (!result) {
+          return res.status(404).json({
+            ok: false,
+            error: "review_sample_not_found",
+            message: "The review sample was not found.",
+          });
+        }
+
+        return res.json({
+          ok: true,
+          changed: result.changed,
+          sample: result.sample,
+        });
+      } catch (error) {
+        if (error instanceof FeedbackReviewValidationError) {
+          return res.status(error.statusCode).json({
+            ok: false,
+            error: error.code,
+            message: error.message,
+            details: error.details,
+          });
+        }
+
+        console.error("Error updating review sample label:", error);
+
+        return res.status(500).json({
+          ok: false,
+          error: "review_sample_label_update_failed",
+          message: "The review sample label could not be updated.",
+        });
+      }
+    },
+  );
 
   return router;
 }

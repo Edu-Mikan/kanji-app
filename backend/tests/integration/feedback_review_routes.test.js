@@ -182,7 +182,14 @@ async function stopTestServer(server) {
   });
 }
 
-async function requestJson({ baseUrl, path, reviewKey, authorization }) {
+async function requestJson({
+  baseUrl,
+  path,
+  method = "GET",
+  reviewKey,
+  authorization,
+  body,
+}) {
   const headers = {};
 
   if (reviewKey !== undefined) {
@@ -193,16 +200,21 @@ async function requestJson({ baseUrl, path, reviewKey, authorization }) {
     headers.authorization = authorization;
   }
 
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${baseUrl}${path}`, {
-    method: "GET",
+    method,
     headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  const body = await response.json();
+  const responseBody = await response.json();
 
   return {
     status: response.status,
-    body,
+    body: responseBody,
   };
 }
 
@@ -519,6 +531,280 @@ test("GET /api/review/samples accepts a valid review device token", async () => 
     assert.equal(response.status, 200);
     assert.equal(response.body.ok, true);
     assert.equal(response.body.items.length, 1);
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+function createLabelUpdateCollection({
+  document = createReviewDocument({
+    isCorrect: true,
+  }),
+} = {}) {
+  const calls = [];
+
+  return {
+    calls,
+
+    collection: {
+      async countDocuments() {
+        return 0;
+      },
+
+      find() {
+        return {
+          sort() {
+            return this;
+          },
+          skip() {
+            return this;
+          },
+          limit() {
+            return this;
+          },
+          async toArray() {
+            return [];
+          },
+        };
+      },
+
+      async findOneAndUpdate(filter, update, options) {
+        calls.push({
+          filter,
+          update,
+          options,
+        });
+
+        return document;
+      },
+    },
+  };
+}
+
+test("PATCH label rejects requests without device token", async () => {
+  const { collection } = createLabelUpdateCollection();
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection: createFakeDeviceCollection(),
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/samples/recognition-id-1/label",
+      method: "PATCH",
+      body: {
+        isCorrect: true,
+      },
+    });
+
+    assert.equal(response.status, 401);
+
+    assert.equal(response.body.error, "review_authorization_required");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("PATCH label rejects a token without update permission", async () => {
+  const tokenId = "device-token-id";
+
+  const tokenSecret = "device-token-secret";
+
+  const deviceToken = buildDeviceToken({
+    tokenId,
+    tokenSecret,
+  });
+
+  const expectedTokenHash = hashDeviceTokenSecret({
+    tokenId,
+    tokenSecret,
+  });
+
+  const { collection } = createLabelUpdateCollection();
+
+  const deviceCollection = createFakeDeviceCollection({
+    expectedTokenId: tokenId,
+    expectedTokenHash,
+    permissions: ["review:read"],
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/samples/recognition-id-1/label",
+      method: "PATCH",
+      authorization: `Bearer ${deviceToken}`,
+      body: {
+        isCorrect: true,
+      },
+    });
+
+    assert.equal(response.status, 403);
+
+    assert.equal(response.body.error, "review_device_permission_denied");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("PATCH label rejects a non-boolean value", async () => {
+  const tokenId = "device-token-id";
+
+  const tokenSecret = "device-token-secret";
+
+  const deviceToken = buildDeviceToken({
+    tokenId,
+    tokenSecret,
+  });
+
+  const expectedTokenHash = hashDeviceTokenSecret({
+    tokenId,
+    tokenSecret,
+  });
+
+  const { collection } = createLabelUpdateCollection();
+
+  const deviceCollection = createFakeDeviceCollection({
+    expectedTokenId: tokenId,
+    expectedTokenHash,
+    permissions: ["review:update-label"],
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/samples/recognition-id-1/label",
+      method: "PATCH",
+      authorization: `Bearer ${deviceToken}`,
+      body: {
+        isCorrect: "true",
+      },
+    });
+
+    assert.equal(response.status, 400);
+
+    assert.equal(response.body.error, "invalid_is_correct");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("PATCH label updates a sample with update permission", async () => {
+  const tokenId = "device-token-id";
+
+  const tokenSecret = "device-token-secret";
+
+  const deviceToken = buildDeviceToken({
+    tokenId,
+    tokenSecret,
+  });
+
+  const expectedTokenHash = hashDeviceTokenSecret({
+    tokenId,
+    tokenSecret,
+  });
+
+  const document = createReviewDocument({
+    recognitionId: "recognition-id-1",
+    isCorrect: true,
+  });
+
+  document.labelUpdatedAt = new Date().toISOString();
+
+  const { collection, calls } = createLabelUpdateCollection({
+    document,
+  });
+
+  const deviceCollection = createFakeDeviceCollection({
+    expectedTokenId: tokenId,
+    expectedTokenHash,
+    permissions: ["review:update-label"],
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/samples/recognition-id-1/label",
+      method: "PATCH",
+      authorization: `Bearer ${deviceToken}`,
+      body: {
+        isCorrect: true,
+      },
+    });
+
+    assert.equal(response.status, 200);
+
+    assert.equal(response.body.ok, true);
+
+    assert.equal(response.body.sample.isCorrect, true);
+
+    assert.equal(calls.length, 1);
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("PATCH label returns 404 when sample does not exist", async () => {
+  const tokenId = "device-token-id";
+
+  const tokenSecret = "device-token-secret";
+
+  const deviceToken = buildDeviceToken({
+    tokenId,
+    tokenSecret,
+  });
+
+  const expectedTokenHash = hashDeviceTokenSecret({
+    tokenId,
+    tokenSecret,
+  });
+
+  const { collection } = createLabelUpdateCollection({
+    document: null,
+  });
+
+  const deviceCollection = createFakeDeviceCollection({
+    expectedTokenId: tokenId,
+    expectedTokenHash,
+    permissions: ["review:update-label"],
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/samples/missing-id/label",
+      method: "PATCH",
+      authorization: `Bearer ${deviceToken}`,
+      body: {
+        isCorrect: false,
+      },
+    });
+
+    assert.equal(response.status, 404);
+
+    assert.equal(response.body.error, "review_sample_not_found");
   } finally {
     await stopTestServer(server);
   }

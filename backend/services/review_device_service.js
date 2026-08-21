@@ -4,7 +4,11 @@ const crypto = require("node:crypto");
 
 const DEVICE_TOKEN_PREFIX = "krd";
 
-const DEFAULT_DEVICE_PERMISSIONS = ["review:read", "samples:create"];
+const DEFAULT_DEVICE_PERMISSIONS = [
+  "review:read",
+  "review:update-label",
+  "samples:create",
+];
 
 const ALLOWED_DEVICE_PERMISSIONS = [
   "review:read",
