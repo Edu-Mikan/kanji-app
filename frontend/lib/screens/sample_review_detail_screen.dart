@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:kanji_app/models/review_sample.dart';
+import 'package:kanji_app/services/review_device_pairing_service.dart';
+import 'package:kanji_app/services/sample_review_service.dart';
 import 'package:kanji_app/widgets/stroke_preview.dart';
 
 class SampleReviewDetailScreen extends StatefulWidget {
   final List<ReviewSample> samples;
   final int initialIndex;
+  final SampleReviewService? service;
+  final ReviewDevicePairingService? pairingService;
 
   const SampleReviewDetailScreen({
     super.key,
     required this.samples,
     required this.initialIndex,
+    this.service,
+    this.pairingService,
   });
 
   @override
@@ -18,14 +24,24 @@ class SampleReviewDetailScreen extends StatefulWidget {
 }
 
 class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
+  late final SampleReviewService _service;
+  late final bool _ownsService;
+
+  late final ReviewDevicePairingService _pairingService;
+  late final bool _ownsPairingService;
+
+  late final List<ReviewSample> _samples;
+
+  bool _isUpdatingLabel = false;
+  String? _labelUpdateError;
   late int _currentIndex;
 
   bool get _hasSamples {
-    return widget.samples.isNotEmpty;
+    return _samples.isNotEmpty;
   }
 
   ReviewSample get _currentSample {
-    return widget.samples[_currentIndex];
+    return _samples[_currentIndex];
   }
 
   bool get _canGoPrevious {
@@ -33,19 +49,40 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
   }
 
   bool get _canGoNext {
-    return _hasSamples && _currentIndex < widget.samples.length - 1;
+    return _hasSamples && _currentIndex < _samples.length - 1;
   }
 
   @override
   void initState() {
     super.initState();
 
-    if (widget.samples.isEmpty) {
+    _ownsService = widget.service == null;
+    _service = widget.service ?? SampleReviewService();
+
+    _ownsPairingService = widget.pairingService == null;
+    _pairingService = widget.pairingService ?? ReviewDevicePairingService();
+
+    _samples = List<ReviewSample>.of(widget.samples);
+
+    if (_samples.isEmpty) {
       _currentIndex = 0;
       return;
     }
 
-    _currentIndex = widget.initialIndex.clamp(0, widget.samples.length - 1);
+    _currentIndex = widget.initialIndex.clamp(0, _samples.length - 1);
+  }
+
+  @override
+  void dispose() {
+    if (_ownsService) {
+      _service.dispose();
+    }
+
+    if (_ownsPairingService) {
+      _pairingService.dispose();
+    }
+
+    super.dispose();
   }
 
   void _goPrevious() {
@@ -68,6 +105,161 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
     });
   }
 
+  Future<bool> _confirmLabelChange({required bool newValue}) async {
+    final label = newValue ? 'correcta' : 'incorrecta';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Cambiar valoración'),
+          content: Text('¿Quieres marcar esta muestra como $label?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed == true;
+  }
+
+  Future<void> _updateLabel(bool newValue) async {
+    if (_isUpdatingLabel) {
+      return;
+    }
+
+    final currentSample = _currentSample;
+
+    if (currentSample.isCorrect == newValue) {
+      return;
+    }
+
+    final confirmed = await _confirmLabelChange(newValue: newValue);
+
+    if (!confirmed || !mounted) {
+      return;
+    }
+
+    final deviceToken = await _pairingService.readDeviceToken();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (deviceToken == null || deviceToken.trim().isEmpty) {
+      setState(() {
+        _labelUpdateError = 'Este dispositivo no está vinculado.';
+      });
+
+      return;
+    }
+
+    setState(() {
+      _isUpdatingLabel = true;
+      _labelUpdateError = null;
+    });
+
+    try {
+      final result = await _service.updateSampleLabel(
+        deviceToken: deviceToken,
+        recognitionId: currentSample.recognitionId,
+        isCorrect: newValue,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _samples[_currentIndex] = result.sample;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.changed
+                ? 'Valoración actualizada.'
+                : 'La muestra ya tenía esa valoración.',
+          ),
+        ),
+      );
+    } on SampleReviewException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _labelUpdateError = _buildUpdateErrorMessage(error);
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _labelUpdateError = 'Se produjo un error inesperado.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUpdatingLabel = false;
+        });
+      }
+    }
+  }
+
+  String _buildUpdateErrorMessage(SampleReviewException error) {
+    switch (error.code) {
+      case 'device_token_required':
+      case 'review_authorization_required':
+        return 'Este dispositivo no está vinculado.';
+
+      case 'review_device_token_invalid':
+        return 'El token del dispositivo no es válido. '
+            'Vincula el dispositivo de nuevo.';
+
+      case 'review_device_token_revoked':
+        return 'Este dispositivo ha sido revocado.';
+
+      case 'review_device_token_expired':
+        return 'La vinculación del dispositivo ha caducado.';
+
+      case 'review_device_permission_denied':
+        return 'Este dispositivo no tiene permiso '
+            'para modificar valoraciones. '
+            'Desvincúlalo y vuelve a vincularlo.';
+
+      case 'review_sample_not_found':
+        return 'La muestra ya no existe.';
+
+      case 'review_storage_unavailable':
+        return 'MongoDB no está disponible en este momento.';
+
+      case 'network_error':
+        return 'No se pudo conectar con el backend.';
+
+      case 'invalid_response':
+      case 'invalid_json':
+      case 'empty_response':
+        return 'La respuesta del backend no es válida.';
+
+      default:
+        return error.message;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_hasSamples) {
@@ -81,7 +273,7 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Muestra ${_currentIndex + 1} de ${widget.samples.length}'),
+        title: Text('Muestra ${_currentIndex + 1} de ${_samples.length}'),
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -165,6 +357,12 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
           children: [
             _buildHeader(sample),
             const SizedBox(height: 18),
+            _buildLabelEditor(sample),
+            if (_labelUpdateError != null) ...[
+              const SizedBox(height: 12),
+              _buildLabelUpdateError(),
+            ],
+            const SizedBox(height: 18),
             _buildInfoRow(
               icon: Icons.gesture,
               label: 'Trazos',
@@ -205,8 +403,6 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
               sample.recognitionId,
               style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
             ),
-            const SizedBox(height: 18),
-            _buildReadOnlyNotice(),
           ],
         ),
       ),
@@ -249,6 +445,82 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
     );
   }
 
+  Widget _buildLabelEditor(ReviewSample sample) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Valoración',
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SegmentedButton<bool>(
+          segments: const [
+            ButtonSegment<bool>(
+              value: true,
+              icon: Icon(Icons.check_circle_outline),
+              label: Text('Correcta'),
+            ),
+            ButtonSegment<bool>(
+              value: false,
+              icon: Icon(Icons.cancel_outlined),
+              label: Text('Incorrecta'),
+            ),
+          ],
+          selected: {sample.isCorrect},
+          showSelectedIcon: false,
+          onSelectionChanged: _isUpdatingLabel
+              ? null
+              : (selection) {
+                  if (selection.isEmpty) {
+                    return;
+                  }
+
+                  final newValue = selection.first;
+
+                  if (newValue == sample.isCorrect) {
+                    return;
+                  }
+
+                  _updateLabel(newValue);
+                },
+        ),
+        if (_isUpdatingLabel) ...[
+          const SizedBox(height: 10),
+          const LinearProgressIndicator(),
+          const SizedBox(height: 6),
+          const Text('Guardando valoración...', textAlign: TextAlign.center),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLabelUpdateError() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        border: Border.all(color: Colors.red.shade200),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red.shade700),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _labelUpdateError!,
+              style: TextStyle(color: Colors.red.shade900),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoRow({
     required IconData icon,
     required String label,
@@ -282,29 +554,6 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
     );
   }
 
-  Widget _buildReadOnlyNotice() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        border: Border.all(color: Colors.blue.shade100),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.visibility_outlined, color: Colors.blue.shade700),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Vista de sólo lectura. '
-              'La corrección de etiquetas se añadirá más adelante.',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNavigationBar() {
     return SafeArea(
       top: false,
@@ -329,7 +578,7 @@ class _SampleReviewDetailScreenState extends State<SampleReviewDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 _hasSamples
-                    ? '${_currentIndex + 1} / ${widget.samples.length}'
+                    ? '${_currentIndex + 1} / ${_samples.length}'
                     : '0 / 0',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),

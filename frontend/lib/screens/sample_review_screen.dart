@@ -216,10 +216,20 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            SampleReviewDetailScreen(samples: samples, initialIndex: index),
+        builder: (_) => SampleReviewDetailScreen(
+          samples: samples,
+          initialIndex: index,
+          service: _service,
+          pairingService: _pairingService,
+        ),
       ),
     );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _loadSamples(page: _currentPage);
   }
 
   @override
