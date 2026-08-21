@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
+import '../services/review_device_pairing_service.dart';
 import 'lesson_list_screen.dart';
+import 'review_device_pairing_screen.dart';
 import 'training_access_screen.dart';
 
+enum _LevelSettingsAction { pairDevice, unlinkDevice, about }
+
 class LevelScreen extends StatefulWidget {
-  const LevelScreen({super.key});
+  final ReviewDevicePairingService? pairingService;
+  final WidgetBuilder? pairingScreenBuilder;
+
+  const LevelScreen({
+    super.key,
+    this.pairingService,
+    this.pairingScreenBuilder,
+  });
 
   @override
   State<LevelScreen> createState() => _LevelScreenState();
@@ -12,6 +23,50 @@ class LevelScreen extends StatefulWidget {
 
 class _LevelScreenState extends State<LevelScreen> {
   final List<String> niveles = const ['Kana', 'N5', 'N4', 'N3', 'N2', 'N1'];
+
+  late final ReviewDevicePairingService _pairingService;
+  late final bool _ownsPairingService;
+
+  bool _isCheckingPairing = true;
+  bool _isDevicePaired = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _ownsPairingService = widget.pairingService == null;
+    _pairingService = widget.pairingService ?? ReviewDevicePairingService();
+
+    _refreshPairingState();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsPairingService) {
+      _pairingService.dispose();
+    }
+
+    super.dispose();
+  }
+
+  Future<void> _refreshPairingState() async {
+    bool isPaired;
+
+    try {
+      isPaired = await _pairingService.isDevicePaired();
+    } catch (_) {
+      isPaired = false;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isDevicePaired = isPaired;
+      _isCheckingPairing = false;
+    });
+  }
 
   String getImageForNivel(String nivel) {
     switch (nivel) {
@@ -116,6 +171,112 @@ class _LevelScreenState extends State<LevelScreen> {
       context,
       MaterialPageRoute(builder: (_) => LessonListScreen(nivel: nivel)),
     );
+  }
+
+  Future<void> _openPairingFromSettings() async {
+    final pairingBuilder = widget.pairingScreenBuilder;
+
+    final paired = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder:
+            pairingBuilder ??
+            (_) => ReviewDevicePairingScreen(
+              service: _pairingService,
+              closeOnSuccess: true,
+            ),
+      ),
+    );
+
+    if (paired == true) {
+      await _refreshPairingState();
+    }
+  }
+
+  Future<void> _confirmUnlinkDevice() async {
+    final shouldUnlink = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Desvincular dispositivo'),
+          content: const Text(
+            'Se eliminará la vinculación local de este dispositivo. '
+            'Podrás volver a vincularlo más adelante.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text('Desvincular'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldUnlink != true) {
+      return;
+    }
+
+    await _pairingService.forgetDevice();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isDevicePaired = false;
+    });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Dispositivo desvinculado.')));
+  }
+
+  void _showAboutDialog() {
+    showAboutDialog(
+      context: context,
+      applicationName: 'Kanji App',
+      applicationVersion: 'Versión local',
+      applicationIcon: const Icon(Icons.school, size: 42),
+      children: [
+        const Text(
+          'Aplicación para practicar escritura japonesa, validar trazos '
+          'y recopilar muestras de entrenamiento de forma controlada.',
+        ),
+        const SizedBox(height: 12),
+        Text('Backend configurado: ${AppConfig.baseUrl}'),
+        const SizedBox(height: 8),
+        Text(
+          _isDevicePaired
+              ? 'Entrenamiento IA: dispositivo vinculado.'
+              : 'Entrenamiento IA: dispositivo no vinculado.',
+        ),
+      ],
+    );
+  }
+
+  void _handleSettingsAction(_LevelSettingsAction action) {
+    switch (action) {
+      case _LevelSettingsAction.pairDevice:
+        _openPairingFromSettings();
+        break;
+
+      case _LevelSettingsAction.unlinkDevice:
+        _confirmUnlinkDevice();
+        break;
+
+      case _LevelSettingsAction.about:
+        _showAboutDialog();
+        break;
+    }
   }
 
   Widget _buildTrainingButton(double contentWidth) {
@@ -277,10 +438,52 @@ class _LevelScreenState extends State<LevelScreen> {
     );
   }
 
+  Widget _buildSettingsMenu() {
+    return PopupMenuButton<_LevelSettingsAction>(
+      tooltip: 'Settings',
+      icon: const Icon(Icons.settings),
+      onSelected: _handleSettingsAction,
+      itemBuilder: (context) {
+        return [
+          if (!_isDevicePaired)
+            const PopupMenuItem<_LevelSettingsAction>(
+              value: _LevelSettingsAction.pairDevice,
+              child: ListTile(
+                leading: Icon(Icons.link),
+                title: Text('Vincular dispositivo'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          if (_isDevicePaired)
+            const PopupMenuItem<_LevelSettingsAction>(
+              value: _LevelSettingsAction.unlinkDevice,
+              child: ListTile(
+                leading: Icon(Icons.link_off),
+                title: Text('Desvincular dispositivo'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          const PopupMenuDivider(),
+          const PopupMenuItem<_LevelSettingsAction>(
+            value: _LevelSettingsAction.about,
+            child: ListTile(
+              leading: Icon(Icons.info_outline),
+              title: Text('Acerca de'),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ];
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Selecciona nivel')),
+      appBar: AppBar(
+        title: const Text('Selecciona nivel'),
+        actions: [_buildSettingsMenu()],
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -305,8 +508,20 @@ class _LevelScreenState extends State<LevelScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (AppConfig.testModeEnabled) ...[
+                      if (_isDevicePaired) ...[
                         _buildTrainingButton(contentMaxWidth),
+                        SizedBox(height: trainingSpacing),
+                      ] else if (_isCheckingPairing) ...[
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 10),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        ),
                         SizedBox(height: trainingSpacing),
                       ],
                       _buildLevelGrid(contentMaxWidth),
