@@ -9,8 +9,6 @@ import 'package:kanji_app/screens/resultado_screen.dart';
 import 'package:kanji_app/services/progress_service.dart';
 import 'package:kanji_app/styles/app_text_styles.dart';
 import 'package:kanji_app/widgets/icon_text_button.dart';
-
-import 'config/app_config.dart';
 import 'screens/settings_screen.dart';
 import 'services/settings_service.dart';
 import 'services/validation_service.dart';
@@ -23,7 +21,6 @@ void main() async {
 
   await Hive.initFlutter();
   await Hive.openBox('progreso');
-  await AppConfig.load();
 
   runApp(const MyApp());
 }
