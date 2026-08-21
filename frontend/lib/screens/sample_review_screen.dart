@@ -548,6 +548,7 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
     final labelText = sample.isCorrect ? 'Correcta' : 'Incorrecta';
 
     return Card(
+      key: ValueKey('review-sample-${sample.recognitionId}'),
       clipBehavior: Clip.antiAlias,
       elevation: 2,
       child: InkWell(
@@ -575,27 +576,39 @@ class _SampleReviewScreenState extends State<SampleReviewScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: labelColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      labelText,
-                      style: TextStyle(
-                        color: labelColor.shade700,
-                        fontWeight: FontWeight.bold,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: labelColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        labelText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: labelColor.shade700,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                  const Spacer(),
-                  Text(
-                    '${sample.strokeCount} trazos',
-                    style: TextStyle(color: Colors.grey.shade700, fontSize: 13),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${sample.strokeCount} trazos',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                 ],
               ),
