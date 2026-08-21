@@ -559,6 +559,137 @@ async function listReviewSamples({ collection, query = {} }) {
   };
 }
 
+function normalizeRequestedKanjis(value) {
+  if (value === undefined || value === null) {
+    throw new FeedbackReviewValidationError(
+      "The kanjis query parameter is required.",
+      "kanjis_required",
+    );
+  }
+
+  const rawValues = Array.isArray(value) ? value : String(value).split(",");
+
+  const uniqueKanjis = new Set();
+
+  for (const rawValue of rawValues) {
+    const normalized = String(rawValue).trim();
+
+    if (normalized.length === 0) {
+      continue;
+    }
+
+    if (Array.from(normalized).length !== 1) {
+      throw new FeedbackReviewValidationError(
+        "Each requested kanji must contain exactly one character.",
+        "invalid_kanji_list",
+        {
+          actualValue: normalized,
+        },
+      );
+    }
+
+    uniqueKanjis.add(normalized);
+  }
+
+  if (uniqueKanjis.size === 0) {
+    throw new FeedbackReviewValidationError(
+      "The kanjis query parameter must contain at least one kanji.",
+      "kanjis_required",
+    );
+  }
+
+  if (uniqueKanjis.size > 500) {
+    throw new FeedbackReviewValidationError(
+      "The kanjis query parameter contains too many values.",
+      "too_many_kanjis",
+      {
+        maximum: 500,
+        actual: uniqueKanjis.size,
+      },
+    );
+  }
+
+  return [...uniqueKanjis];
+}
+
+function buildSampleCountFilter(kanjis) {
+  return {
+    source: "test_screen",
+    feedbackType: "manual_debug",
+    expectedKanji: {
+      $in: kanjis,
+    },
+    recognitionId: {
+      $type: "string",
+      $ne: "",
+    },
+    isCorrect: {
+      $type: "bool",
+    },
+    strokesNormalized: {
+      $type: "array",
+      $ne: [],
+    },
+  };
+}
+
+async function getReviewSampleCounts({ collection, kanjis }) {
+  if (!collection || typeof collection.aggregate !== "function") {
+    throw new Error(
+      "A MongoDB feedback collection with aggregate is required.",
+    );
+  }
+
+  const normalizedKanjis = normalizeRequestedKanjis(kanjis);
+
+  const counts = Object.fromEntries(
+    normalizedKanjis.map((kanji) => [kanji, 0]),
+  );
+
+  const pipeline = [
+    {
+      $match: buildSampleCountFilter(normalizedKanjis),
+    },
+    {
+      $group: {
+        _id: "$expectedKanji",
+        count: {
+          $sum: 1,
+        },
+      },
+    },
+    {
+      $sort: {
+        _id: 1,
+      },
+    },
+  ];
+
+  const rows = await collection.aggregate(pipeline).toArray();
+
+  for (const row of rows) {
+    if (
+      typeof row?._id === "string" &&
+      Object.hasOwn(counts, row._id) &&
+      Number.isInteger(row.count) &&
+      row.count >= 0
+    ) {
+      counts[row._id] = row.count;
+    }
+  }
+
+  const totalWithSamples = Object.values(counts).filter(
+    (count) => count > 0,
+  ).length;
+
+  return {
+    requestedCount: normalizedKanjis.length,
+    withSamplesCount: totalWithSamples,
+    withoutSamplesCount: normalizedKanjis.length - totalWithSamples,
+    counts,
+  };
+}
+
 module.exports = {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -583,4 +714,7 @@ module.exports = {
   normalizeReviewDeviceForAudit,
   unwrapFindOneAndUpdateResult,
   updateReviewSampleLabel,
+  normalizeRequestedKanjis,
+  buildSampleCountFilter,
+  getReviewSampleCounts,
 };

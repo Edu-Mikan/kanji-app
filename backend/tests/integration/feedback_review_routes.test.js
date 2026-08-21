@@ -68,6 +68,8 @@ function createFakeCollection({
   documents = [createReviewDocument()],
   countError = null,
   findError = null,
+  aggregateRows = [],
+  aggregateError = null,
 } = {}) {
   const calls = {
     countFilter: null,
@@ -76,6 +78,7 @@ function createFakeCollection({
     sort: null,
     skip: null,
     limit: null,
+    aggregatePipeline: null,
   };
 
   const cursor = {
@@ -123,6 +126,20 @@ function createFakeCollection({
       calls.findOptions = options;
 
       return cursor;
+    },
+
+    aggregate(pipeline) {
+      calls.aggregatePipeline = pipeline;
+
+      return {
+        async toArray() {
+          if (aggregateError) {
+            throw aggregateError;
+          }
+
+          return aggregateRows;
+        },
+      };
     },
   };
 
@@ -805,6 +822,166 @@ test("PATCH label returns 404 when sample does not exist", async () => {
     assert.equal(response.status, 404);
 
     assert.equal(response.body.error, "review_sample_not_found");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("GET /api/review/sample-counts requires authorization", async () => {
+  const { collection } = createFakeCollection();
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/sample-counts?kanjis=力,木",
+    });
+
+    assert.equal(response.status, 401);
+
+    assert.equal(response.body.error, "review_authorization_required");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("GET /api/review/sample-counts requires kanjis", async () => {
+  const { collection } = createFakeCollection();
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/sample-counts",
+      reviewKey: "test-review-key",
+    });
+
+    assert.equal(response.status, 400);
+
+    assert.equal(response.body.error, "kanjis_required");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("GET /api/review/sample-counts returns grouped counts and zeros", async () => {
+  const { collection, calls } = createFakeCollection({
+    aggregateRows: [
+      {
+        _id: "力",
+        count: 12,
+      },
+      {
+        _id: "木",
+        count: 69,
+      },
+    ],
+  });
+
+  const tokenId = "device-token-id";
+
+  const tokenSecret = "device-token-secret";
+
+  const deviceToken = buildDeviceToken({
+    tokenId,
+    tokenSecret,
+  });
+
+  const expectedTokenHash = hashDeviceTokenSecret({
+    tokenId,
+    tokenSecret,
+  });
+
+  const deviceCollection = createFakeDeviceCollection({
+    expectedTokenId: tokenId,
+    expectedTokenHash,
+    permissions: ["review:read"],
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+    deviceCollection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/sample-counts?kanjis=力,木,刀",
+      authorization: `Bearer ${deviceToken}`,
+    });
+
+    assert.equal(response.status, 200);
+
+    assert.equal(response.body.ok, true);
+
+    assert.deepEqual(response.body.counts, {
+      力: 12,
+      木: 69,
+      刀: 0,
+    });
+
+    assert.equal(response.body.requestedCount, 3);
+
+    assert.equal(response.body.withSamplesCount, 2);
+
+    assert.equal(response.body.withoutSamplesCount, 1);
+
+    assert.ok(Array.isArray(calls.aggregatePipeline));
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("GET /api/review/sample-counts returns 503 when storage is unavailable", async () => {
+  const { server, baseUrl } = await startTestServer({
+    collection: null,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/sample-counts?kanjis=力",
+      reviewKey: "test-review-key",
+    });
+
+    assert.equal(response.status, 503);
+
+    assert.equal(response.body.error, "review_storage_unavailable");
+  } finally {
+    await stopTestServer(server);
+  }
+});
+
+test("GET /api/review/sample-counts hides storage errors", async () => {
+  const { collection } = createFakeCollection({
+    aggregateError: new Error("Sensitive aggregation details"),
+  });
+
+  const { server, baseUrl } = await startTestServer({
+    collection,
+  });
+
+  try {
+    const response = await requestJson({
+      baseUrl,
+      path: "/api/review/sample-counts?kanjis=力",
+      reviewKey: "test-review-key",
+    });
+
+    assert.equal(response.status, 500);
+
+    assert.equal(response.body.error, "review_sample_counts_query_failed");
+
+    assert.equal(
+      JSON.stringify(response.body).includes("Sensitive aggregation"),
+      false,
+    );
   } finally {
     await stopTestServer(server);
   }

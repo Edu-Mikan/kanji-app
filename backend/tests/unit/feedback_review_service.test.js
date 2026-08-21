@@ -24,6 +24,9 @@ const {
   normalizeLabelUpdate,
   unwrapFindOneAndUpdateResult,
   updateReviewSampleLabel,
+  normalizeRequestedKanjis,
+  buildSampleCountFilter,
+  getReviewSampleCounts,
 } = require("../../services/feedback_review_service");
 
 function createReviewDocument({
@@ -520,4 +523,131 @@ test("updateReviewSampleLabel returns null when sample does not exist", async ()
   });
 
   assert.equal(result, null);
+});
+
+test("normalizeRequestedKanjis parses, trims and deduplicates kanjis", () => {
+  assert.deepEqual(normalizeRequestedKanjis("力, 木,力,刀"), [
+    "力",
+    "木",
+    "刀",
+  ]);
+});
+
+test("normalizeRequestedKanjis rejects a missing list", () => {
+  assert.throws(
+    () => normalizeRequestedKanjis(undefined),
+    (error) =>
+      error instanceof FeedbackReviewValidationError &&
+      error.code === "kanjis_required",
+  );
+});
+
+test("normalizeRequestedKanjis rejects invalid values", () => {
+  assert.throws(
+    () => normalizeRequestedKanjis("力,力木"),
+    (error) => error.code === "invalid_kanji_list",
+  );
+});
+
+test("buildSampleCountFilter restricts counts to reliable samples", () => {
+  const filter = buildSampleCountFilter(["力", "木"]);
+
+  assert.equal(filter.source, "test_screen");
+
+  assert.equal(filter.feedbackType, "manual_debug");
+
+  assert.deepEqual(filter.expectedKanji, {
+    $in: ["力", "木"],
+  });
+
+  assert.deepEqual(filter.isCorrect, {
+    $type: "bool",
+  });
+
+  assert.deepEqual(filter.strokesNormalized, {
+    $type: "array",
+    $ne: [],
+  });
+});
+
+test("getReviewSampleCounts returns counts and explicit zeros", async () => {
+  const calls = {
+    pipeline: null,
+  };
+
+  const collection = {
+    aggregate(pipeline) {
+      calls.pipeline = pipeline;
+
+      return {
+        async toArray() {
+          return [
+            {
+              _id: "力",
+              count: 12,
+            },
+            {
+              _id: "木",
+              count: 69,
+            },
+          ];
+        },
+      };
+    },
+  };
+
+  const result = await getReviewSampleCounts({
+    collection,
+    kanjis: ["力", "木", "刀"],
+  });
+
+  assert.deepEqual(result, {
+    requestedCount: 3,
+    withSamplesCount: 2,
+    withoutSamplesCount: 1,
+    counts: {
+      力: 12,
+      木: 69,
+      刀: 0,
+    },
+  });
+
+  assert.ok(Array.isArray(calls.pipeline));
+
+  assert.equal(calls.pipeline.length, 3);
+
+  assert.deepEqual(calls.pipeline[1], {
+    $group: {
+      _id: "$expectedKanji",
+      count: {
+        $sum: 1,
+      },
+    },
+  });
+});
+
+test("getReviewSampleCounts supports an empty aggregation result", async () => {
+  const collection = {
+    aggregate() {
+      return {
+        async toArray() {
+          return [];
+        },
+      };
+    },
+  };
+
+  const result = await getReviewSampleCounts({
+    collection,
+    kanjis: ["力", "木"],
+  });
+
+  assert.deepEqual(result.counts, {
+    力: 0,
+    木: 0,
+  });
+
+  assert.equal(result.withSamplesCount, 0);
+
+  assert.equal(result.withoutSamplesCount, 2);
 });

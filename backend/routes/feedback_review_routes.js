@@ -19,6 +19,7 @@ const {
   FeedbackReviewValidationError,
   listReviewSamples,
   updateReviewSampleLabel,
+  getReviewSampleCounts,
 } = require("../services/feedback_review_service");
 
 function createFeedbackReviewRouter({
@@ -268,6 +269,47 @@ function createFeedbackReviewRouter({
         ok: false,
         error: "review_samples_query_failed",
         message: "The review samples could not be retrieved.",
+      });
+    }
+  });
+
+  router.get("/sample-counts", requireReviewReadAccess, async (req, res) => {
+    try {
+      const collection = getCollection();
+
+      if (!collection) {
+        return res.status(503).json({
+          ok: false,
+          error: "review_storage_unavailable",
+          message: "The review sample storage is unavailable.",
+        });
+      }
+
+      const result = await getReviewSampleCounts({
+        collection,
+        kanjis: req.query.kanjis,
+      });
+
+      return res.json({
+        ok: true,
+        ...result,
+      });
+    } catch (error) {
+      if (error instanceof FeedbackReviewValidationError) {
+        return res.status(error.statusCode).json({
+          ok: false,
+          error: error.code,
+          message: error.message,
+          details: error.details,
+        });
+      }
+
+      console.error("Error counting review samples:", error);
+
+      return res.status(500).json({
+        ok: false,
+        error: "review_sample_counts_query_failed",
+        message: "The review sample counts could not be retrieved.",
       });
     }
   });
