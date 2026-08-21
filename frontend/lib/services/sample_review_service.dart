@@ -163,6 +163,41 @@ class ReviewSamplePage {
   }
 }
 
+class ReviewSampleLabelUpdateResult {
+  final bool changed;
+  final ReviewSample sample;
+
+  const ReviewSampleLabelUpdateResult({
+    required this.changed,
+    required this.sample,
+  });
+
+  factory ReviewSampleLabelUpdateResult.fromJson(Map<String, dynamic> json) {
+    if (json['ok'] != true) {
+      throw const FormatException(
+        'The label update response is not successful.',
+      );
+    }
+
+    final changedValue = json['changed'];
+
+    if (changedValue is! bool) {
+      throw const FormatException('changed must be a boolean.');
+    }
+
+    final sampleValue = json['sample'];
+
+    if (sampleValue is! Map) {
+      throw const FormatException('sample must be a JSON object.');
+    }
+
+    return ReviewSampleLabelUpdateResult(
+      changed: changedValue,
+      sample: ReviewSample.fromJson(Map<String, dynamic>.from(sampleValue)),
+    );
+  }
+}
+
 class SampleReviewService {
   final String baseUrl;
   final http.Client _client;
@@ -274,6 +309,81 @@ class SampleReviewService {
       throw SampleReviewException(
         code: 'invalid_response',
         message: 'La respuesta del servicio de revisión no es válida.',
+        statusCode: response.statusCode,
+        details: error.message,
+      );
+    }
+  }
+
+  Future<ReviewSampleLabelUpdateResult> updateSampleLabel({
+    required String deviceToken,
+    required String recognitionId,
+    required bool isCorrect,
+  }) async {
+    final normalizedDeviceToken = deviceToken.trim();
+    final normalizedRecognitionId = recognitionId.trim();
+
+    if (normalizedDeviceToken.isEmpty) {
+      throw const SampleReviewException(
+        code: 'device_token_required',
+        message: 'El dispositivo no está vinculado.',
+      );
+    }
+
+    if (normalizedRecognitionId.isEmpty) {
+      throw const SampleReviewException(
+        code: 'recognition_id_required',
+        message: 'El identificador de la muestra es obligatorio.',
+      );
+    }
+
+    final encodedRecognitionId = Uri.encodeComponent(normalizedRecognitionId);
+
+    final uri = Uri.parse(
+      '$baseUrl/api/review/samples/'
+      '$encodedRecognitionId/label',
+    );
+
+    late final http.Response response;
+
+    try {
+      response = await _client.patch(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $normalizedDeviceToken',
+        },
+        body: jsonEncode({'isCorrect': isCorrect}),
+      );
+    } catch (_) {
+      throw const SampleReviewException(
+        code: 'network_error',
+        message: 'No se pudo conectar con el servicio de revisión.',
+      );
+    }
+
+    final responseJson = _decodeResponseBody(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SampleReviewException(
+        code:
+            _optionalString(responseJson['error']) ??
+            'review_label_update_failed',
+        message:
+            _optionalString(responseJson['message']) ??
+            'No se pudo actualizar la valoración de la muestra.',
+        statusCode: response.statusCode,
+        details: responseJson['details'],
+      );
+    }
+
+    try {
+      return ReviewSampleLabelUpdateResult.fromJson(responseJson);
+    } on FormatException catch (error) {
+      throw SampleReviewException(
+        code: 'invalid_response',
+        message: 'La respuesta de actualización no es válida.',
         statusCode: response.statusCode,
         details: error.message,
       );
