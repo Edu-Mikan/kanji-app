@@ -198,6 +198,118 @@ class ReviewSampleLabelUpdateResult {
   }
 }
 
+class ReviewSampleCounts {
+  final int requestedCount;
+  final int withSamplesCount;
+  final int withoutSamplesCount;
+  final Map<String, int> counts;
+
+  const ReviewSampleCounts({
+    required this.requestedCount,
+    required this.withSamplesCount,
+    required this.withoutSamplesCount,
+    required this.counts,
+  });
+
+  int countFor(String kanji) {
+    return counts[kanji.trim()] ?? 0;
+  }
+
+  bool hasSamples(String kanji) {
+    return countFor(kanji) > 0;
+  }
+
+  factory ReviewSampleCounts.fromJson(Map<String, dynamic> json) {
+    if (json['ok'] != true) {
+      throw const FormatException(
+        'The sample counts response is not successful.',
+      );
+    }
+
+    final countsValue = json['counts'];
+
+    if (countsValue is! Map) {
+      throw const FormatException('counts must be a JSON object.');
+    }
+
+    final parsedCounts = <String, int>{};
+
+    for (final entry in countsValue.entries) {
+      final kanji = entry.key.toString().trim();
+      final count = _parseNonNegativeInteger(
+        entry.value,
+        fieldName: 'counts.$kanji',
+      );
+
+      if (kanji.isEmpty) {
+        throw const FormatException('A counts key must be a non-empty string.');
+      }
+
+      parsedCounts[kanji] = count;
+    }
+
+    final requestedCount = _parseNonNegativeInteger(
+      json['requestedCount'],
+      fieldName: 'requestedCount',
+    );
+
+    final withSamplesCount = _parseNonNegativeInteger(
+      json['withSamplesCount'],
+      fieldName: 'withSamplesCount',
+    );
+
+    final withoutSamplesCount = _parseNonNegativeInteger(
+      json['withoutSamplesCount'],
+      fieldName: 'withoutSamplesCount',
+    );
+
+    if (requestedCount != parsedCounts.length) {
+      throw const FormatException(
+        'requestedCount does not match the number of count entries.',
+      );
+    }
+
+    if (withSamplesCount + withoutSamplesCount != requestedCount) {
+      throw const FormatException('The sample count summary is inconsistent.');
+    }
+
+    final calculatedWithSamples = parsedCounts.values
+        .where((count) => count > 0)
+        .length;
+
+    if (calculatedWithSamples != withSamplesCount) {
+      throw const FormatException(
+        'withSamplesCount does not match the count entries.',
+      );
+    }
+
+    return ReviewSampleCounts(
+      requestedCount: requestedCount,
+      withSamplesCount: withSamplesCount,
+      withoutSamplesCount: withoutSamplesCount,
+      counts: Map<String, int>.unmodifiable(parsedCounts),
+    );
+  }
+
+  static int _parseNonNegativeInteger(
+    dynamic value, {
+    required String fieldName,
+  }) {
+    if (value is int && value >= 0) {
+      return value;
+    }
+
+    if (value is num &&
+        value.isFinite &&
+        value >= 0 &&
+        value == value.roundToDouble()) {
+      return value.toInt();
+    }
+
+    throw FormatException('$fieldName must be a non-negative integer.');
+  }
+}
+
 class SampleReviewService {
   final String baseUrl;
   final http.Client _client;
@@ -309,6 +421,104 @@ class SampleReviewService {
       throw SampleReviewException(
         code: 'invalid_response',
         message: 'La respuesta del servicio de revisión no es válida.',
+        statusCode: response.statusCode,
+        details: error.message,
+      );
+    }
+  }
+
+  Future<ReviewSampleCounts> getSampleCounts({
+    required String deviceToken,
+    required List<String> kanjis,
+  }) async {
+    final normalizedDeviceToken = deviceToken.trim();
+
+    if (normalizedDeviceToken.isEmpty) {
+      throw const SampleReviewException(
+        code: 'device_token_required',
+        message: 'El dispositivo no está vinculado.',
+      );
+    }
+
+    final normalizedKanjis = <String>[];
+    final seenKanjis = <String>{};
+
+    for (final value in kanjis) {
+      final normalizedKanji = value.trim();
+
+      if (normalizedKanji.isEmpty) {
+        continue;
+      }
+
+      if (normalizedKanji.runes.length != 1) {
+        throw SampleReviewException(
+          code: 'invalid_kanji_list',
+          message:
+              'El valor "$normalizedKanji" no contiene exactamente un carácter.',
+        );
+      }
+
+      if (seenKanjis.add(normalizedKanji)) {
+        normalizedKanjis.add(normalizedKanji);
+      }
+    }
+
+    if (normalizedKanjis.isEmpty) {
+      throw const SampleReviewException(
+        code: 'kanjis_required',
+        message: 'Debes indicar al menos un kanji.',
+      );
+    }
+
+    if (normalizedKanjis.length > 500) {
+      throw const SampleReviewException(
+        code: 'too_many_kanjis',
+        message: 'No se pueden consultar más de 500 kanjis a la vez.',
+      );
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/api/review/sample-counts',
+    ).replace(queryParameters: {'kanjis': normalizedKanjis.join(',')});
+
+    late final http.Response response;
+
+    try {
+      response = await _client.get(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $normalizedDeviceToken',
+        },
+      );
+    } catch (_) {
+      throw const SampleReviewException(
+        code: 'network_error',
+        message: 'No se pudo conectar con el servicio de revisión.',
+      );
+    }
+
+    final responseJson = _decodeResponseBody(response);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw SampleReviewException(
+        code:
+            _optionalString(responseJson['error']) ??
+            'review_sample_counts_request_failed',
+        message:
+            _optionalString(responseJson['message']) ??
+            'No se pudieron recuperar los conteos de muestras.',
+        statusCode: response.statusCode,
+        details: responseJson['details'],
+      );
+    }
+
+    try {
+      return ReviewSampleCounts.fromJson(responseJson);
+    } on FormatException catch (error) {
+      throw SampleReviewException(
+        code: 'invalid_response',
+        message: 'La respuesta de conteos de muestras no es válida.',
         statusCode: response.statusCode,
         details: error.message,
       );

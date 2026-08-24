@@ -612,4 +612,283 @@ void main() {
 
     service.dispose();
   });
+
+  Map<String, dynamic> createSuccessfulSampleCountsResponse() {
+    return {
+      'ok': true,
+      'requestedCount': 4,
+      'withSamplesCount': 3,
+      'withoutSamplesCount': 1,
+      'counts': {'力': 12, '木': 69, '本': 50, '刀': 0},
+    };
+  }
+
+  test('getSampleCounts sends the protected aggregated request', () async {
+    late http.Request capturedRequest;
+
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test/',
+      client: MockClient((request) async {
+        capturedRequest = request;
+
+        return http.Response(
+          jsonEncode(createSuccessfulSampleCountsResponse()),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      }),
+    );
+
+    final result = await service.getSampleCounts(
+      deviceToken: 'krd_tokenid_tokensecret',
+      kanjis: const ['力', ' 木 ', '本', '刀', '力'],
+    );
+
+    expect(capturedRequest.method, 'GET');
+
+    expect(capturedRequest.url.path, '/api/review/sample-counts');
+
+    expect(capturedRequest.url.queryParameters['kanjis'], '力,木,本,刀');
+
+    expect(
+      capturedRequest.headers['authorization'],
+      'Bearer krd_tokenid_tokensecret',
+    );
+
+    expect(result.requestedCount, 4);
+
+    expect(result.withSamplesCount, 3);
+
+    expect(result.withoutSamplesCount, 1);
+
+    expect(result.countFor('木'), 69);
+
+    expect(result.countFor('刀'), 0);
+
+    expect(result.countFor('不存在'), 0);
+
+    expect(result.hasSamples('力'), isTrue);
+
+    expect(result.hasSamples('刀'), isFalse);
+
+    service.dispose();
+  });
+
+  test('getSampleCounts rejects an empty device token before HTTP', () async {
+    var requestCount = 0;
+
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        requestCount++;
+
+        return http.Response('{}', 200);
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(deviceToken: '   ', kanjis: const ['力']),
+      throwsA(
+        isA<SampleReviewException>().having(
+          (error) => error.code,
+          'code',
+          'device_token_required',
+        ),
+      ),
+    );
+
+    expect(requestCount, 0);
+
+    service.dispose();
+  });
+
+  test('getSampleCounts rejects an empty kanji list before HTTP', () async {
+    var requestCount = 0;
+
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        requestCount++;
+
+        return http.Response('{}', 200);
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(
+        deviceToken: 'krd_tokenid_tokensecret',
+        kanjis: const [' ', ''],
+      ),
+      throwsA(
+        isA<SampleReviewException>().having(
+          (error) => error.code,
+          'code',
+          'kanjis_required',
+        ),
+      ),
+    );
+
+    expect(requestCount, 0);
+
+    service.dispose();
+  });
+
+  test('getSampleCounts rejects an invalid kanji value before HTTP', () async {
+    var requestCount = 0;
+
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        requestCount++;
+
+        return http.Response('{}', 200);
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(
+        deviceToken: 'krd_tokenid_tokensecret',
+        kanjis: const ['力木'],
+      ),
+      throwsA(
+        isA<SampleReviewException>().having(
+          (error) => error.code,
+          'code',
+          'invalid_kanji_list',
+        ),
+      ),
+    );
+
+    expect(requestCount, 0);
+
+    service.dispose();
+  });
+
+  test('getSampleCounts maps a permission denied response', () async {
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'ok': false,
+            'error': 'review_device_permission_denied',
+            'message':
+                'The review device token does not have '
+                'the required permission.',
+          }),
+          403,
+        );
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(
+        deviceToken: 'krd_limited_token_secret',
+        kanjis: const ['力', '木'],
+      ),
+      throwsA(
+        isA<SampleReviewException>()
+            .having(
+              (error) => error.code,
+              'code',
+              'review_device_permission_denied',
+            )
+            .having((error) => error.statusCode, 'statusCode', 403),
+      ),
+    );
+
+    service.dispose();
+  });
+
+  test('getSampleCounts maps a network failure', () async {
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        throw Exception('Network unavailable');
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(
+        deviceToken: 'krd_tokenid_tokensecret',
+        kanjis: const ['力'],
+      ),
+      throwsA(
+        isA<SampleReviewException>().having(
+          (error) => error.code,
+          'code',
+          'network_error',
+        ),
+      ),
+    );
+
+    service.dispose();
+  });
+  test('getSampleCounts rejects a missing counts object', () async {
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'ok': true,
+            'requestedCount': 1,
+            'withSamplesCount': 0,
+            'withoutSamplesCount': 1,
+          }),
+          200,
+        );
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(
+        deviceToken: 'krd_tokenid_tokensecret',
+        kanjis: const ['力'],
+      ),
+      throwsA(
+        isA<SampleReviewException>().having(
+          (error) => error.code,
+          'code',
+          'invalid_response',
+        ),
+      ),
+    );
+
+    service.dispose();
+  });
+
+  test('getSampleCounts rejects an inconsistent summary', () async {
+    final service = SampleReviewService(
+      baseUrl: 'https://example.test',
+      client: MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'ok': true,
+            'requestedCount': 2,
+            'withSamplesCount': 2,
+            'withoutSamplesCount': 0,
+            'counts': {'力': 12, '木': 0},
+          }),
+          200,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        );
+      }),
+    );
+
+    await expectLater(
+      service.getSampleCounts(
+        deviceToken: 'krd_tokenid_tokensecret',
+        kanjis: const ['力', '木'],
+      ),
+      throwsA(
+        isA<SampleReviewException>().having(
+          (error) => error.code,
+          'code',
+          'invalid_response',
+        ),
+      ),
+    );
+
+    service.dispose();
+  });
 }
