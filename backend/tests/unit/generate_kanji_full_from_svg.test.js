@@ -10,6 +10,8 @@ const {
   isCjkCharacter,
 } = require("../../scripts/generate_kanji_full_from_svg");
 
+const converter = require("../../services/kanji_svg_reference_converter");
+
 test("extractPathDataFromSvg should not confuse id with d attribute", () => {
   const paths = extractPathDataFromSvg(
     '<svg><path id="kvg:07530-s1" d="M0 0 H10 V20"/></svg>',
@@ -59,4 +61,24 @@ test("isCjkCharacter should reject ASCII characters", () => {
   assert.equal(isCjkCharacter("0"), false);
 
   assert.equal(isCjkCharacter("?"), false);
+});
+
+test("generator re-exports the shared SVG converter functions", () => {
+  assert.equal(getKanjiSvgFileName, converter.getKanjiSvgFileName);
+
+  assert.equal(extractPathDataFromSvg, converter.extractPathDataFromSvg);
+
+  assert.equal(parsePathDataToPoints, converter.parsePathDataToPoints);
+
+  assert.equal(convertSvgToStrokes, converter.convertSvgToStrokes);
+
+  assert.equal(getKanjiFromSvgFileName, converter.getKanjiFromSvgFileName);
+
+  assert.equal(isCjkCharacter, converter.isCjkCharacter);
+});
+
+test("getKanjiSvgFileName rejects values that are not one character", () => {
+  assert.throws(() => {
+    converter.getKanjiSvgFileName("日本");
+  }, /Expected one kanji character/);
 });
