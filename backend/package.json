@@ -28,6 +28,7 @@
     "import:feedback-jsonl": "node scripts/import_feedback_jsonl_to_mongo.js",
     "reference:catalog:dry-run": "node scripts/update_kanji_reference_catalog.js",
     "reference:catalog:update": "node scripts/update_kanji_reference_catalog.js --apply",
+    "reference:catalog:regression": "node scripts/validate_kanji_reference_catalog_regression.js",
     "start": "node server.js"
   },
   "keywords": [],
