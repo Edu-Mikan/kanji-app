@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-24T12:26:10.512Z",
+  "generator": {
+    "version": 1,
+    "file": "scripts/update_kanji_reference_catalog.js",
+    "sha256": "b2d20e9c71079440e3180d93c706a7437c3db4fa505500fe698e3309e0e2b1f0"
+  },
+  "source": {
+    "directory": "kanji_svg"
+  },
+  "catalog": {
+    "schemaVersion": 1,
+    "kanjiCount": 20,
+    "kanjis": [
+      "一",
+      "七",
+      "三",
+      "二",
+      "八",
+      "六",
+      "力",
+      "十",
+      "口",
+      "四",
+      "回",
+      "山",
+      "日",
+      "木",
+      "未",
+      "末",
+      "本",
+      "用",
+      "田",
+      "目"
+    ],
+    "sha256": "cdc26eb84429ddd0734f9ddbbc182ad1bd4c665acca213a35daff5b0ab755d5c"
+  },
+  "update": {
+    "generatedKanjis": [
+      "一",
+      "七",
+      "三",
+      "二",
+      "八",
+      "六",
+      "力",
+      "十",
+      "口",
+      "四",
+      "回",
+      "山",
+      "日",
+      "木",
+      "未",
+      "末",
+      "本",
+      "用",
+      "田",
+      "目"
+    ],
+    "preservedKanjis": []
+  },
+  "entries": {
+    "一": {
+      "strokeCount": 1,
+      "entrySha256": "b12fbb5cb5f1ffb6ccf4861bd033851b1e4f60a3b6d83eb4b3c5e3b5ebf7d2bc",
+      "sourceSvgSha256": "247db7a7e43bf194a2de84444bf96097a7faccb683ba2555c4a2d587f2f8f1a1",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "七": {
+      "strokeCount": 2,
+      "entrySha256": "e7dc9a3340b3bd1a4031e7b3f623e1f8f9564bf2306ee1bd2f6f7d2a835c7b81",
+      "sourceSvgSha256": "1c7dc6d53dead261db024da69becd73c0e4fa75b1e783dc3cc4fe7f925e41691",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "三": {
+      "strokeCount": 3,
+      "entrySha256": "bdac9c89a05b784c8d3baa1d15a3d5e21e6f1cabee123872d69cf3c158d13fd1",
+      "sourceSvgSha256": "96008df185d0f6b72b650f3433c33d8c00fc997d80014a6253ee6cc66075949a",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "二": {
+      "strokeCount": 2,
+      "entrySha256": "f2d3d06a246b6a673862fb68896698edd9a8380713b2765c8e8a7187b4c76674",
+      "sourceSvgSha256": "dd5d1cdbc040d16b6491f7bf7ea2e5c44051ddeb5c5c04794c045d7b0ff4a6f2",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "八": {
+      "strokeCount": 2,
+      "entrySha256": "1be601900f32b6eeebcffa00da45a13ea4c59f18997ea8ac81f8a54f5d04a12f",
+      "sourceSvgSha256": "946a8ad9b642c1d8aa78ccbed549adeff493cdd118c1169ad0a01c8dcc67a15b",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "六": {
+      "strokeCount": 4,
+      "entrySha256": "13657890c6594bec88521dbc84cc159fecc8b37457c79e094949543053ac2b90",
+      "sourceSvgSha256": "8cd4ce77296800aece0c4935f2d38b806ead510267a3b8074021c3ff0696c53e",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "力": {
+      "strokeCount": 2,
+      "entrySha256": "3b0185faea057da9f134ef1505d4f96a47c8579f31726c2d36536fd22e77a20b",
+      "sourceSvgSha256": "4b871a11664994c437ce22a2c02988872aa3a97991b73d24ce981e6fe53e58bc",
+      "reasons": [
+        "external_unseen"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "十": {
+      "strokeCount": 2,
+      "entrySha256": "845c2013820a4198fd16b2da2732dfdb70a4c14fdd9e49fe2fa419151a1563fb",
+      "sourceSvgSha256": "7108c3e2d86c3f663955e1686fdc3846abdbdf8356b55e41cbc0ca8d461ddacf",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "口": {
+      "strokeCount": 3,
+      "entrySha256": "8575a851c609872a67e1c0728f704c309ad2cf1e38d061eb04c8dc99d50cde2a",
+      "sourceSvgSha256": "b7e84a009709cb9ed8e5f8e8b0fbbacc9544d22d46a7ca92892e7c168b4657df",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "四": {
+      "strokeCount": 5,
+      "entrySha256": "5dda75710de8657239bcd5a81549a432a2ef3d1598f83dbc92e733e139391358",
+      "sourceSvgSha256": "9efb216e33fc878ef76799089a55755808e44d5dd643798e694fad739d2d69f3",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "回": {
+      "strokeCount": 6,
+      "entrySha256": "4cbfda7a5ac1cf8605b719b16e9311f8fd8d144c368dd298b0b4ed8f48fa615a",
+      "sourceSvgSha256": "4d8d15776dd00ebfaf986707e6d23b1ef846a80bf9c8b276766d2af76d5f94b6",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "山": {
+      "strokeCount": 3,
+      "entrySha256": "51689ac7f15aeebd8bd62ec67c6f54f19fbb98412a0a08256598bda06a814be7",
+      "sourceSvgSha256": "a400c3e06e77e7d94a7d497d8a9329c6d80c2fba5124eb2ebc10f40fbfdc43b5",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "日": {
+      "strokeCount": 4,
+      "entrySha256": "d4056bceac611e3c804a8266b4f5adc1cc2766e59291b4714c2aab079bea7fdc",
+      "sourceSvgSha256": "a07770792ee60e33cfa05924075a7a0f1b6c9b85e5d4b0cf6f65e78ea18437f6",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "木": {
+      "strokeCount": 4,
+      "entrySha256": "b0a845ff5fb98ad65054066af1ea99b0af428174057a0ee8bf167f15cae2e04d",
+      "sourceSvgSha256": "098ea79de559f0fdd2485093063a5e570da89a0710a112ee0ee5c80ab1cccf1b",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "未": {
+      "strokeCount": 5,
+      "entrySha256": "2d1cd736c08efacb6afd667e806c923c6b6b5a1801609a3b4f4d4eb52eba2beb",
+      "sourceSvgSha256": "95f9eca70d9a63ae4f8f6943f2b8eb8e00fc85a90c855f847d9ff9b219322a2c",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "末": {
+      "strokeCount": 5,
+      "entrySha256": "ba5031c5304567b72d5c782e6cae7119f13d122921bf347ad5571a074079f6d8",
+      "sourceSvgSha256": "c3e9dc5ae4c03970a04e314c9bd6a46cb512c5937939d7e0d98da2d16908b798",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "本": {
+      "strokeCount": 5,
+      "entrySha256": "4b482331472146f9a4bc86c0a5ae121e896a873ae767231509e711ce0b636d08",
+      "sourceSvgSha256": "665d502ed38bf331dc984c58886a0897f7c0adcc31abe8364b82e8a085a3e35a",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "用": {
+      "strokeCount": 5,
+      "entrySha256": "8bc744a994691fc387196829db5b384f03e68b15883a350ba1751895ca757ff8",
+      "sourceSvgSha256": "ed36e3357efddb14c1298592cbdb175a1f9fb839582a3771737c5c92c209bd21",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "田": {
+      "strokeCount": 5,
+      "entrySha256": "76c91ffc02310379c416c5808b0d25bd5a2b8d97adaaa08669c1d319da0c784e",
+      "sourceSvgSha256": "e82e9988e2d1c536e41db0561bdbf1643d0aacbec2d388cc9c0206aea44f4dca",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    },
+    "目": {
+      "strokeCount": 5,
+      "entrySha256": "0d382ec0ec6beb0592fa36dbaf4f74a874aad35843dca4fb81fd1e745102d2e8",
+      "sourceSvgSha256": "5f289404049d43b6c4865527eb3f98d14303f148fcc8ccf7fab81dfd97a6af27",
+      "reasons": [
+        "approved_descriptor"
+      ],
+      "action": "generated",
+      "warningCount": 0
+    }
+  }
+}
