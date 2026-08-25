@@ -7,6 +7,7 @@ const {
   buildEvaluationCatalog,
   buildOutputPaths,
   buildEvaluationSummary,
+  DEFAULT_KANJI_DATASET_PATH,
 } = require("../../scripts/evaluate_reference_descriptor_candidate");
 
 test("parseArgs should parse evaluation arguments", () => {
@@ -139,4 +140,20 @@ test("buildEvaluationSummary should reject candidates with false negatives", () 
     summary.recommendation,
     "reject_or_relax_candidate_due_to_false_negatives",
   );
+});
+test("parseArgs uses the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+
+test("parseArgs preserves an explicit legacy dataset", () => {
+  const options = parseArgs(["--dataset", "./kanji_full.json"]);
+
+  assert.equal(options.datasetPath.endsWith("kanji_full.json"), true);
 });

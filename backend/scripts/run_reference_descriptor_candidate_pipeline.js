@@ -1,11 +1,14 @@
 const path = require("node:path");
 const childProcess = require("node:child_process");
 const fs = require("node:fs");
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 function parseArgs(argv) {
   const options = {
     kanji: null,
-    datasetPath: null,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
     descriptorPath: null,
     filePath: null,
     outputDirectory: null,
@@ -61,14 +64,36 @@ function printHelp() {
 Run reference descriptor candidate pipeline
 
 Usage:
+
   node scripts/run_reference_descriptor_candidate_pipeline.js \\
     --kanji 一 \\
-    --dataset ./kanji_full.json \\
     --descriptor-file ./data/kanji_descriptors.json \\
     --file ./training_data.jsonl \\
     --out-dir ./candidate_reports_training
 
+Options:
+
+  --kanji <kanji>
+      Kanji to process.
+
+  --dataset <path>
+      Path to the canonical kanji reference catalog.
+      Default: ./data/kanji_reference_catalog.json
+
+  --descriptor-file <path>
+      Approved descriptor catalog.
+
+  --file <path>
+      JSON or JSONL feedback sample file.
+
+  --out-dir <path>
+      Output directory for generated reports.
+
+  --help
+      Show this help.
+
 This script runs:
+
   1. generate_descriptor_candidate_from_reference.js
   2. evaluate_reference_descriptor_candidate.js
 `);
@@ -81,10 +106,6 @@ function validateOptions(options) {
 
   if (!options.kanji) {
     throw new Error("Missing --kanji <kanji>");
-  }
-
-  if (!options.datasetPath) {
-    throw new Error("Missing --dataset <path>");
   }
 
   if (!options.descriptorPath) {
@@ -228,6 +249,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildOutputPaths,

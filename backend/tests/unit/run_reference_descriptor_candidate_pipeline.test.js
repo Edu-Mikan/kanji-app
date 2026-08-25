@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildOutputPaths,
@@ -62,4 +63,19 @@ test("buildOutputPaths should create expected output paths", () => {
       "一_reference_candidate_evaluation_summary.json",
     ),
   );
+});
+test("parseArgs uses the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+test("parseArgs preserves an explicit legacy dataset", () => {
+  const options = parseArgs(["--dataset", "./kanji_full.json"]);
+
+  assert.equal(options.datasetPath.endsWith("kanji_full.json"), true);
 });

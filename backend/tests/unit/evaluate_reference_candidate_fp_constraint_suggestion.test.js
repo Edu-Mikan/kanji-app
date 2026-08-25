@@ -8,6 +8,7 @@ const {
   normalizeSuggestionAsReferenceConstraint,
   buildConstrainedCandidate,
   getEvaluationSummaryPath,
+  DEFAULT_KANJI_DATASET_PATH,
 } = require("../../scripts/evaluate_reference_candidate_fp_constraint_suggestion");
 
 test("parseArgs should parse FP constraint suggestion evaluation arguments", () => {
@@ -145,4 +146,20 @@ test("getEvaluationSummaryPath should return standard reference candidate summar
   assert.ok(
     summaryPath.endsWith("本_reference_candidate_evaluation_summary.json"),
   );
+});
+test("parseArgs uses the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+
+test("parseArgs preserves an explicit legacy dataset", () => {
+  const options = parseArgs(["--dataset", "./kanji_full.json"]);
+
+  assert.equal(options.datasetPath.endsWith("kanji_full.json"), true);
 });
