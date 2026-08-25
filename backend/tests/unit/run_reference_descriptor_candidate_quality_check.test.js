@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildBatchArgs,
@@ -136,4 +137,31 @@ test("buildQualityGateArgs should point to reference candidate batch summary", (
       "reference_descriptor_candidate_pipeline_batch_summary.json",
     ),
   );
+});
+test("parseArgs should use the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+test("buildBatchArgs should propagate the incremental reference catalog", () => {
+  const args = buildBatchArgs({
+    allCovered: true,
+    kanjiList: [],
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
+    descriptorPath: "data/kanji_descriptors.json",
+    filePath: "training_data.jsonl",
+    outputDirectory: "candidate_reports_training",
+    continueOnError: false,
+  });
+
+  const datasetIndex = args.indexOf("--dataset");
+
+  assert.notEqual(datasetIndex, -1);
+
+  assert.equal(args[datasetIndex + 1], DEFAULT_KANJI_DATASET_PATH);
 });

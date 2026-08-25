@@ -1,12 +1,15 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 function parseArgs(argv) {
   const options = {
     kanjiList: [],
     allCovered: false,
-    datasetPath: null,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
     descriptorPath: null,
     filePath: null,
     outputDirectory: null,
@@ -79,7 +82,10 @@ Run reference descriptor candidate pipeline batch
 Usage:
   node scripts/run_reference_descriptor_candidate_pipeline_batch.js \\
     --kanji-list 一,二,三,七,六 \\
-    --dataset ./kanji_full.json \\
+    --dataset ./data/kanji_reference_catalog.json \\
+    --dataset <path> \\
+        Path to the canonical kanji reference catalog. \\
+        Default: ./data/kanji_reference_catalog.json \\
     --descriptor-file ./data/kanji_descriptors.json \\
     --file ./training_data.jsonl \\
     --out-dir ./candidate_reports_training \\
@@ -88,7 +94,10 @@ Usage:
 Alternative:
   node scripts/run_reference_descriptor_candidate_pipeline_batch.js \\
     --all-covered \\
-    --dataset ./kanji_full.json \\
+    --dataset ./data/kanji_reference_catalog.json \\
+    --dataset <path> \\
+        Path to the canonical kanji reference catalog. \\
+        Default: ./data/kanji_reference_catalog.json \\
     --descriptor-file ./data/kanji_descriptors.json \\
     --file ./training_data.jsonl \\
     --out-dir ./candidate_reports_training \\
@@ -114,10 +123,6 @@ function validateOptions(options) {
 
   if (options.allCovered && hasExplicitKanjiList) {
     throw new Error("Use either --kanji-list or --all-covered, not both");
-  }
-
-  if (!options.datasetPath) {
-    throw new Error("Missing --dataset <path>");
   }
 
   if (!options.descriptorPath) {
@@ -465,6 +470,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   getSummaryPath,

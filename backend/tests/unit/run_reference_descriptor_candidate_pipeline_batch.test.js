@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   getSummaryPath,
@@ -206,4 +207,29 @@ test("getExpectedKanjiFromSample should fall back to kanji", () => {
     }),
     "日",
   );
+});
+test("parseArgs should use the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+
+test("validateOptions should accept the default reference catalog", () => {
+  assert.doesNotThrow(() => {
+    validateOptions({
+      kanjiList: ["一"],
+      allCovered: false,
+      datasetPath: DEFAULT_KANJI_DATASET_PATH,
+      descriptorPath: "./data/kanji_descriptors.json",
+      filePath: "./training_data.jsonl",
+      outputDirectory: "./candidate_reports_training",
+      continueOnError: false,
+      help: false,
+    });
+  });
 });

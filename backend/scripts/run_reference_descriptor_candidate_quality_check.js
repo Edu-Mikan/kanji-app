@@ -1,11 +1,14 @@
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 function parseArgs(argv) {
   const options = {
     kanjiList: [],
     allCovered: false,
-    datasetPath: null,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
     descriptorPath: null,
     filePath: null,
     outputDirectory: null,
@@ -78,7 +81,7 @@ Run reference descriptor candidate quality check
 Usage:
   node scripts/run_reference_descriptor_candidate_quality_check.js \\
     --all-covered \\
-    --dataset ./kanji_full.json \\
+    --dataset ./data/kanji_reference_catalog.json \\
     --descriptor-file ./data/kanji_descriptors.json \\
     --file ./training_data.jsonl \\
     --out-dir ./candidate_reports_training \\
@@ -121,10 +124,6 @@ function validateOptions(options) {
 
   if (options.allCovered && hasExplicitKanjiList) {
     throw new Error("Use either --kanji-list or --all-covered, not both");
-  }
-
-  if (!options.datasetPath) {
-    throw new Error("Missing --dataset <path>");
   }
 
   if (!options.descriptorPath) {
@@ -253,6 +252,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildBatchArgs,
