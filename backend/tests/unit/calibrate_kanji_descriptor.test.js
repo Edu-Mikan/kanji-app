@@ -1,12 +1,17 @@
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 const test = require("node:test");
-
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
+  parseArgs,
   calculateMedian,
   calculateMean,
   calculatePercentile,
   summarizeNumericValues,
+  buildReferenceFeaturesForKanji,
   collectReferenceComparisonValues,
   summarizeReferenceComparisonValues,
   collectPerStrokeReferenceComparisonValues,
@@ -334,4 +339,90 @@ test("buildSampleEvaluationEntries should preserve one entry per evaluation", ()
   assert.equal(entries.length, 2);
   assert.equal(entries[0].classification, "truePositive");
   assert.equal(entries[1].classification, "falsePositive");
+});
+test("parseArgs uses the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+
+test("parseArgs preserves an explicit legacy dataset path", () => {
+  const options = parseArgs(["--dataset", "./kanji_full.json"]);
+
+  assert.equal(options.datasetPath.endsWith("kanji_full.json"), true);
+});
+
+function createTemporaryReferenceDataset({ fileName }) {
+  const directory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "kanji-calibration-reference-"),
+  );
+
+  const datasetPath = path.join(directory, fileName);
+
+  fs.writeFileSync(
+    datasetPath,
+    JSON.stringify(
+      {
+        一: [
+          {
+            x: [0, 1],
+            y: [0, 0],
+          },
+        ],
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+
+  return {
+    directory,
+    datasetPath,
+  };
+}
+
+test("buildReferenceFeaturesForKanji records the incremental catalog source", (t) => {
+  const fixture = createTemporaryReferenceDataset({
+    fileName: "kanji_reference_catalog.json",
+  });
+
+  t.after(() => {
+    fs.rmSync(fixture.directory, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  const result = buildReferenceFeaturesForKanji({
+    kanji: "一",
+    datasetPath: fixture.datasetPath,
+  });
+
+  assert.equal(result.source, "kanji_reference_catalog.json");
+});
+
+test("buildReferenceFeaturesForKanji preserves an explicit legacy source", (t) => {
+  const fixture = createTemporaryReferenceDataset({
+    fileName: "kanji_full.json",
+  });
+
+  t.after(() => {
+    fs.rmSync(fixture.directory, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  const result = buildReferenceFeaturesForKanji({
+    kanji: "一",
+    datasetPath: fixture.datasetPath,
+  });
+
+  assert.equal(result.source, "kanji_full.json");
 });

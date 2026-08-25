@@ -8,10 +8,9 @@ const {
   compareFeatureSetsByIndex,
 } = require("../services/reference_comparator");
 
-const DEFAULT_KANJI_DATASET_PATH = path.resolve(
-  __dirname,
-  "../kanji_full.json",
-);
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 function parseArgs(argv) {
   const options = {
@@ -99,8 +98,9 @@ Options:
       matching this expected kanji.
 
   --dataset <path>
-      Path to kanji_full.json.
-      Default: ./kanji_full.json
+      Path to the canonical kanji reference catalog.
+      Default: ./data/kanji_reference_catalog.json
+
 
   --out-json <path>
       Save the comparison report as JSON.
@@ -403,6 +403,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   getExpectedKanji,
   findSample,

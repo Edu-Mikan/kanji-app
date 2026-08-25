@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   getReferenceStrokes,
@@ -9,6 +10,21 @@ const {
   classifyStrokeType,
   generateDescriptorCandidateFromReference,
 } = require("../../scripts/generate_descriptor_candidate_from_reference");
+test("parseArgs should use the incremental reference catalog by default", () => {
+  const options = parseArgs([
+    "--kanji",
+    "一",
+    "--out-json",
+    "./candidate.json",
+  ]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
 
 test("parseArgs should parse descriptor generation arguments", () => {
   const options = parseArgs([

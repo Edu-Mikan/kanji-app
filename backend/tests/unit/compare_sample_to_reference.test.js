@@ -3,10 +3,14 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
+  parseArgs,
   getExpectedKanji,
   findSample,
   buildComparisonReport,
 } = require("../../scripts/compare_sample_to_reference");
+
+const path = require("node:path");
 
 test("getExpectedKanji should prefer expectedKanji", () => {
   assert.equal(
@@ -92,4 +96,22 @@ test("buildComparisonReport should preserve sample and comparison metadata", () 
   assert.equal(report.reference.kanji, "四");
 
   assert.equal(report.comparison.comparisonCost, 0.1);
+});
+test("parseArgs uses the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith(
+      path.join("data", "kanji_reference_catalog.json"),
+    ),
+    true,
+  );
+});
+
+test("parseArgs preserves an explicit legacy dataset path", () => {
+  const options = parseArgs(["--dataset", "./kanji_full.json"]);
+
+  assert.equal(options.datasetPath.endsWith("kanji_full.json"), true);
 });

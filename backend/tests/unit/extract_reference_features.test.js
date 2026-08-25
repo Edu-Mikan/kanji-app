@@ -3,6 +3,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
+  parseArgs,
   prepareReferenceStrokes,
   extractReferenceFeatures,
   analyzeReferenceGeometryQuality,
@@ -96,4 +98,39 @@ test("analyzeReferenceGeometryQuality should accept non-degenerate reference str
   assert.equal(quality.ok, true);
 
   assert.equal(quality.warningCount, 0);
+});
+test("parseArgs uses the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+
+test("parseArgs preserves an explicit legacy dataset path", () => {
+  const options = parseArgs(["--dataset", "./kanji_full.json"]);
+
+  assert.equal(options.datasetPath.endsWith("kanji_full.json"), true);
+});
+
+test("extractReferenceFeatures preserves the provided reference source", () => {
+  const result = extractReferenceFeatures({
+    kanji: "一",
+    rawStrokes: [createSimpleStroke()],
+    source: "custom_reference_catalog.json",
+  });
+
+  assert.equal(result.source, "custom_reference_catalog.json");
+});
+
+test("extractReferenceFeatures uses the incremental catalog source by default", () => {
+  const result = extractReferenceFeatures({
+    kanji: "一",
+    rawStrokes: [createSimpleStroke()],
+  });
+
+  assert.equal(result.source, "kanji_reference_catalog.json");
 });

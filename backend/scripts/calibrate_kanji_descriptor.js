@@ -16,10 +16,9 @@ const DEFAULT_DESCRIPTOR_PATH = path.resolve(
   "../data/kanji_descriptors.json",
 );
 
-const DEFAULT_KANJI_DATASET_PATH = path.resolve(
-  __dirname,
-  "../kanji_full.json",
-);
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 const DEFAULT_NUMERIC_FEATURES = [
   "angleAbs",
@@ -116,8 +115,8 @@ Options:
       Default: data/kanji_descriptors.json
 
   --dataset <path>
-      Path to kanji_full.json.
-      Default: ./kanji_full.json
+      Path to the canonical kanji reference catalog.
+      Default: ./data/kanji_reference_catalog.json
 
   --out-json <path>
       Save the calibration report as JSON.
@@ -764,6 +763,7 @@ function buildReferenceFeaturesForKanji({ kanji, datasetPath }) {
   return extractReferenceFeatures({
     kanji,
     rawStrokes,
+    source: path.basename(datasetPath),
   });
 }
 
@@ -1132,6 +1132,8 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
+  parseArgs,
   isFiniteNumber,
   calculateMedian,
   calculateMean,

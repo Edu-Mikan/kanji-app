@@ -9,10 +9,9 @@ const {
 
 const { extractAllFeatures } = require("../services/feature_extractor");
 
-const DEFAULT_KANJI_DATASET_PATH = path.resolve(
-  __dirname,
-  "../kanji_full.json",
-);
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 function parseArgs(argv) {
   const options = {
@@ -68,11 +67,11 @@ Usage:
 
 Options:
   --kanji <kanji>
-      Kanji to extract from kanji_full.json.
+      Kanji to extract from the canonical reference catalog.
 
   --dataset <path>
-      Path to kanji_full.json.
-      Default: ./kanji_full.json
+      Path to the canonical kanji reference catalog.
+      Default: ./data/kanji_reference_catalog.json
 
   --out-json <path>
       Save extracted reference features as JSON.
@@ -112,7 +111,11 @@ function prepareReferenceStrokes(rawStrokes) {
   };
 }
 
-function extractReferenceFeatures({ kanji, rawStrokes }) {
+function extractReferenceFeatures({
+  kanji,
+  rawStrokes,
+  source = "kanji_reference_catalog.json",
+}) {
   const prepared = prepareReferenceStrokes(rawStrokes);
 
   /*
@@ -133,7 +136,7 @@ function extractReferenceFeatures({ kanji, rawStrokes }) {
   const result = {
     kanji,
 
-    source: "kanji_full.json",
+    source,
 
     generatedAt: new Date().toISOString(),
 
@@ -314,8 +317,8 @@ function main() {
 
   const result = extractReferenceFeatures({
     kanji: options.kanji,
-
     rawStrokes,
+    source: path.basename(options.datasetPath),
   });
 
   printSummary(result);
@@ -345,6 +348,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   prepareReferenceStrokes,
   extractReferenceFeatures,

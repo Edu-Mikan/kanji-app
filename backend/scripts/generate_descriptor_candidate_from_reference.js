@@ -1,10 +1,14 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
+
 function parseArgs(argv) {
   const options = {
     kanji: null,
-    datasetPath: null,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
     outputPath: null,
     help: false,
   };
@@ -46,10 +50,25 @@ function printHelp() {
 Generate descriptor candidate from reference geometry
 
 Usage:
+
   node scripts/generate_descriptor_candidate_from_reference.js \\
     --kanji 川 \\
-    --dataset ./kanji_full.json \\
     --out-json ./candidate_reports_training/川_descriptor_candidate_from_reference.json
+
+Options:
+
+  --kanji <kanji>
+      Kanji to process.
+
+  --dataset <path>
+      Path to the canonical kanji reference catalog.
+      Default: ./data/kanji_reference_catalog.json
+
+  --out-json <path>
+      Output descriptor candidate path.
+
+  --help
+      Show this help.
 `);
 }
 
@@ -60,10 +79,6 @@ function validateOptions(options) {
 
   if (!options.kanji) {
     throw new Error("Missing --kanji <kanji>");
-  }
-
-  if (!options.datasetPath) {
-    throw new Error("Missing --dataset <path>");
   }
 
   if (!options.outputPath) {
@@ -507,6 +522,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   getReferenceStrokes,
