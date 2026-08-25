@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   getPermissiveRows,
@@ -346,4 +347,29 @@ test("buildBatchSummary should fail when true positives are lost", () => {
   assert.equal(summary.totalFalseNegativeIncrease, 1);
 
   assert.equal(summary.totalTruePositiveLoss, 1);
+});
+test("parseArgs should use the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
+  );
+});
+
+test("validateOptions should accept the default reference catalog", () => {
+  assert.doesNotThrow(() => {
+    validateOptions({
+      batchSummaryPath:
+        "./candidate_reports_training/reference_descriptor_candidate_pipeline_batch_summary.json",
+      descriptorPath: "./data/kanji_descriptors.json",
+      filePath: "./training_data.jsonl",
+      datasetPath: DEFAULT_KANJI_DATASET_PATH,
+      outputDirectory: "./candidate_reports_training",
+      continueOnError: false,
+      help: false,
+    });
+  });
 });

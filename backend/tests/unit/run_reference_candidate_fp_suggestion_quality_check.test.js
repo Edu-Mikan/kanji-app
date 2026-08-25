@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildReferenceCandidateQualityArgs,
@@ -33,16 +34,14 @@ test("parseArgs should parse FP suggestion quality check arguments", () => {
   assert.equal(options.continueOnError, true);
 });
 
-test("validateOptions should reject missing dataset", () => {
-  assert.throws(
-    () =>
-      validateOptions({
-        descriptorPath: "./data/kanji_descriptors.json",
-        filePath: "./training_data.jsonl",
-        outputDirectory: "./candidate_reports_training",
-        help: false,
-      }),
-    /Missing --dataset/,
+test("parseArgs should use the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
   );
 });
 

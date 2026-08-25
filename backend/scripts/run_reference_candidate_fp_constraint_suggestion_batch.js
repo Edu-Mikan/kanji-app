@@ -1,13 +1,16 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const childProcess = require("node:child_process");
+const { REFERENCE_CATALOG_PATH } = require("../services/kanji_reference_paths");
+
+const DEFAULT_KANJI_DATASET_PATH = REFERENCE_CATALOG_PATH;
 
 function parseArgs(argv) {
   const options = {
     batchSummaryPath: null,
     descriptorPath: null,
     filePath: null,
-    datasetPath: null,
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
     outputDirectory: null,
     continueOnError: false,
     help: false,
@@ -71,7 +74,10 @@ Usage:
     --batch-summary ./candidate_reports_training/reference_descriptor_candidate_pipeline_batch_summary.json \\
     --descriptor-file ./data/kanji_descriptors.json \\
     --file ./training_data.jsonl \\
-    --dataset ./kanji_full.json \\
+    --dataset ./data/kanji_reference_catalog.json \\
+    --dataset <path> \\
+        Path to the canonical kanji reference catalog. \\
+        Default: ./data/kanji_reference_catalog.json \\
     --out-dir ./candidate_reports_training \\
     --continue-on-error
 
@@ -99,10 +105,6 @@ function validateOptions(options) {
 
   if (!options.filePath) {
     throw new Error("Missing --file <path>");
-  }
-
-  if (!options.datasetPath) {
-    throw new Error("Missing --dataset <path>");
   }
 
   if (!options.outputDirectory) {
@@ -544,6 +546,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   getPermissiveRows,
