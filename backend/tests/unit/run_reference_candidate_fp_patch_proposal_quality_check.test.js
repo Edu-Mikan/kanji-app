@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildFpSuggestionQualityArgs,
@@ -33,17 +34,17 @@ test("parseArgs should parse FP patch proposal quality check arguments", () => {
   assert.equal(options.continueOnError, true);
 });
 
-test("validateOptions should reject missing dataset", () => {
-  assert.throws(
-    () =>
-      validateOptions({
-        descriptorPath: "./data/kanji_descriptors.json",
-        filePath: "./training_data.jsonl",
-        outputDirectory: "./candidate_reports_training",
-        help: false,
-      }),
-    /Missing --dataset/,
-  );
+test("validateOptions should accept the default reference catalog", () => {
+  assert.doesNotThrow(() => {
+    validateOptions({
+      datasetPath: DEFAULT_KANJI_DATASET_PATH,
+      descriptorPath: "./data/kanji_descriptors.json",
+      filePath: "./training_data.jsonl",
+      outputDirectory: "./candidate_reports_training",
+      continueOnError: false,
+      help: false,
+    });
+  });
 });
 
 test("validateOptions should reject missing descriptor file", () => {

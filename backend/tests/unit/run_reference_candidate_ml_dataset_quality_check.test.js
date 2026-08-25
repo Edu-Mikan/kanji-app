@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  DEFAULT_KANJI_DATASET_PATH,
   parseArgs,
   validateOptions,
   buildReferenceCandidateQualityArgs,
@@ -47,19 +48,30 @@ test("parseArgs should parse ML dataset quality check arguments", () => {
   assert.equal(options.continueOnError, true);
 });
 
-test("validateOptions should reject missing dataset", () => {
-  assert.throws(
-    () =>
-      validateOptions({
-        descriptorPath: "./data/kanji_descriptors.json",
-        filePath: "./training_data.jsonl",
-        outputDirectory: "./candidate_reports_training",
-        mlDatasetPath: "./ml_datasets/dataset.jsonl",
-        mlSummaryPath: "./ml_datasets/summary.json",
-        help: false,
-      }),
-    /Missing --dataset/,
+test("parseArgs should use the incremental reference catalog by default", () => {
+  const options = parseArgs([]);
+
+  assert.equal(options.datasetPath, DEFAULT_KANJI_DATASET_PATH);
+
+  assert.equal(
+    options.datasetPath.endsWith("kanji_reference_catalog.json"),
+    true,
   );
+});
+
+test("validateOptions should accept the default reference catalog", () => {
+  assert.doesNotThrow(() => {
+    validateOptions({
+      datasetPath: DEFAULT_KANJI_DATASET_PATH,
+      descriptorPath: "./data/kanji_descriptors.json",
+      filePath: "./training_data.jsonl",
+      outputDirectory: "./candidate_reports_training",
+      mlDatasetPath: "./ml_datasets/dataset.jsonl",
+      mlSummaryPath: "./ml_datasets/summary.json",
+      continueOnError: false,
+      help: false,
+    });
+  });
 });
 
 test("validateOptions should reject missing output jsonl", () => {
@@ -132,4 +144,19 @@ test("buildMlDatasetQualityGateArgs should point to ML dataset and summary", () 
     "--summary",
     "ml_datasets/reference_candidate_binary_dataset_summary.json",
   ]);
+});
+test("buildReferenceCandidateQualityArgs should propagate the incremental catalog", () => {
+  const args = buildReferenceCandidateQualityArgs({
+    datasetPath: DEFAULT_KANJI_DATASET_PATH,
+    descriptorPath: "data/kanji_descriptors.json",
+    filePath: "training_data.jsonl",
+    outputDirectory: "candidate_reports_training",
+    continueOnError: false,
+  });
+
+  const datasetIndex = args.indexOf("--dataset");
+
+  assert.notEqual(datasetIndex, -1);
+
+  assert.equal(args[datasetIndex + 1], DEFAULT_KANJI_DATASET_PATH);
 });
