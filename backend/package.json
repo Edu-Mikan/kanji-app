@@ -28,7 +28,8 @@
     "reference:catalog:update": "node scripts/update_kanji_reference_catalog.js --apply",
     "reference:catalog:regression": "node scripts/validate_kanji_reference_catalog_regression.js",
     "reference:catalog:check": "node scripts/check_kanji_reference_catalog.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "inspect:mongo-feedback": "node scripts/inspect_mongo_feedback_samples.js"
   },
   "keywords": [],
   "author": "",
