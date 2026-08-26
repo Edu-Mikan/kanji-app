@@ -2,34 +2,23 @@
 
 const fs = require("node:fs");
 const path = require("node:path");
-const { spawnSync } = require("node:child_process");
-
+const {
+  buildKanjiDatasetEntry,
+} = require("../services/kanji_svg_reference_converter");
 const BACKEND_DIRECTORY = path.resolve(__dirname, "..");
-
 const PROJECT_DIRECTORY = path.resolve(BACKEND_DIRECTORY, "..");
-
 const FRONTEND_DATA_DIRECTORY = path.join(
   PROJECT_DIRECTORY,
   "frontend",
   "assets",
   "data",
 );
-
 const TRAINING_KANJI_PATH = path.join(
   FRONTEND_DATA_DIRECTORY,
   "training_kanji.json",
 );
-
 const SVG_DIRECTORY = path.join(BACKEND_DIRECTORY, "kanji_svg");
-
 const OUTPUT_PATH = path.join(BACKEND_DIRECTORY, "kanji_runtime.json");
-
-const GENERATOR_PATH = path.join(
-  BACKEND_DIRECTORY,
-  "scripts",
-  "generate_kanji_full_from_svg.js",
-);
-
 const LESSON_FILE_PATTERN = /^lecciones(?:_N[1-5])?\.json$/;
 
 function assertFileExists(filePath, label) {
@@ -166,45 +155,85 @@ function collectRuntimeKanjis(options = {}) {
   };
 }
 
-function runExistingGenerator({
+function serializeRuntimeDataset(dataset) {
+  return `${JSON.stringify(dataset, null, 2)}\n`;
+}
+
+function generateRuntimeDataset({
   runtimeKanjis,
   svgDirectory = SVG_DIRECTORY,
-  outputPath = OUTPUT_PATH,
-  generatorPath = GENERATOR_PATH,
+  buildEntry = buildKanjiDatasetEntry,
 }) {
   assertDirectoryExists(svgDirectory, "Kanji SVG directory");
 
-  assertFileExists(generatorPath, "SVG generator");
-
-  const result = spawnSync(
-    process.execPath,
-    [
-      generatorPath,
-      "--svg-dir",
-      svgDirectory,
-      "--kanji-list",
-      runtimeKanjis.join(","),
-      "--out-json",
-      outputPath,
-    ],
-    {
-      cwd: BACKEND_DIRECTORY,
-
-      encoding: "utf8",
-
-      stdio: "inherit",
-    },
-  );
-
-  if (result.error) {
-    throw result.error;
+  if (!Array.isArray(runtimeKanjis)) {
+    throw new Error("Runtime kanjis must be an array.");
   }
 
-  if (result.status !== 0) {
-    throw new Error(
-      `Runtime kanji generation failed with exit code ${result.status}.`,
-    );
+  if (typeof buildEntry !== "function") {
+    throw new Error("buildEntry must be a function.");
   }
+
+  const dataset = {};
+  const rows = [];
+
+  for (const kanji of runtimeKanjis) {
+    const result = buildEntry({
+      svgDir: svgDirectory,
+      kanji,
+    });
+
+    if (
+      !result ||
+      !Array.isArray(result.strokes) ||
+      result.strokes.length === 0
+    ) {
+      throw new Error(`Generated runtime reference is invalid for ${kanji}.`);
+    }
+
+    dataset[kanji] = result.strokes;
+
+    rows.push({
+      kanji,
+      originalPathCount: result.originalPathCount ?? null,
+      usefulStrokeCount: result.usefulStrokeCount ?? result.strokes.length,
+      warningCount: Array.isArray(result.warnings) ? result.warnings.length : 0,
+      warnings: Array.isArray(result.warnings) ? result.warnings : [],
+    });
+  }
+
+  return {
+    dataset,
+    rows,
+  };
+}
+
+function writeRuntimeDataset({ dataset, outputPath = OUTPUT_PATH }) {
+  fs.mkdirSync(path.dirname(outputPath), {
+    recursive: true,
+  });
+
+  fs.writeFileSync(outputPath, serializeRuntimeDataset(dataset), "utf8");
+}
+
+function generateRuntimeFile({
+  runtimeKanjis,
+  svgDirectory = SVG_DIRECTORY,
+  outputPath = OUTPUT_PATH,
+  buildEntry = buildKanjiDatasetEntry,
+}) {
+  const result = generateRuntimeDataset({
+    runtimeKanjis,
+    svgDirectory,
+    buildEntry,
+  });
+
+  writeRuntimeDataset({
+    dataset: result.dataset,
+    outputPath,
+  });
+
+  return result;
 }
 
 function validateGeneratedRuntime({ runtimeKanjis, outputPath = OUTPUT_PATH }) {
@@ -264,7 +293,7 @@ function main() {
 
     console.log(`Includes 力: ${collection.runtimeKanjis.includes("力")}`);
 
-    runExistingGenerator({
+    const generation = generateRuntimeFile({
       runtimeKanjis: collection.runtimeKanjis,
     });
 
@@ -285,6 +314,17 @@ function main() {
     console.log(`Output size: ${validation.outputSizeBytes} bytes`);
 
     console.log(`Output: ${OUTPUT_PATH}`);
+
+    for (const row of generation.rows) {
+      console.log(
+        [
+          `${row.kanji}:`,
+          `paths=${row.originalPathCount}`,
+          `strokes=${row.usefulStrokeCount}`,
+          `warnings=${row.warningCount}`,
+        ].join(" "),
+      );
+    }
 
     console.log("");
     console.log("Kanji runtime generated successfully.");
@@ -310,7 +350,10 @@ module.exports = {
   collectLessonKanjis,
   collectTrainingKanjis,
   collectRuntimeKanjis,
-  runExistingGenerator,
+  serializeRuntimeDataset,
+  generateRuntimeDataset,
+  writeRuntimeDataset,
+  generateRuntimeFile,
   validateGeneratedRuntime,
   main,
 };

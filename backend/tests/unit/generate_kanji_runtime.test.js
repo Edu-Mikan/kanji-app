@@ -14,6 +14,9 @@ const {
   collectTrainingKanjis,
   collectRuntimeKanjis,
   validateGeneratedRuntime,
+  serializeRuntimeDataset,
+  generateRuntimeDataset,
+  generateRuntimeFile,
 } = require("../../scripts/generate_kanji_runtime");
 
 function createTemporaryDirectory() {
@@ -26,6 +29,20 @@ function writeJson(filePath, value) {
   });
 
   fs.writeFileSync(filePath, JSON.stringify(value, null, 2), "utf8");
+}
+
+function createGeneratedEntry(kanji) {
+  return {
+    strokes: [
+      {
+        x: [0, 1],
+        y: [0, kanji === "一" ? 0 : 1],
+      },
+    ],
+    warnings: [],
+    originalPathCount: 1,
+    usefulStrokeCount: 1,
+  };
 }
 
 test("isHanCharacter accepts one Han character", () => {
@@ -282,4 +299,126 @@ test("validateGeneratedRuntime rejects unexpected kanjis", (t) => {
       outputPath,
     });
   }, /unexpected kanjis: 力/);
+});
+
+test("generateRuntimeDataset builds entries directly with the shared converter contract", (t) => {
+  const directory = createTemporaryDirectory();
+
+  t.after(() => {
+    fs.rmSync(directory, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  const calls = [];
+
+  const result = generateRuntimeDataset({
+    runtimeKanjis: ["一", "力"],
+    svgDirectory: directory,
+    buildEntry({ svgDir, kanji }) {
+      calls.push({
+        svgDir,
+        kanji,
+      });
+
+      return createGeneratedEntry(kanji);
+    },
+  });
+
+  assert.deepEqual(calls, [
+    {
+      svgDir: directory,
+      kanji: "一",
+    },
+    {
+      svgDir: directory,
+      kanji: "力",
+    },
+  ]);
+
+  assert.deepEqual(Object.keys(result.dataset), ["一", "力"]);
+
+  assert.equal(result.rows.length, 2);
+
+  assert.equal(result.rows[0].warningCount, 0);
+});
+
+test("generateRuntimeDataset rejects an invalid generated entry", (t) => {
+  const directory = createTemporaryDirectory();
+
+  t.after(() => {
+    fs.rmSync(directory, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  assert.throws(() => {
+    generateRuntimeDataset({
+      runtimeKanjis: ["力"],
+      svgDirectory: directory,
+      buildEntry() {
+        return {
+          strokes: [],
+          warnings: [],
+        };
+      },
+    });
+  }, /Generated runtime reference is invalid for 力/);
+});
+
+test("serializeRuntimeDataset produces stable pretty JSON with a final newline", () => {
+  const serialized = serializeRuntimeDataset({
+    一: [
+      {
+        x: [0, 1],
+        y: [0, 0],
+      },
+    ],
+  });
+
+  assert.equal(serialized.endsWith("\n"), true);
+
+  assert.deepEqual(JSON.parse(serialized), {
+    一: [
+      {
+        x: [0, 1],
+        y: [0, 0],
+      },
+    ],
+  });
+});
+
+test("generateRuntimeFile writes a dataset that passes coverage validation", (t) => {
+  const directory = createTemporaryDirectory();
+
+  t.after(() => {
+    fs.rmSync(directory, {
+      recursive: true,
+      force: true,
+    });
+  });
+
+  const outputPath = path.join(directory, "kanji_runtime.json");
+
+  generateRuntimeFile({
+    runtimeKanjis: ["一", "力"],
+    svgDirectory: directory,
+    outputPath,
+    buildEntry({ kanji }) {
+      return createGeneratedEntry(kanji);
+    },
+  });
+
+  const validation = validateGeneratedRuntime({
+    runtimeKanjis: ["一", "力"],
+    outputPath,
+  });
+
+  assert.equal(validation.generatedKanjiCount, 2);
+
+  assert.deepEqual(validation.missingKanjis, []);
+
+  assert.deepEqual(validation.unexpectedKanjis, []);
 });
