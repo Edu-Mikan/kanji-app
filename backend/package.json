@@ -5,8 +5,6 @@
   "main": "index.js",
   "scripts": {
     "test": "node --test",
-    "generate:kanji-full": "node scripts/generate_kanji_full_from_svg.js --svg-dir ./kanji_svg --all --out-json ./kanji_full.json",
-    "check:kanji-full": "node scripts/check_kanji_full_exists.js",
     "pretest:descriptor-quality": "npm run reference:catalog:check",
     "test:descriptor-quality": "node scripts/run_descriptor_batch_quality_check.js --all --file ./training_data.jsonl --descriptor-file ./data/kanji_descriptors.json --dataset ./data/kanji_reference_catalog.json --out-dir ./candidate_reports_training --continue-on-error",
     "test:unit": "node --test tests/unit/*.test.js",
