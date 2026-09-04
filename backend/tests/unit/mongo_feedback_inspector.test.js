@@ -394,6 +394,11 @@ test("inspectFeedbackSamples groups results by kanji deterministically", () => {
   assert.equal(result.totalSamples, 3);
   assert.equal(result.reliableCount, 2);
   assert.equal(result.excludedCount, 1);
+
+  assert.ok(Array.isArray(result.samples));
+  assert.equal(result.samples.length, 3);
+  assert.equal(Object.hasOwn(result, "simples"), false);
+
   assert.deepEqual(Object.keys(result.byKanji), ["力", "木"]);
 
   assert.equal(result.byKanji.力.total, 1);
