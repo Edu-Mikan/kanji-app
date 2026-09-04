@@ -339,6 +339,153 @@ function compareKanjis(left, right) {
   return left.codePointAt(0) - right.codePointAt(0);
 }
 
+function incrementCount(counts, key) {
+  counts[key] = (counts[key] ?? 0) + 1;
+}
+
+function sortCountObject(counts) {
+  return Object.fromEntries(
+    Object.entries(counts).sort(([left], [right]) =>
+      left.localeCompare(right, "en"),
+    ),
+  );
+}
+
+function getStoredReviewStatusCountKey(review) {
+  if (review?.missing === true) {
+    return "<missing>";
+  }
+
+  if (
+    typeof review?.storedValue === "string" &&
+    review.storedValue.trim().length > 0
+  ) {
+    return review.storedValue.trim().toLowerCase();
+  }
+
+  return "<invalid>";
+}
+
+function buildDuplicateRecognitionIdDiagnostics(samples) {
+  const countsByRecognitionId = new Map();
+
+  for (const sample of samples) {
+    const recognitionId = sample.recognitionId;
+
+    if (typeof recognitionId !== "string" || recognitionId.length === 0) {
+      continue;
+    }
+
+    countsByRecognitionId.set(
+      recognitionId,
+      (countsByRecognitionId.get(recognitionId) ?? 0) + 1,
+    );
+  }
+
+  const duplicateRecognitionIds = [...countsByRecognitionId.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([recognitionId, count]) => ({
+      recognitionId,
+      count,
+    }))
+    .sort((left, right) =>
+      left.recognitionId.localeCompare(right.recognitionId, "en"),
+    );
+
+  return {
+    duplicateRecognitionIdCount: duplicateRecognitionIds.length,
+
+    duplicateSampleCount: duplicateRecognitionIds.reduce(
+      (total, duplicate) => total + duplicate.count,
+      0,
+    ),
+
+    duplicateRecognitionIds,
+  };
+}
+
+function buildInspectionDiagnostics(samples) {
+  const reasonCounts = {};
+  const sourceCounts = {};
+  const feedbackTypeCounts = {};
+  const storedReviewStatusCounts = {};
+  const effectiveReviewStatusCounts = {};
+  const strokeStatusCounts = {};
+  const featureStatusCounts = {};
+
+  const catalogCounts = {
+    withCanonicalReference: 0,
+    withoutCanonicalReference: 0,
+    withApprovedDescriptor: 0,
+    withoutApprovedDescriptor: 0,
+    externalUnseen: 0,
+    explicitRequirement: 0,
+  };
+
+  for (const sample of samples) {
+    for (const reason of sample.reasons ?? []) {
+      incrementCount(reasonCounts, reason);
+    }
+
+    incrementCount(sourceCounts, sample.source ?? "<missing>");
+
+    incrementCount(feedbackTypeCounts, sample.feedbackType ?? "<missing>");
+
+    incrementCount(
+      storedReviewStatusCounts,
+      getStoredReviewStatusCountKey(sample.review),
+    );
+
+    incrementCount(
+      effectiveReviewStatusCounts,
+      sample.review?.effectiveStatus ?? "<missing>",
+    );
+
+    incrementCount(strokeStatusCounts, sample.strokeStatus ?? "<missing>");
+
+    incrementCount(featureStatusCounts, sample.featureStatus ?? "<missing>");
+
+    if (sample.catalog?.hasCanonicalReference === true) {
+      catalogCounts.withCanonicalReference++;
+    } else {
+      catalogCounts.withoutCanonicalReference++;
+    }
+
+    if (sample.catalog?.hasApprovedDescriptor === true) {
+      catalogCounts.withApprovedDescriptor++;
+    } else {
+      catalogCounts.withoutApprovedDescriptor++;
+    }
+
+    if (sample.catalog?.isExternalUnseen === true) {
+      catalogCounts.externalUnseen++;
+    }
+
+    if (sample.catalog?.isExplicitRequirement === true) {
+      catalogCounts.explicitRequirement++;
+    }
+  }
+
+  return {
+    reasonCounts: sortCountObject(reasonCounts),
+    sourceCounts: sortCountObject(sourceCounts),
+
+    feedbackTypeCounts: sortCountObject(feedbackTypeCounts),
+
+    storedReviewStatusCounts: sortCountObject(storedReviewStatusCounts),
+
+    effectiveReviewStatusCounts: sortCountObject(effectiveReviewStatusCounts),
+
+    strokeStatusCounts: sortCountObject(strokeStatusCounts),
+
+    featureStatusCounts: sortCountObject(featureStatusCounts),
+
+    catalogCounts,
+
+    ...buildDuplicateRecognitionIdDiagnostics(samples),
+  };
+}
+
 function inspectFeedbackSamples(documents, context = {}) {
   if (!Array.isArray(documents)) {
     throw new TypeError("documents must be an array.");
@@ -409,6 +556,7 @@ function inspectFeedbackSamples(documents, context = {}) {
     reliableCount,
     excludedCount: samples.length - reliableCount,
     byKanji,
+    diagnostics: buildInspectionDiagnostics(samples),
     samples,
   };
 }
@@ -427,5 +575,10 @@ module.exports = {
   inspectStrokeStatus,
   inspectFeatureStatus,
   inspectFeedbackSample,
+  incrementCount,
+  sortCountObject,
+  getStoredReviewStatusCountKey,
+  buildDuplicateRecognitionIdDiagnostics,
+  buildInspectionDiagnostics,
   inspectFeedbackSamples,
 };

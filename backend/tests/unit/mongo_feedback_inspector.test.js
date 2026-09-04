@@ -418,3 +418,152 @@ test("inspectFeedbackSamples does not mutate source documents", () => {
 
   assert.equal(JSON.stringify(sample), serializedBefore);
 });
+
+test("inspectFeedbackSamples builds deterministic aggregate diagnostics", () => {
+  const samples = [
+    createReliableSample({
+      recognitionId: "sample-tree-1",
+      kanji: "木",
+      expectedKanji: "木",
+      datasetReviewStatus: "approved",
+    }),
+
+    createReliableSample({
+      recognitionId: "sample-force-1",
+      kanji: "力",
+      expectedKanji: "力",
+      features: undefined,
+      strokesNormalized: undefined,
+      strokesRaw: [createValidStroke()],
+      datasetReviewStatus: undefined,
+    }),
+
+    createReliableSample({
+      recognitionId: "sample-excluded-1",
+      kanji: "木",
+      expectedKanji: "木",
+      source: "unknown",
+      feedbackType: "unknown",
+      features: undefined,
+      strokesNormalized: undefined,
+      datasetReviewStatus: "needs_review",
+    }),
+
+    createReliableSample({
+      recognitionId: "sample-invalid-status",
+      kanji: "木",
+      expectedKanji: "木",
+      datasetReviewStatus: "unexpected",
+    }),
+  ];
+
+  const result = inspectFeedbackSamples(samples, createCatalogContext());
+
+  assert.deepEqual(result.diagnostics.reasonCounts, {
+    feedback_type_not_manual_debug: 1,
+    invalid_dataset_review_status: 1,
+    dataset_review_status_needs_review: 1,
+    missing_strokes: 1,
+    source_not_test_screen: 1,
+  });
+
+  assert.deepEqual(result.diagnostics.sourceCounts, {
+    test_screen: 3,
+    unknown: 1,
+  });
+
+  assert.deepEqual(result.diagnostics.feedbackTypeCounts, {
+    manual_debug: 3,
+    unknown: 1,
+  });
+
+  assert.deepEqual(result.diagnostics.storedReviewStatusCounts, {
+    "<missing>": 1,
+    approved: 1,
+    needs_review: 1,
+    unexpected: 1,
+  });
+
+  assert.deepEqual(result.diagnostics.effectiveReviewStatusCounts, {
+    approved: 1,
+    needs_review: 1,
+    pending: 2,
+  });
+
+  assert.deepEqual(result.diagnostics.strokeStatusCounts, {
+    missing_strokes: 1,
+    valid_normalized_strokes: 2,
+    valid_raw_strokes: 1,
+  });
+
+  assert.deepEqual(result.diagnostics.featureStatusCounts, {
+    geometry_available: 2,
+    not_preparable: 1,
+    reconstructible: 1,
+  });
+
+  assert.deepEqual(result.diagnostics.catalogCounts, {
+    withCanonicalReference: 4,
+    withoutCanonicalReference: 0,
+    withApprovedDescriptor: 3,
+    withoutApprovedDescriptor: 1,
+    externalUnseen: 1,
+    explicitRequirement: 0,
+  });
+});
+
+test("inspectFeedbackSamples detects duplicate recognitionIds", () => {
+  const samples = [
+    createReliableSample({
+      recognitionId: "duplicate-id",
+      expectedKanji: "木",
+    }),
+
+    createReliableSample({
+      _id: "mongo-id-2",
+      recognitionId: "duplicate-id",
+      expectedKanji: "木",
+    }),
+
+    createReliableSample({
+      _id: "mongo-id-3",
+      recognitionId: "unique-id",
+      expectedKanji: "力",
+      kanji: "力",
+    }),
+
+    createReliableSample({
+      _id: "mongo-id-4",
+      recognitionId: " ",
+      expectedKanji: "木",
+    }),
+  ];
+
+  const result = inspectFeedbackSamples(samples, createCatalogContext());
+
+  assert.equal(result.diagnostics.duplicateRecognitionIdCount, 1);
+
+  assert.equal(result.diagnostics.duplicateSampleCount, 2);
+
+  assert.deepEqual(result.diagnostics.duplicateRecognitionIds, [
+    {
+      recognitionId: "duplicate-id",
+      count: 2,
+    },
+  ]);
+
+  assert.equal(
+    result.diagnostics.duplicateRecognitionIds.some(
+      (duplicate) => duplicate.recognitionId === "unique-id",
+    ),
+    false,
+  );
+
+  assert.equal(
+    result.diagnostics.duplicateRecognitionIds.some(
+      (duplicate) =>
+        duplicate.recognitionId === null || duplicate.recognitionId === "",
+    ),
+    false,
+  );
+});
