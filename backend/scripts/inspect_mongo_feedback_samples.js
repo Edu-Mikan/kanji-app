@@ -21,6 +21,10 @@ const {
   buildMongoFeedbackSnapshot,
 } = require("../services/mongo_feedback_snapshot");
 
+const {
+  compareMongoFeedbackSnapshots,
+} = require("../services/mongo_feedback_snapshot_diff");
+
 const { calculateSha256 } = require("../services/kanji_reference_catalog");
 
 const {
@@ -73,6 +77,8 @@ function parseArgs(argv) {
     requirementsPath: DEFAULT_REQUIREMENTS_PATH,
     outputJsonPath: null,
     outputSnapshotPath: null,
+    previousSnapshotPath: null,
+    outputDiffPath: null,
     help: false,
   };
 
@@ -156,10 +162,34 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--previous-snapshot") {
+      options.previousSnapshotPath = path.resolve(
+        requireArgumentValue(argv, index, "--previous-snapshot"),
+      );
+
+      index++;
+      continue;
+    }
+
+    if (argument === "--out-diff") {
+      options.outputDiffPath = path.resolve(
+        requireArgumentValue(argv, index, "--out-diff"),
+      );
+
+      index++;
+      continue;
+    }
+
     throw new Error(`Unknown argument: ${argument}`);
   }
 
   return options;
+}
+
+function validateSnapshotDiffOptions(options) {
+  if (options.outputDiffPath && !options.previousSnapshotPath) {
+    throw new Error("--out-diff requires --previous-snapshot.");
+  }
 }
 
 function printHelp() {
@@ -205,6 +235,14 @@ Options:
   --out-snapshot <path>
       Save a deterministic candidate snapshot locally.
       The snapshot contains hashes, not complete 
+
+  --previous-snapshot <path>
+      Compare the current candidate snapshot with a previous snapshot.
+      Reports new, modified, unchanged and missing samples.
+
+  --out-diff <path>
+      Save the local snapshot comparison report as JSON.
+      Requires --previous-snapshot.
 
   --help
       Show this help.
@@ -330,6 +368,67 @@ function writeSnapshotReport(outputPath, snapshot) {
   );
 }
 
+function buildSnapshotDiff({ previousSnapshot, currentSnapshot }) {
+  return compareMongoFeedbackSnapshots({
+    previousSnapshot,
+    currentSnapshot,
+  });
+}
+
+function buildSnapshotDiffFromFile({ previousSnapshotPath, currentSnapshot }) {
+  if (
+    !fs.existsSync(previousSnapshotPath) ||
+    !fs.statSync(previousSnapshotPath).isFile()
+  ) {
+    throw new Error("Previous snapshot not found: " + previousSnapshotPath);
+  }
+
+  const previousSnapshot = readJsonFile(
+    previousSnapshotPath,
+    "Previous snapshot",
+  );
+
+  return buildSnapshotDiff({
+    previousSnapshot,
+    currentSnapshot,
+  });
+}
+
+function writeSnapshotDiffReport(outputPath, diff) {
+  fs.mkdirSync(path.dirname(outputPath), {
+    recursive: true,
+  });
+
+  fs.writeFileSync(outputPath, `${JSON.stringify(diff, null, 2)}\n`, "utf8");
+}
+
+function buildSafeSnapshotDiffSummary(diff) {
+  const counts = diff?.counts ?? {};
+
+  return {
+    previous: counts.previous ?? 0,
+    current: counts.current ?? 0,
+    new: counts.new ?? 0,
+    modified: counts.modified ?? 0,
+    unchanged: counts.unchanged ?? 0,
+    missing: counts.missing ?? 0,
+  };
+}
+
+function printSnapshotDiffSummary(diff) {
+  const summary = buildSafeSnapshotDiffSummary(diff);
+
+  console.log("");
+  console.log("SNAPSHOT COMPARISON");
+  console.log("===================");
+  console.log(`Previous entries: ${summary.previous}`);
+  console.log(`Current entries: ${summary.current}`);
+  console.log(`New samples: ${summary.new}`);
+  console.log(`Modified samples: ${summary.modified}`);
+  console.log(`Unchanged samples: ${summary.unchanged}`);
+  console.log(`Missing samples: ${summary.missing}`);
+}
+
 function getRequiredMongoUri(environment) {
   const value = environment?.MONGO_URI;
 
@@ -394,6 +493,8 @@ async function main() {
     return;
   }
 
+  validateSnapshotDiffOptions(options);
+
   const bundle = await runInspectionBundle({
     options,
   });
@@ -414,6 +515,23 @@ async function main() {
     console.log("Candidate snapshot saved to: " + options.outputSnapshotPath);
 
     console.log("Snapshot SHA-256: " + bundle.snapshot.snapshotSha256);
+  }
+
+  if (options.previousSnapshotPath) {
+    const snapshotDiff = buildSnapshotDiffFromFile({
+      previousSnapshotPath: options.previousSnapshotPath,
+
+      currentSnapshot: bundle.snapshot,
+    });
+
+    printSnapshotDiffSummary(snapshotDiff);
+
+    if (options.outputDiffPath) {
+      writeSnapshotDiffReport(options.outputDiffPath, snapshotDiff);
+
+      console.log("");
+      console.log("Snapshot comparison saved to: " + options.outputDiffPath);
+    }
   }
 }
 
@@ -453,4 +571,10 @@ module.exports = {
   loadInspectionInputs,
   runInspectionBundle,
   writeSnapshotReport,
+  validateSnapshotDiffOptions,
+  buildSnapshotDiff,
+  buildSnapshotDiffFromFile,
+  writeSnapshotDiffReport,
+  buildSafeSnapshotDiffSummary,
+  printSnapshotDiffSummary,
 };

@@ -9,6 +9,10 @@ const os = require("node:os");
 
 const BACKEND_ROOT = path.resolve(__dirname, "../..");
 const SCRIPT_PATH = "scripts/inspect_mongo_feedback_samples.js";
+const {
+  compareMongoFeedbackSnapshots,
+} = require("../../services/mongo_feedback_snapshot_diff");
+const cli = require("../../scripts/inspect_mongo_feedback_samples");
 
 function runCli(args, environmentOverrides = {}) {
   const environment = {
@@ -137,8 +141,6 @@ test("CLI module can be required without executing main", () => {
   assert.equal(result.stderr, "");
 });
 test("CLI inspection bundle builds a deterministic candidate snapshot", async () => {
-  const cli = require("../../scripts/inspect_mongo_feedback_samples");
-
   const tempDirectory = fs.mkdtempSync(
     path.join(os.tmpdir(), "kanji-mongo-snapshot-cli-test-"),
   );
@@ -293,8 +295,6 @@ test("CLI inspection bundle builds a deterministic candidate snapshot", async ()
   }
 });
 test("writeSnapshotReport writes local JSON without secret fields", () => {
-  const cli = require("../../scripts/inspect_mongo_feedback_samples");
-
   const tempDirectory = fs.mkdtempSync(
     path.join(os.tmpdir(), "kanji-mongo-snapshot-write-test-"),
   );
@@ -342,4 +342,278 @@ test("writeSnapshotReport writes local JSON without secret fields", () => {
       force: true,
     });
   }
+});
+test("CLI parses previous snapshot and diff output paths", () => {
+  const options = cli.parseArgs([
+    "--previous-snapshot",
+    "./previous.snapshot.json",
+    "--out-snapshot",
+    "./current.snapshot.json",
+    "--out-diff",
+    "./snapshot.diff.json",
+  ]);
+
+  assert.equal(
+    options.previousSnapshotPath,
+    path.resolve("./previous.snapshot.json"),
+  );
+
+  assert.equal(
+    options.outputSnapshotPath,
+    path.resolve("./current.snapshot.json"),
+  );
+
+  assert.equal(options.outputDiffPath, path.resolve("./snapshot.diff.json"));
+});
+
+test("CLI requires previous snapshot when out-diff is requested", () => {
+  assert.throws(
+    () =>
+      cli.validateSnapshotDiffOptions({
+        previousSnapshotPath: null,
+        outputDiffPath: path.resolve("./snapshot.diff.json"),
+      }),
+    /--out-diff requires --previous-snapshot/,
+  );
+});
+
+test("CLI help documents snapshot comparison options", () => {
+  const result = runCli(["--help"], {
+    MONGO_URI: undefined,
+  });
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+
+  assert.match(result.stdout, /--previous-snapshot/);
+  assert.match(result.stdout, /--out-diff/);
+  assert.match(result.stdout, /new/i);
+  assert.match(result.stdout, /modified/i);
+  assert.match(result.stdout, /unchanged/i);
+  assert.match(result.stdout, /missing/i);
+});
+
+test("buildSnapshotDiff compares real candidate snapshots", () => {
+  const previousSnapshot = {
+    schemaVersion: 1,
+    entries: [
+      {
+        sampleKey: "recognition:sample-1",
+        recognitionId: "sample-1",
+        expectedKanji: "木",
+        documentSha256: "a".repeat(64),
+      },
+    ],
+  };
+
+  const currentSnapshot = {
+    schemaVersion: 1,
+    entries: [
+      {
+        sampleKey: "recognition:sample-1",
+        recognitionId: "sample-1",
+        expectedKanji: "木",
+        documentSha256: "b".repeat(64),
+      },
+      {
+        sampleKey: "recognition:sample-2",
+        recognitionId: "sample-2",
+        expectedKanji: "力",
+        documentSha256: "c".repeat(64),
+      },
+    ],
+  };
+
+  const result = cli.buildSnapshotDiff({
+    previousSnapshot,
+    currentSnapshot,
+  });
+
+  assert.deepEqual(result.counts, {
+    previous: 1,
+    current: 2,
+    new: 1,
+    modified: 1,
+    unchanged: 0,
+    missing: 0,
+  });
+
+  assert.equal(result.newSamples[0].sampleKey, "recognition:sample-2");
+
+  assert.equal(result.modifiedSamples[0].sampleKey, "recognition:sample-1");
+});
+
+test("buildSnapshotDiff uses the shared snapshot comparator", () => {
+  const previousSnapshot = {
+    schemaVersion: 1,
+    entries: [],
+  };
+
+  const currentSnapshot = {
+    schemaVersion: 1,
+    entries: [],
+  };
+
+  assert.deepEqual(
+    cli.buildSnapshotDiff({
+      previousSnapshot,
+      currentSnapshot,
+    }),
+    compareMongoFeedbackSnapshots({
+      previousSnapshot,
+      currentSnapshot,
+    }),
+  );
+});
+
+test("buildSnapshotDiff loads the previous snapshot from disk", () => {
+  const tempDirectory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "kanji-snapshot-diff-load-test-"),
+  );
+
+  try {
+    const previousSnapshotPath = path.join(
+      tempDirectory,
+      "previous.snapshot.json",
+    );
+
+    fs.writeFileSync(
+      previousSnapshotPath,
+      JSON.stringify(
+        {
+          schemaVersion: 1,
+          entries: [],
+        },
+        null,
+        2,
+      ),
+      "utf8",
+    );
+
+    const currentSnapshot = {
+      schemaVersion: 1,
+      entries: [
+        {
+          sampleKey: "recognition:sample-new",
+          recognitionId: "sample-new",
+          expectedKanji: "力",
+          documentSha256: "a".repeat(64),
+        },
+      ],
+    };
+
+    const result = cli.buildSnapshotDiffFromFile({
+      previousSnapshotPath,
+      currentSnapshot,
+    });
+
+    assert.equal(result.counts.previous, 0);
+    assert.equal(result.counts.current, 1);
+    assert.equal(result.counts.new, 1);
+  } finally {
+    fs.rmSync(tempDirectory, {
+      recursive: true,
+      force: true,
+    });
+  }
+});
+
+test("buildSnapshotDiffFromFile rejects a missing previous snapshot", () => {
+  assert.throws(
+    () =>
+      cli.buildSnapshotDiffFromFile({
+        previousSnapshotPath: "./missing-previous-snapshot.json",
+        currentSnapshot: {
+          schemaVersion: 1,
+          entries: [],
+        },
+      }),
+    /Previous snapshot not found/,
+  );
+});
+
+test("writeSnapshotDiffReport writes local JSON", () => {
+  const tempDirectory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "kanji-snapshot-diff-write-test-"),
+  );
+
+  try {
+    const outputPath = path.join(tempDirectory, "snapshot.diff.json");
+
+    const diff = {
+      schemaVersion: 1,
+      counts: {
+        previous: 1,
+        current: 1,
+        new: 0,
+        modified: 0,
+        unchanged: 1,
+        missing: 0,
+      },
+      byKanji: {
+        木: {
+          kanji: "木",
+          new: 0,
+          modified: 0,
+          unchanged: 1,
+          missing: 0,
+        },
+      },
+      newSamples: [],
+      modifiedSamples: [],
+      unchangedSamples: [
+        {
+          sampleKey: "recognition:sample-1",
+          recognitionId: "sample-1",
+          expectedKanji: "木",
+          documentSha256: "a".repeat(64),
+        },
+      ],
+      missingSamples: [],
+    };
+
+    cli.writeSnapshotDiffReport(outputPath, diff);
+
+    const written = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+
+    assert.deepEqual(written, diff);
+  } finally {
+    fs.rmSync(tempDirectory, {
+      recursive: true,
+      force: true,
+    });
+  }
+});
+
+test("safe snapshot diff summary contains only aggregate counts", () => {
+  const diff = {
+    counts: {
+      previous: 10,
+      current: 12,
+      new: 3,
+      modified: 1,
+      unchanged: 8,
+      missing: 1,
+    },
+  };
+
+  assert.deepEqual(cli.buildSafeSnapshotDiffSummary(diff), {
+    previous: 10,
+    current: 12,
+    new: 3,
+    modified: 1,
+    unchanged: 8,
+    missing: 1,
+  });
+});
+
+test("CLI validates diff options before requiring MongoDB", () => {
+  const result = runCli(["--out-diff", "./snapshot.diff.json"], {
+    MONGO_URI: undefined,
+  });
+
+  assert.notEqual(result.status, 0);
+
+  assert.match(result.stderr, /--out-diff requires --previous-snapshot/);
+
+  assert.doesNotMatch(result.stderr, /MONGO_URI is required/);
 });
