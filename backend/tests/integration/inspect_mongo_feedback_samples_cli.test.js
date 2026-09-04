@@ -4,6 +4,8 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
+const fs = require("node:fs");
+const os = require("node:os");
 
 const BACKEND_ROOT = path.resolve(__dirname, "../..");
 const SCRIPT_PATH = "scripts/inspect_mongo_feedback_samples.js";
@@ -38,6 +40,12 @@ test("CLI prints help without requiring MongoDB", () => {
   assert.match(result.stdout, /MongoDB feedback sample inspector/);
 
   assert.match(result.stdout, /--out-json/);
+  assert.match(result.stdout, /strictly read-only/i);
+  assert.match(result.stdout, /MongoDB feedback sample inspector/);
+
+  assert.match(result.stdout, /--out-json/);
+  assert.match(result.stdout, /--manifest/);
+  assert.match(result.stdout, /--out-snapshot/);
   assert.match(result.stdout, /strictly read-only/i);
   assert.doesNotMatch(result.stdout, /--apply/);
 });
@@ -105,6 +113,12 @@ test("CLI module can be required without executing main", () => {
         'if (typeof cli.buildSafeConsoleSummary !== "function") {',
         '  throw new Error("buildSafeConsoleSummary missing");',
         "}",
+        'if (typeof cli.runInspectionBundle !== "function") {',
+        '  throw new Error("runInspectionBundle missing");',
+        "}",
+        'if (typeof cli.writeSnapshotReport !== "function") {',
+        '  throw new Error("writeSnapshotReport missing");',
+        "}",
       ].join("\n"),
     ],
     {
@@ -121,4 +135,211 @@ test("CLI module can be required without executing main", () => {
 
   assert.equal(result.stdout, "");
   assert.equal(result.stderr, "");
+});
+test("CLI inspection bundle builds a deterministic candidate snapshot", async () => {
+  const cli = require("../../scripts/inspect_mongo_feedback_samples");
+
+  const tempDirectory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "kanji-mongo-snapshot-cli-test-"),
+  );
+
+  try {
+    const catalogPath = path.join(tempDirectory, "catalog.json");
+
+    const manifestPath = path.join(tempDirectory, "manifest.json");
+
+    const descriptorPath = path.join(tempDirectory, "descriptors.json");
+
+    const requirementsPath = path.join(tempDirectory, "requirements.json");
+
+    const referenceStroke = {
+      x: [0, 0.5, 1],
+      y: [0, 0.5, 1],
+    };
+
+    fs.writeFileSync(
+      catalogPath,
+      JSON.stringify({
+        木: [referenceStroke],
+      }),
+      "utf8",
+    );
+
+    fs.writeFileSync(
+      manifestPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        catalog: {
+          kanjiCount: 1,
+          kanjis: ["木"],
+          sha256: "fixture-catalog-hash",
+        },
+      }),
+      "utf8",
+    );
+
+    fs.writeFileSync(
+      descriptorPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        descriptors: {
+          木: {
+            enabled: true,
+          },
+        },
+      }),
+      "utf8",
+    );
+
+    fs.writeFileSync(
+      requirementsPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        externalUnseen: [],
+        requiredKanjis: [],
+      }),
+      "utf8",
+    );
+
+    const options = cli.parseArgs([
+      "--catalog",
+      catalogPath,
+      "--manifest",
+      manifestPath,
+      "--descriptors",
+      descriptorPath,
+      "--requirements",
+      requirementsPath,
+    ]);
+
+    const documents = [
+      {
+        _id: "mongo-id-1",
+        schemaVersion: 1,
+        recognitionId: "recognition-id-1",
+        kanji: "木",
+        expectedKanji: "木",
+        isCorrect: true,
+        source: "test_screen",
+        feedbackType: "manual_debug",
+        datasetReviewStatus: "pending",
+        features: {
+          geometry: {
+            bboxWidth: 1,
+            bboxHeight: 1,
+            aspectRatio: 1,
+            perStroke: [
+              {
+                index: 0,
+                minX: 0,
+                maxX: 1,
+                minY: 0,
+                maxY: 1,
+                width: 1,
+                height: 1,
+              },
+            ],
+          },
+        },
+        strokesNormalized: [referenceStroke],
+        algorithmVersion: "heuristic-v2",
+        createdAt: "2026-08-26T08:00:00.000Z",
+      },
+    ];
+
+    const bundle = await cli.runInspectionBundle({
+      options,
+      environment: {
+        MONGO_URI: "mongodb://example.invalid:27017",
+      },
+      readDocuments: async () => documents,
+      generatedAt: "2026-08-26T10:00:00.000Z",
+    });
+
+    assert.equal(bundle.documents.length, 1);
+
+    assert.equal(bundle.report.totalSamples, 1);
+
+    assert.equal(bundle.report.reliableCount, 1);
+
+    assert.equal(bundle.snapshot.documentCount, 1);
+
+    assert.equal(bundle.snapshot.entryCount, 1);
+
+    assert.match(bundle.snapshot.catalogSha256, /^[a-f0-9]{64}$/);
+
+    assert.match(bundle.snapshot.manifestSha256, /^[a-f0-9]{64}$/);
+
+    assert.match(bundle.snapshot.snapshotSha256, /^[a-f0-9]{64}$/);
+
+    assert.deepEqual(
+      bundle.snapshot.entries.map((entry) => entry.sampleKey),
+      ["recognition:recognition-id-1"],
+    );
+
+    assert.equal(Object.hasOwn(bundle.snapshot.entries[0], "document"), false);
+
+    assert.equal(
+      Object.hasOwn(bundle.snapshot.entries[0], "strokesNormalized"),
+      false,
+    );
+
+    assert.equal(Object.hasOwn(bundle.snapshot.entries[0], "features"), false);
+  } finally {
+    fs.rmSync(tempDirectory, {
+      recursive: true,
+      force: true,
+    });
+  }
+});
+test("writeSnapshotReport writes local JSON without secret fields", () => {
+  const cli = require("../../scripts/inspect_mongo_feedback_samples");
+
+  const tempDirectory = fs.mkdtempSync(
+    path.join(os.tmpdir(), "kanji-mongo-snapshot-write-test-"),
+  );
+
+  try {
+    const outputPath = path.join(tempDirectory, "candidate.snapshot.json");
+
+    const snapshot = {
+      schemaVersion: 1,
+      generatedAt: "2026-08-26T10:00:00.000Z",
+      hashAlgorithm: "sha256",
+      catalogSha256: "catalog-hash",
+      manifestSha256: "manifest-hash",
+      documentCount: 1,
+      entryCount: 1,
+      snapshotSha256: "snapshot-hash",
+      entries: [
+        {
+          sampleKey: "recognition:recognition-id-1",
+          recognitionId: "recognition-id-1",
+          expectedKanji: "木",
+          documentSha256: "document-hash",
+        },
+      ],
+    };
+
+    cli.writeSnapshotReport(outputPath, snapshot);
+
+    assert.equal(fs.existsSync(outputPath), true);
+
+    const written = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+
+    assert.deepEqual(written, snapshot);
+
+    const serialized = JSON.stringify(written);
+
+    assert.equal(serialized.includes("MONGO_URI"), false);
+
+    assert.equal(serialized.includes("mongodb://"), false);
+
+    assert.equal(serialized.includes("tokenSecret"), false);
+  } finally {
+    fs.rmSync(tempDirectory, {
+      recursive: true,
+      force: true,
+    });
+  }
 });

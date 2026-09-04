@@ -17,6 +17,16 @@ const {
   buildFeedbackInspectionCatalogContext,
 } = require("../services/feedback_inspection_catalog_context");
 
+const {
+  buildMongoFeedbackSnapshot,
+} = require("../services/mongo_feedback_snapshot");
+
+const { calculateSha256 } = require("../services/kanji_reference_catalog");
+
+const {
+  REFERENCE_MANIFEST_PATH,
+} = require("../services/kanji_reference_paths");
+
 const BACKEND_ROOT = path.resolve(__dirname, "..");
 
 const DEFAULT_CATALOG_PATH = path.join(
@@ -24,6 +34,8 @@ const DEFAULT_CATALOG_PATH = path.join(
   "data",
   "kanji_reference_catalog.json",
 );
+
+const DEFAULT_MANIFEST_PATH = REFERENCE_MANIFEST_PATH;
 
 const DEFAULT_DESCRIPTOR_PATH = path.join(
   BACKEND_ROOT,
@@ -56,9 +68,11 @@ function parseArgs(argv) {
     dbName: DEFAULT_DB_NAME,
     collectionName: DEFAULT_COLLECTION_NAME,
     catalogPath: DEFAULT_CATALOG_PATH,
+    manifestPath: DEFAULT_MANIFEST_PATH,
     descriptorPath: DEFAULT_DESCRIPTOR_PATH,
     requirementsPath: DEFAULT_REQUIREMENTS_PATH,
     outputJsonPath: null,
+    outputSnapshotPath: null,
     help: false,
   };
 
@@ -100,6 +114,15 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (argument === "--manifest") {
+      options.manifestPath = path.resolve(
+        requireArgumentValue(argv, index, "--manifest"),
+      );
+
+      index++;
+      continue;
+    }
+
     if (argument === "--descriptors") {
       options.descriptorPath = path.resolve(
         requireArgumentValue(argv, index, "--descriptors"),
@@ -120,6 +143,15 @@ function parseArgs(argv) {
       options.outputJsonPath = path.resolve(
         requireArgumentValue(argv, index, "--out-json"),
       );
+      index++;
+      continue;
+    }
+
+    if (argument === "--out-snapshot") {
+      options.outputSnapshotPath = path.resolve(
+        requireArgumentValue(argv, index, "--out-snapshot"),
+      );
+
       index++;
       continue;
     }
@@ -155,6 +187,10 @@ Options:
       Canonical reference catalog.
       Default: ./data/kanji_reference_catalog.json
 
+  --manifest <path>
+      Canonical reference catalog manifest.
+      Default: ./data/kanji_reference_catalog.manifest.json
+
   --descriptors <path>
       Approved descriptor catalog.
       Default: ./data/kanji_descriptors.json
@@ -166,6 +202,10 @@ Options:
   --out-json <path>
       Save the inspection report as local JSON.
 
+  --out-snapshot <path>
+      Save a deterministic candidate snapshot locally.
+      The snapshot contains hashes, not complete 
+
   --help
       Show this help.
 
@@ -174,6 +214,7 @@ Security:
   - Never prints MONGO_URI.
   - Never writes to MongoDB.
   - Does not approve, exclude or mark samples.
+  - Snapshot output is local and contains no MongoDB URI.
 `);
 }
 
@@ -189,8 +230,13 @@ function readJsonFile(filePath, label) {
   }
 }
 
-function loadCatalogContext(options) {
+function loadInspectionInputs(options) {
   const catalog = readJsonFile(options.catalogPath, "Reference catalog");
+
+  const manifest = readJsonFile(
+    options.manifestPath,
+    "Reference catalog manifest",
+  );
 
   const descriptorCatalog = readJsonFile(
     options.descriptorPath,
@@ -202,11 +248,25 @@ function loadCatalogContext(options) {
     "Reference requirements",
   );
 
-  return buildFeedbackInspectionCatalogContext({
+  const catalogContext = buildFeedbackInspectionCatalogContext({
     catalog,
     descriptorCatalog,
     requirements,
   });
+
+  return {
+    catalog,
+    manifest,
+    descriptorCatalog,
+    requirements,
+    catalogContext,
+    catalogSha256: calculateSha256(catalog),
+    manifestSha256: calculateSha256(manifest),
+  };
+}
+
+function loadCatalogContext(options) {
+  return loadInspectionInputs(options).catalogContext;
 }
 
 function buildSafeConsoleSummary(report) {
@@ -258,6 +318,18 @@ function writeJsonReport(outputPath, report) {
   fs.writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 }
 
+function writeSnapshotReport(outputPath, snapshot) {
+  fs.mkdirSync(path.dirname(outputPath), {
+    recursive: true,
+  });
+
+  fs.writeFileSync(
+    outputPath,
+    `${JSON.stringify(snapshot, null, 2)}\n`,
+    "utf8",
+  );
+}
+
 function getRequiredMongoUri(environment) {
   const value = environment?.MONGO_URI;
 
@@ -273,9 +345,24 @@ async function runInspection({
   environment = process.env,
   readDocuments = readMongoFeedbackDocuments,
 }) {
+  const bundle = await runInspectionBundle({
+    options,
+    environment,
+    readDocuments,
+  });
+
+  return bundle.report;
+}
+
+async function runInspectionBundle({
+  options,
+  environment = process.env,
+  readDocuments = readMongoFeedbackDocuments,
+  generatedAt = new Date(),
+}) {
   const mongoUri = getRequiredMongoUri(environment);
 
-  const catalogContext = loadCatalogContext(options);
+  const inputs = loadInspectionInputs(options);
 
   const documents = await readDocuments({
     mongoUri,
@@ -283,7 +370,20 @@ async function runInspection({
     collectionName: options.collectionName,
   });
 
-  return inspectFeedbackSamples(documents, catalogContext);
+  const report = inspectFeedbackSamples(documents, inputs.catalogContext);
+
+  const snapshot = buildMongoFeedbackSnapshot({
+    documents,
+    catalogSha256: inputs.catalogSha256,
+    manifestSha256: inputs.manifestSha256,
+    generatedAt,
+  });
+
+  return {
+    documents,
+    report,
+    snapshot,
+  };
 }
 
 async function main() {
@@ -294,17 +394,26 @@ async function main() {
     return;
   }
 
-  const report = await runInspection({
+  const bundle = await runInspectionBundle({
     options,
   });
 
-  printReportSummary(report);
+  printReportSummary(bundle.report);
 
   if (options.outputJsonPath) {
-    writeJsonReport(options.outputJsonPath, report);
+    writeJsonReport(options.outputJsonPath, bundle.report);
 
     console.log("");
-    console.log(`JSON report saved to: ` + options.outputJsonPath);
+    console.log("JSON report saved to: " + options.outputJsonPath);
+  }
+
+  if (options.outputSnapshotPath) {
+    writeSnapshotReport(options.outputSnapshotPath, bundle.snapshot);
+
+    console.log("");
+    console.log("Candidate snapshot saved to: " + options.outputSnapshotPath);
+
+    console.log("Snapshot SHA-256: " + bundle.snapshot.snapshotSha256);
   }
 }
 
@@ -340,4 +449,8 @@ module.exports = {
   getRequiredMongoUri,
   runInspection,
   main,
+  DEFAULT_MANIFEST_PATH,
+  loadInspectionInputs,
+  runInspectionBundle,
+  writeSnapshotReport,
 };
