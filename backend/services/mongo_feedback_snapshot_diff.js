@@ -3,24 +3,35 @@
 const { sortKanjis } = require("./kanji_reference_catalog");
 
 const SNAPSHOT_DIFF_SCHEMA_VERSION = 1;
-
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function normalizeRequiredRecognitionId(value) {
+function normalizeRequiredSampleKey(value) {
   if (typeof value !== "string" || value.trim().length === 0) {
-    throw new Error("Snapshot entry recognitionId is required.");
+    throw new Error("Snapshot entry sampleKey is required.");
   }
 
   return value.trim();
 }
 
-function normalizeSha256(value) {
+function normalizeOptionalString(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  return normalized.length > 0 ? normalized : null;
+}
+
+function normalizeDocumentSha256(value) {
   if (typeof value !== "string" || !SHA256_PATTERN.test(value)) {
-    throw new Error("Snapshot entry sha256 must be a SHA-256 hash.");
+    throw new Error(
+      "Snapshot entry documentSha256 " + "must be a SHA-256 hash.",
+    );
   }
 
   return value;
@@ -32,51 +43,39 @@ function normalizeSnapshotEntry(entry) {
   }
 
   return {
-    recognitionId: normalizeRequiredRecognitionId(entry.recognitionId),
+    sampleKey: normalizeRequiredSampleKey(entry.sampleKey),
 
-    expectedKanji:
-      typeof entry.expectedKanji === "string" &&
-      entry.expectedKanji.trim().length > 0
-        ? entry.expectedKanji.trim()
-        : null,
+    recognitionId: normalizeOptionalString(entry.recognitionId),
 
-    classification:
-      typeof entry.classification === "string" &&
-      entry.classification.trim().length > 0
-        ? entry.classification.trim()
-        : null,
+    expectedKanji: normalizeOptionalString(entry.expectedKanji),
 
-    sha256: normalizeSha256(entry.sha256),
+    documentSha256: normalizeDocumentSha256(entry.documentSha256),
   };
 }
 
-function compareRecognitionIds(left, right) {
+function compareSampleKeys(left, right) {
   return left.localeCompare(right, "en", {
     sensitivity: "variant",
   });
 }
 
 function normalizeSnapshotEntries(snapshot) {
-  if (!isPlainObject(snapshot) || !Array.isArray(snapshot.samples)) {
-    throw new Error("Snapshot must contain a samples array.");
+  if (!isPlainObject(snapshot) || !Array.isArray(snapshot.entries)) {
+    throw new Error("Snapshot must contain an entries array.");
   }
 
   const entries = new Map();
 
-  const normalizedEntries = snapshot.samples
+  const normalizedEntries = snapshot.entries
     .map(normalizeSnapshotEntry)
-    .sort((left, right) =>
-      compareRecognitionIds(left.recognitionId, right.recognitionId),
-    );
+    .sort((left, right) => compareSampleKeys(left.sampleKey, right.sampleKey));
 
   for (const entry of normalizedEntries) {
-    if (entries.has(entry.recognitionId)) {
-      throw new Error(
-        "Duplicate recognitionId in snapshot: " + entry.recognitionId,
-      );
+    if (entries.has(entry.sampleKey)) {
+      throw new Error("Duplicate sampleKey in snapshot: " + entry.sampleKey);
     }
 
-    entries.set(entry.recognitionId, entry);
+    entries.set(entry.sampleKey, entry);
   }
 
   return entries;
@@ -84,20 +83,20 @@ function normalizeSnapshotEntries(snapshot) {
 
 function createCurrentEntry(entry) {
   return {
+    sampleKey: entry.sampleKey,
     recognitionId: entry.recognitionId,
     expectedKanji: entry.expectedKanji,
-    classification: entry.classification,
-    sha256: entry.sha256,
+    documentSha256: entry.documentSha256,
   };
 }
 
 function createModifiedEntry({ previousEntry, currentEntry }) {
   return {
+    sampleKey: currentEntry.sampleKey,
     recognitionId: currentEntry.recognitionId,
     expectedKanji: currentEntry.expectedKanji,
-    classification: currentEntry.classification,
-    previousSha256: previousEntry.sha256,
-    currentSha256: currentEntry.sha256,
+    previousDocumentSha256: previousEntry.documentSha256,
+    currentDocumentSha256: currentEntry.documentSha256,
   };
 }
 
@@ -112,12 +111,12 @@ function createEmptyKanjiRow(kanji) {
 }
 
 function incrementKanjiCount(rows, kanji, category) {
-  const normalizedKanji =
-    typeof kanji === "string" && kanji.length > 0 ? kanji : "UNKNOWN";
+  const normalizedKanji = normalizeOptionalString(kanji) ?? "UNKNOWN";
 
   const row = rows.get(normalizedKanji) ?? createEmptyKanjiRow(normalizedKanji);
 
   row[category]++;
+
   rows.set(normalizedKanji, row);
 }
 
@@ -168,29 +167,31 @@ function compareMongoFeedbackSnapshots({ previousSnapshot, currentSnapshot }) {
   const unchangedSamples = [];
   const missingSamples = [];
 
-  for (const [recognitionId, currentEntry] of currentEntries) {
-    const previousEntry = previousEntries.get(recognitionId);
+  for (const [sampleKey, currentEntry] of currentEntries) {
+    const previousEntry = previousEntries.get(sampleKey);
 
     if (!previousEntry) {
       newSamples.push(createCurrentEntry(currentEntry));
+
       continue;
     }
 
-    if (previousEntry.sha256 !== currentEntry.sha256) {
+    if (previousEntry.documentSha256 !== currentEntry.documentSha256) {
       modifiedSamples.push(
         createModifiedEntry({
           previousEntry,
           currentEntry,
         }),
       );
+
       continue;
     }
 
     unchangedSamples.push(createCurrentEntry(currentEntry));
   }
 
-  for (const [recognitionId, previousEntry] of previousEntries) {
-    if (!currentEntries.has(recognitionId)) {
+  for (const [sampleKey, previousEntry] of previousEntries) {
+    if (!currentEntries.has(sampleKey)) {
       missingSamples.push(createCurrentEntry(previousEntry));
     }
   }
@@ -226,10 +227,11 @@ module.exports = {
   SNAPSHOT_DIFF_SCHEMA_VERSION,
   SHA256_PATTERN,
   isPlainObject,
-  normalizeRequiredRecognitionId,
-  normalizeSha256,
+  normalizeRequiredSampleKey,
+  normalizeOptionalString,
+  normalizeDocumentSha256,
   normalizeSnapshotEntry,
-  compareRecognitionIds,
+  compareSampleKeys,
   normalizeSnapshotEntries,
   createCurrentEntry,
   createModifiedEntry,

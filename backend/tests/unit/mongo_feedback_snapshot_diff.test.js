@@ -4,29 +4,39 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 const {
+  buildMongoFeedbackSnapshot,
+} = require("../../services/mongo_feedback_snapshot");
+
+const {
   SNAPSHOT_DIFF_SCHEMA_VERSION,
   normalizeSnapshotEntries,
   compareMongoFeedbackSnapshots,
 } = require("../../services/mongo_feedback_snapshot_diff");
 
+const HASH_A = "a".repeat(64);
+const HASH_B = "b".repeat(64);
+const HASH_C = "c".repeat(64);
+const HASH_D = "d".repeat(64);
+const HASH_E = "e".repeat(64);
+
 function createSnapshot(entries) {
   return {
     schemaVersion: 1,
-    samples: entries,
+    entries,
   };
 }
 
 function createEntry({
-  recognitionId,
-  sha256,
+  sampleKey,
+  recognitionId = null,
   expectedKanji = "木",
-  classification = "reliable",
+  documentSha256,
 }) {
   return {
+    sampleKey,
     recognitionId,
     expectedKanji,
-    classification,
-    sha256,
+    documentSha256,
   };
 }
 
@@ -34,283 +44,297 @@ test("snapshot diff schema version is explicit", () => {
   assert.equal(SNAPSHOT_DIFF_SCHEMA_VERSION, 1);
 });
 
-test("normalizeSnapshotEntries creates a recognitionId index", () => {
+test("normalizeSnapshotEntries creates a sampleKey index", () => {
   const snapshot = createSnapshot([
     createEntry({
+      sampleKey: "recognition:sample-2",
       recognitionId: "sample-2",
-      sha256: "b".repeat(64),
       expectedKanji: "力",
+      documentSha256: HASH_B,
     }),
     createEntry({
+      sampleKey: "recognition:sample-1",
       recognitionId: "sample-1",
-      sha256: "a".repeat(64),
       expectedKanji: "木",
+      documentSha256: HASH_A,
     }),
   ]);
 
   const result = normalizeSnapshotEntries(snapshot);
 
-  assert.deepEqual([...result.keys()], ["sample-1", "sample-2"]);
+  assert.deepEqual(
+    [...result.keys()],
+    ["recognition:sample-1", "recognition:sample-2"],
+  );
 
-  assert.equal(result.get("sample-1").expectedKanji, "木");
+  assert.equal(result.get("recognition:sample-1").expectedKanji, "木");
 
-  assert.equal(result.get("sample-2").expectedKanji, "力");
+  assert.equal(result.get("recognition:sample-2").expectedKanji, "力");
 });
 
-test("normalizeSnapshotEntries rejects a missing samples array", () => {
+test("normalizeSnapshotEntries rejects a missing entries array", () => {
   assert.throws(
     () =>
       normalizeSnapshotEntries({
         schemaVersion: 1,
       }),
-    /Snapshot must contain a samples array/,
+    /Snapshot must contain an entries array/,
   );
 });
 
-test("normalizeSnapshotEntries rejects an invalid recognitionId", () => {
+test("normalizeSnapshotEntries rejects an invalid sampleKey", () => {
   assert.throws(
     () =>
       normalizeSnapshotEntries(
         createSnapshot([
           createEntry({
-            recognitionId: "",
-            sha256: "a".repeat(64),
+            sampleKey: "",
+            documentSha256: HASH_A,
           }),
         ]),
       ),
-    /Snapshot entry recognitionId is required/,
+    /Snapshot entry sampleKey is required/,
   );
 });
 
-test("normalizeSnapshotEntries rejects an invalid SHA-256", () => {
+test("normalizeSnapshotEntries rejects an invalid document SHA-256", () => {
   assert.throws(
     () =>
       normalizeSnapshotEntries(
         createSnapshot([
           createEntry({
-            recognitionId: "sample-1",
-            sha256: "not-a-hash",
+            sampleKey: "recognition:sample-1",
+            documentSha256: "not-a-hash",
           }),
         ]),
       ),
-    /Snapshot entry sha256 must be a SHA-256 hash/,
+    /documentSha256 must be a SHA-256 hash/,
   );
 });
 
-test("normalizeSnapshotEntries rejects duplicate recognitionIds", () => {
+test("normalizeSnapshotEntries rejects duplicate sampleKeys", () => {
   assert.throws(
     () =>
       normalizeSnapshotEntries(
         createSnapshot([
           createEntry({
-            recognitionId: "sample-1",
-            sha256: "a".repeat(64),
+            sampleKey: "recognition:sample-1",
+            documentSha256: HASH_A,
           }),
           createEntry({
-            recognitionId: "sample-1",
-            sha256: "b".repeat(64),
+            sampleKey: "recognition:sample-1",
+            documentSha256: HASH_B,
           }),
         ]),
       ),
-    /Duplicate recognitionId in snapshot: sample-1/,
+    /Duplicate sampleKey in snapshot: recognition:sample-1/,
   );
 });
 
-test("compareMongoFeedbackSnapshots detects a new sample", () => {
-  const previousSnapshot = createSnapshot([]);
-
-  const currentSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-new",
-      sha256: "a".repeat(64),
-      expectedKanji: "力",
-    }),
-  ]);
-
+test("compareMongoFeedbackSnapshots detects a new entry", () => {
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([]),
+    currentSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:sample-new",
+        recognitionId: "sample-new",
+        expectedKanji: "力",
+        documentSha256: HASH_A,
+      }),
+    ]),
   });
 
-  assert.equal(result.counts.new, 1);
-  assert.equal(result.counts.modified, 0);
-  assert.equal(result.counts.unchanged, 0);
-  assert.equal(result.counts.missing, 0);
+  assert.deepEqual(result.counts, {
+    previous: 0,
+    current: 1,
+    new: 1,
+    modified: 0,
+    unchanged: 0,
+    missing: 0,
+  });
 
   assert.deepEqual(result.newSamples, [
     {
+      sampleKey: "recognition:sample-new",
       recognitionId: "sample-new",
       expectedKanji: "力",
-      classification: "reliable",
-      sha256: "a".repeat(64),
+      documentSha256: HASH_A,
     },
   ]);
 });
 
-test("compareMongoFeedbackSnapshots detects a modified sample", () => {
-  const previousSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-1",
-      sha256: "a".repeat(64),
-    }),
-  ]);
-
-  const currentSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-1",
-      sha256: "b".repeat(64),
-    }),
-  ]);
-
+test("compareMongoFeedbackSnapshots detects a modified entry", () => {
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:sample-1",
+        recognitionId: "sample-1",
+        documentSha256: HASH_A,
+      }),
+    ]),
+    currentSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:sample-1",
+        recognitionId: "sample-1",
+        documentSha256: HASH_B,
+      }),
+    ]),
   });
 
   assert.equal(result.counts.modified, 1);
 
   assert.deepEqual(result.modifiedSamples, [
     {
+      sampleKey: "recognition:sample-1",
       recognitionId: "sample-1",
       expectedKanji: "木",
-      classification: "reliable",
-      previousSha256: "a".repeat(64),
-      currentSha256: "b".repeat(64),
+      previousDocumentSha256: HASH_A,
+      currentDocumentSha256: HASH_B,
     },
   ]);
 });
 
-test("compareMongoFeedbackSnapshots detects an unchanged sample", () => {
-  const hash = "a".repeat(64);
-
-  const previousSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-1",
-      sha256: hash,
-    }),
-  ]);
-
-  const currentSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-1",
-      sha256: hash,
-    }),
-  ]);
+test("compareMongoFeedbackSnapshots detects an unchanged entry", () => {
+  const entry = createEntry({
+    sampleKey: "recognition:sample-1",
+    recognitionId: "sample-1",
+    documentSha256: HASH_A,
+  });
 
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([entry]),
+    currentSnapshot: createSnapshot([entry]),
   });
 
   assert.equal(result.counts.unchanged, 1);
 
   assert.deepEqual(result.unchangedSamples, [
     {
+      sampleKey: "recognition:sample-1",
       recognitionId: "sample-1",
       expectedKanji: "木",
-      classification: "reliable",
-      sha256: hash,
+      documentSha256: HASH_A,
     },
   ]);
 });
 
-test("compareMongoFeedbackSnapshots detects a missing sample", () => {
-  const previousSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-missing",
-      sha256: "a".repeat(64),
-      expectedKanji: "力",
-    }),
-  ]);
-
-  const currentSnapshot = createSnapshot([]);
-
+test("compareMongoFeedbackSnapshots detects a missing entry", () => {
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:sample-missing",
+        recognitionId: "sample-missing",
+        expectedKanji: "力",
+        documentSha256: HASH_A,
+      }),
+    ]),
+    currentSnapshot: createSnapshot([]),
   });
 
   assert.equal(result.counts.missing, 1);
 
   assert.deepEqual(result.missingSamples, [
     {
+      sampleKey: "recognition:sample-missing",
       recognitionId: "sample-missing",
       expectedKanji: "力",
-      classification: "reliable",
-      sha256: "a".repeat(64),
+      documentSha256: HASH_A,
     },
   ]);
 });
 
-test("snapshot comparison returns deterministic ordering", () => {
-  const previousSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-z",
-      sha256: "a".repeat(64),
-    }),
-  ]);
-
-  const currentSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "sample-b",
-      sha256: "b".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "sample-a",
-      sha256: "c".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "sample-z",
-      sha256: "d".repeat(64),
-    }),
-  ]);
-
+test("comparison supports MongoDB fallback sample keys", () => {
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([]),
+    currentSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "mongo:507f1f77bcf86cd799439011",
+        recognitionId: null,
+        expectedKanji: "木",
+        documentSha256: HASH_A,
+      }),
+    ]),
+  });
+
+  assert.equal(result.counts.new, 1);
+
+  assert.equal(
+    result.newSamples[0].sampleKey,
+    "mongo:507f1f77bcf86cd799439011",
+  );
+
+  assert.equal(result.newSamples[0].recognitionId, null);
+});
+
+test("snapshot comparison returns deterministic ordering", () => {
+  const result = compareMongoFeedbackSnapshots({
+    previousSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:sample-z",
+        recognitionId: "sample-z",
+        documentSha256: HASH_A,
+      }),
+    ]),
+    currentSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:sample-b",
+        recognitionId: "sample-b",
+        documentSha256: HASH_B,
+      }),
+      createEntry({
+        sampleKey: "recognition:sample-a",
+        recognitionId: "sample-a",
+        documentSha256: HASH_C,
+      }),
+      createEntry({
+        sampleKey: "recognition:sample-z",
+        recognitionId: "sample-z",
+        documentSha256: HASH_D,
+      }),
+    ]),
   });
 
   assert.deepEqual(
-    result.newSamples.map((sample) => sample.recognitionId),
-    ["sample-a", "sample-b"],
+    result.newSamples.map((sample) => sample.sampleKey),
+    ["recognition:sample-a", "recognition:sample-b"],
   );
 
   assert.deepEqual(
-    result.modifiedSamples.map((sample) => sample.recognitionId),
-    ["sample-z"],
+    result.modifiedSamples.map((sample) => sample.sampleKey),
+    ["recognition:sample-z"],
   );
 });
 
 test("snapshot comparison groups changes by kanji", () => {
-  const previousSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "tree-modified",
-      expectedKanji: "木",
-      sha256: "a".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "force-missing",
-      expectedKanji: "力",
-      sha256: "b".repeat(64),
-    }),
-  ]);
-
-  const currentSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "tree-modified",
-      expectedKanji: "木",
-      sha256: "c".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "tree-new",
-      expectedKanji: "木",
-      sha256: "d".repeat(64),
-    }),
-  ]);
-
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:tree-modified",
+        recognitionId: "tree-modified",
+        expectedKanji: "木",
+        documentSha256: HASH_A,
+      }),
+      createEntry({
+        sampleKey: "recognition:force-missing",
+        recognitionId: "force-missing",
+        expectedKanji: "力",
+        documentSha256: HASH_B,
+      }),
+    ]),
+    currentSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:tree-modified",
+        recognitionId: "tree-modified",
+        expectedKanji: "木",
+        documentSha256: HASH_C,
+      }),
+      createEntry({
+        sampleKey: "recognition:tree-new",
+        recognitionId: "tree-new",
+        expectedKanji: "木",
+        documentSha256: HASH_D,
+      }),
+    ]),
   });
 
   assert.deepEqual(Object.keys(result.byKanji), ["力", "木"]);
@@ -333,39 +357,35 @@ test("snapshot comparison groups changes by kanji", () => {
 });
 
 test("snapshot comparison satisfies total invariants", () => {
-  const previousSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "unchanged",
-      sha256: "a".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "modified",
-      sha256: "b".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "missing",
-      sha256: "c".repeat(64),
-    }),
-  ]);
-
-  const currentSnapshot = createSnapshot([
-    createEntry({
-      recognitionId: "unchanged",
-      sha256: "a".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "modified",
-      sha256: "d".repeat(64),
-    }),
-    createEntry({
-      recognitionId: "new",
-      sha256: "e".repeat(64),
-    }),
-  ]);
-
   const result = compareMongoFeedbackSnapshots({
-    previousSnapshot,
-    currentSnapshot,
+    previousSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:unchanged",
+        documentSha256: HASH_A,
+      }),
+      createEntry({
+        sampleKey: "recognition:modified",
+        documentSha256: HASH_B,
+      }),
+      createEntry({
+        sampleKey: "recognition:missing",
+        documentSha256: HASH_C,
+      }),
+    ]),
+    currentSnapshot: createSnapshot([
+      createEntry({
+        sampleKey: "recognition:unchanged",
+        documentSha256: HASH_A,
+      }),
+      createEntry({
+        sampleKey: "recognition:modified",
+        documentSha256: HASH_D,
+      }),
+      createEntry({
+        sampleKey: "recognition:new",
+        documentSha256: HASH_E,
+      }),
+    ]),
   });
 
   assert.deepEqual(result.counts, {
@@ -388,18 +408,78 @@ test("snapshot comparison satisfies total invariants", () => {
   );
 });
 
+test("comparison accepts snapshots built by the real constructor", () => {
+  const catalogSha256 = "1".repeat(64);
+  const manifestSha256 = "2".repeat(64);
+
+  const previousSnapshot = buildMongoFeedbackSnapshot({
+    documents: [
+      {
+        _id: "mongo-id-1",
+        recognitionId: "sample-1",
+        expectedKanji: "木",
+        isCorrect: true,
+        source: "test_screen",
+      },
+    ],
+    catalogSha256,
+    manifestSha256,
+    generatedAt: "2026-09-04T10:00:00.000Z",
+  });
+
+  const currentSnapshot = buildMongoFeedbackSnapshot({
+    documents: [
+      {
+        _id: "mongo-id-1",
+        recognitionId: "sample-1",
+        expectedKanji: "木",
+        isCorrect: false,
+        source: "test_screen",
+      },
+      {
+        _id: "mongo-id-2",
+        recognitionId: "sample-2",
+        expectedKanji: "力",
+        isCorrect: true,
+        source: "test_screen",
+      },
+    ],
+    catalogSha256,
+    manifestSha256,
+    generatedAt: "2026-09-04T11:00:00.000Z",
+  });
+
+  const result = compareMongoFeedbackSnapshots({
+    previousSnapshot,
+    currentSnapshot,
+  });
+
+  assert.equal(result.counts.previous, 1);
+  assert.equal(result.counts.current, 2);
+  assert.equal(result.counts.new, 1);
+  assert.equal(result.counts.modified, 1);
+  assert.equal(result.counts.unchanged, 0);
+  assert.equal(result.counts.missing, 0);
+
+  assert.equal(result.newSamples[0].sampleKey, "recognition:sample-2");
+
+  assert.equal(result.modifiedSamples[0].sampleKey, "recognition:sample-1");
+});
+
 test("snapshot comparison does not mutate either snapshot", () => {
   const previousSnapshot = createSnapshot([
     createEntry({
+      sampleKey: "recognition:sample-1",
       recognitionId: "sample-1",
-      sha256: "a".repeat(64),
+      documentSha256: HASH_A,
     }),
   ]);
 
   const currentSnapshot = createSnapshot([
     createEntry({
+      sampleKey: "recognition:sample-1",
       recognitionId: "sample-1",
-      sha256: "b".repeat(64),
+      documentSha256: HASH_B,
     }),
   ]);
 
